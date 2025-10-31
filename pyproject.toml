@@ -1,10 +1,10 @@
 [project]
 name = "Berrizdown"
 version = "0.1.0"
-description = "Berriz downloader image comment post video and unlock drm"
+description = "Image Video Post Comment Berriz download tool "
 readme = "README.md"
 requires-python = "==3.12.*"
-license = {text = "GPL-3"}
+license = "AGPL-3.0-or-later"
 authors = [
   {name = "omenbibi", email = "ytiq8nxnm@mozmail.com"}
 ]
@@ -51,7 +51,15 @@ dependencies = [
 ]
 
 [project.scripts]
-berrizdown = "berrizdown.__main__:main"
+berriz = "berrizdown.__main__:main"
+
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["logs", "tests", "docs"]
 
 [tool.ruff]
 line-length = 221
@@ -60,8 +68,8 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 exclude = [
-    "readydl_pyplayready", 
-    "wvd", 
+    "readydl_pyplayready",
+    "wvd",
     "pywidevine",
     "pyplayready"
 ]
