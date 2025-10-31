@@ -722,6 +722,9 @@ CFG = ConfigLoader.load()
 # By edit tools {} remove or add tools to bypass tools_check()
 def tools_check() -> None:
     R = Route()
+    
+    R.mp4decrypt_path.parent.mkdir(parents=True, exist_ok=True)
+        
     tools = {
         "mp4decrypt": R.mp4decrypt_path,
         "packager": R.packager_path,
