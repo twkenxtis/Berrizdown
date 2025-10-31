@@ -1,0 +1,9 @@
+requests
+pycryptodome
+construct==2.8.8
+ecpy
+click
+PyYAML
+aiohttp
+cryptography
+platformdirs
