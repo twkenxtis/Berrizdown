@@ -158,7 +158,7 @@ class MediaProcessor:
                 for media_id, media_type in media_idntype:
                     media_id_list.append(media_id)
                     skip_media_id = await self._check_download_pkl(media_id)
-                    if skip_media_id:
+                    if skip_media_id and video_dup is False:
                         await self._handle_choice(skip_media_id)
                         continue
                     if await self.cookie_check(media_idntype):
