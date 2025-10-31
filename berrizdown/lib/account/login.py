@@ -141,7 +141,7 @@ class LoginManager:
                 f"at {Color.fg('green')}berriz.account{Color.fg('light_gray')} in YAML {Color.fg('tan')}['email':'password']{Color.reset()}"
             )
             logger.info(
-                f"Try setting {Color.fg('orange')}put NETSCAPE cookie{Color.reset()}{Color.fg('light_gray')}"
+                f"Try setting {Color.fg('orange')}put Netscape cookie {Color.reset()}{Color.fg('light_gray')}"
                 f"at {Color.fg('green')}berriz\\cookies\\Berriz{Color.fg('light_gray')} in Folder {Color.fg('tan')}Make sure cookie name is default.txt{Color.reset()}"
             )
             for ck in invaild_cookies:
