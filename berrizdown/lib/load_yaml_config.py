@@ -773,7 +773,7 @@ def tools_check() -> None:
                 print(check, "https://mkvtoolnix.org/", end)
             if key == "ffmpeg":
                 print(check, "https://www.ffmpeg.org/download.html", end)
-        raise FileNotFoundError(f"Required tools {', '.join(missing)} not found exit.")
+        raise FileNotFoundError(f"Required tools {', '.join(missing)} not found exit. Please manuel create tools folder and put executable file into tools folder.")
 
 
 try:
