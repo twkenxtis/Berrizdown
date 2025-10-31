@@ -223,22 +223,16 @@ class FFmpegMuxer:
         except AttributeError:
             ConfigLoader.print_warning("MUX", mux_tool, "ffmpeg")
             mux_tool = "FFMPEG"
-        MKVTOOLNIX_path: Path = Route().mkvmerge_path
-        if not MKVTOOLNIX_path.exists():
-            if paramstore.get("mkvmerge_path_ok") is True:
-                MKVTOOLNIX_path: str = "mkvmerge"
-            else:
-                logger.error(f"mkvmerge.exe not found at: {MKVTOOLNIX_path}")
-                return False
-        FFMPEG_path: Path = Route().ffmpeg
-        if not FFMPEG_path.exists():
-            if paramstore.get("ffmpeg_path_ok") is True:
-                FFMPEG_path: str = "ffmpeg"
-            else:
-                logger.error(f"ffmpeg.exe not found at: {FFMPEG_path}")
-                return False
+
         match mux_tool:
             case "FFMPEG":
+                FFMPEG_path: Path = Route().ffmpeg
+                if not FFMPEG_path.exists():
+                    if paramstore.get("ffmpeg_path_ok") is True:
+                        FFMPEG_path: str = "ffmpeg"
+                    else:
+                        logger.error(f"ffmpeg.exe not found at: {FFMPEG_path}")
+                        return False
                 cmd: list[str] = await self.build_ffmpeg_command(video_file_str, audio_file_str, temp_file_path, FFMPEG_path)
 
                 try:
@@ -258,6 +252,13 @@ class FFmpegMuxer:
                     logger.error(f"FFmpeg mixing error: {str(e)}")
                     return False
             case "MKVTOOLNIX":
+                MKVTOOLNIX_path: Path = Route().mkvmerge_path
+                if not MKVTOOLNIX_path.exists():
+                    if paramstore.get("mkvmerge_path_ok") is True:
+                        MKVTOOLNIX_path: str = "mkvmerge"
+                    else:
+                        logger.error(f"mkvmerge.exe not found at: {MKVTOOLNIX_path}")
+                        return False
                 cmd = [
                     MKVTOOLNIX_path,
                     "-o",
