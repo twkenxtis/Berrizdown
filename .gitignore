@@ -6,6 +6,7 @@
 *.db
 download_info.bin
 *key_store.db
+*.txt
 key_store.db
 *.db
 *.sqlite3
