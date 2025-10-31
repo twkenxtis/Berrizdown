@@ -1,5 +1,4 @@
 import asyncio
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -73,7 +72,7 @@ class Refresh_JWT:
             else:
                 logger.info(f"{Color.fg('light_gray')}Token refresh failed, {Color.fg('light_red')}try auto re-login stil {Color.fg('gold')}Fail{Color.reset()}")
                 logger.warning(f"{Color.fg('light_gray')}If dont cookie pls use command {Color.reset()}{Color.bg('cyan')}-nc{Color.reset()}{Color.fg('pink')} to continue ...{Color.reset()}")
-                sys.exit(1)
+                return None, None
         else:
             return None, None
 

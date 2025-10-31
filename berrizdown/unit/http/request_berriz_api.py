@@ -3,6 +3,7 @@ import json
 import logging
 import random
 import re
+import sys
 import ssl
 import time
 import uuid
@@ -177,11 +178,13 @@ class BerrizAPIClient:
         if gwt == {}:
             return False
         try:
+            if len(gwt) == 0:
+                return False
             p = gwt.split(".")[1]
             p += "=" * (-len(p) % 4)
             return int(json.loads(base64.urlsafe_b64decode(p))["exp"]) - time.time() < 150
         except Exception as e:
-            logger.error(e)
+            logger.error(f"{e}")
             return False
 
     async def cookie(self, re_request_cookie: bool = False) -> dict[str, str] | None:
@@ -193,7 +196,9 @@ class BerrizAPIClient:
                     cookie["bz_a"] = bz_a
                     return cookie
                 else:
-                    raise ValueError("Cookie is none.")
+                    logger.error("Cookie is none.")
+                    await self.close_session()
+                    sys.exit(0)
 
             if cookie_session in (None, {}):
                 BerrizAPIClient._re_request_cookie = False
