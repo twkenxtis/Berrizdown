@@ -2,7 +2,7 @@ try:
     import asyncio
     import logging
 
-    from berriz import main
+    from core import main
     from static.color import Color
 
     asyncio.run(main())
