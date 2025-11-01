@@ -1,0 +1,154 @@
+duplicate:
+  # Allow repeated downloads
+  default: false
+  overrides:
+    image: false
+    video: false
+    post: false
+    notice: false
+    cmt: false
+
+headers:
+  # Enable fakeuseragent: false
+  Fake-User-Agent: false
+  # default user agent when fake-User-Agent is false
+  User-Agent: "Berrizdown / 0.1.0"
+
+output_template:
+  video: '{date}.{title}.{quality}.{community_name}.{artis}.{source}.WEB-DL.{video}.{audio}-{tag}'
+  json_file_name: '{date}.{title}.{community_name}.{artis}.{source}-{tag}'
+  html_file_name: '{date}.{title}.{community_name}.{artis}.{source}-{tag}'
+  image_file_name: '{date}.{title}.{raw_name}.{community_name}.{artis}.{source}-{tag}'
+  playlist_file_name: '{date}.{title}.{community_name}.{artis}.{source}_manifest-{tag}'
+  tag: ''
+  # Default File datetime
+  date_formact: "%y%m%d.%H%M.%S"
+
+donwload_dir_name:
+  download_dir: "Berriz.downloads"
+  # Default Folder formact
+  #dir_name: "{date}.{community_name}.{source}.{artis}.{title}"
+  dir_name: "{date}.{community_name}.{source}.{artis}"
+  # Default Folder datetime
+  date_formact: "%y%m%d.%H%M-%S"
+
+Container:
+  # ffmpeg, mkvtoolnix
+  # [if choese mkvtoolnix enforce .mkv]
+  mux: ffmpeg
+  # ts, mp4, mov, m4v, mkv, avi
+  video: mp4
+  # mp4decrypt, shaka-packager
+  decryption-engine: shaka-packager
+  # lib\\tools\\<name> windows is .exe | Linux maybe different
+  mp4decrypt: mp4decrypt.exe
+  shaka-packager: packager-win-x64.exe
+  mkvmerge: mkvmerge.exe
+  ffmpeg: ffmpeg.exe
+
+Video:
+  # 1080, 720, 480, 360, 144, ask, None
+  Video_Resolution_Choice: ask
+  # Berriz so far only [H.264]
+  Video_codec: H264
+  # 192, ask, None
+  Audio_Resolution_Choice: ask
+
+TimeZone:
+  # UTC+9, utc+9, utc9, +9, 9, -9, [timezone should be in -12 ~ +14]
+  time: +9
+
+KeyService:
+  # None, playready, widevine, remote_widevine, remote_playready | watora, http_api
+  source: None
+
+remote_cdm:
+  - name: "playready"
+    device_name: 
+    security_level: 2000
+    host: 
+    secret: 
+  - name: "widevine"
+    device_name: 
+    device_type: 'ANDROID'
+    system_id: 22589
+    security_level: 3
+    host: 
+    secret: 
+  - name: "http_api"
+    host: 
+
+CDM:
+  # "path \key\device\aosp_7.1.2_12e5a_4410_l3.wvd"
+  widevine: 
+  # "path \key\device\web_tv_os_1.1.3_sl300.prd"
+  playready: 
+
+berriz:
+  # only support Berriz account no OAuth2 support (No Google/No Apple)
+  # if using google or apple account use default.txt
+  account: ['example@mail.io:password', 'example2@mail.io:password2']
+
+logging:
+  # "debug", "info", "warning", "error", "critical"
+  level: INFO
+  # this formact only show in log file not on console
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+
+Proxy:
+  Proxy_Enable: false
+
+  # static\\proxy\\proxy.txt
+  use_proxy_list: false
+  # if not use_proxy_list than use this proxy settings
+  use_proxy: http
+  http: ['socks5://127.0.0.1:40000']
+  https: ['', '']
+
+# Setting also can use command to set value
+Setting:
+  # No cookie use
+  nocookie: false
+  # skip-download
+  skip-download: false
+  # skip-json
+  skip-json: false
+  # skip-thumbnails
+  skip-thumbnails: false
+  # skip-playlist
+  skip-playlist: false
+  # skip-html / html only for post and notice and no script on it for static rendering backup
+  skip-html: false
+  # no-subfolder
+  no-subfolder: false
+
+BerrizAPIClient:
+  show_log: false
+  base_sleep: 0.731
+  max_sleep: 31.0
+  max_retries: 11
+  connector_limit: 512
+  connector_limit_per_host: 16
+  keepalive_timeout: 17
+  enable_cleanup_closed: true
+  force_close: false
+  use_dns_cache: true
+  ttl_dns_cache: 600
+  timeouttotal: 400
+  timeeoutconnect: 9
+  timeoutsock_connect: 13
+  timeeoutsock_read: 17
+
+VideoDownload:
+  connector_limit: 256
+  connector_limit_per_host: 32
+  connector_ttl_dns_cache: 600
+  connector_use_dns_cache: true
+  connector_keepalive_timeout: 70
+  connector_enable_cleanup_closed: 256
+  timeout_total: 600
+  timeout_connect: 15
+  timeout_sock_read: 60
+  timeout_sock_connect: 10
+  max_retries: 7
+  semaphore: 7
