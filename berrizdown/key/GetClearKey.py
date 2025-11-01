@@ -65,8 +65,8 @@ async def get_clear_key(wv_pssh: str, pr_pssh: str, acquirelicenseassertion_inpu
         pssh_input: str = wv_pssh
     if drm_type == "widevine":
         original_path_obj = Path(wv_device_path)
-        final_path = original_path_obj if original_path_obj.exists() else original_path_obj.with_name(original_path_obj.name + ".wvd")
 
+        final_path = original_path_obj if original_path_obj.exists() else original_path_obj.with_name(original_path_obj.name + ".wvd")
         if len(str(wv_device_path)) < 1:
             logger.warning(f"Widevine CDM file not found. Neither the original path nor the .wvd fallback exists: {str(final_path)}")
             return None

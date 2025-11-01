@@ -1,9 +1,8 @@
 from __future__ import annotations
+import aiohttp
 
-import logging
 from uuid import UUID
 
-import requests
 from lib.__init__ import use_proxy
 from readydl_pyplayready.pyplayready import InvalidXmrLicense
 from readydl_pyplayready.pyplayready.cdm import Cdm
@@ -11,7 +10,11 @@ from readydl_pyplayready.pyplayready.device import Device
 from readydl_pyplayready.pyplayready.license.key import Key
 from readydl_pyplayready.pyplayready.misc.exceptions import InvalidInitData
 from readydl_pyplayready.pyplayready.system.wrmheader import WRMHeader
+from static.version import __version__
 from unit.http.request_berriz_api import TPD_RemoteCDM_Request
+from unit.handle.handle_log import setup_logging
+
+logger = setup_logging("remotecdm", "mint")
 
 
 class RemoteCdm(Cdm):
@@ -45,29 +48,32 @@ class RemoteCdm(Cdm):
 
         # spoof certificate_chain and ecc_key just so we can construct via super call
         super().__init__(security_level, None, None, None)
-
-        self._logger = logging.getLogger()
-
-        # self.__session = requests.Session()
-        self.__session: TPD_RemoteCDM_Request = TPD_RemoteCDM_Request(secret)
-        response = requests.head(self.host)
-
-        if response.status_code != 200:
-            self._logger.warning(f"Could not test Remote API version [{response.status_code}]")
-
-        server = response.headers.get("Server")
-        if not server or "playready serve" not in server.lower():
-            self._logger.warning(f"This Remote CDM API does not seem to be a playready serve API ({server}).")
-
+        self.secret: str = secret
+            
+    async def test_remote_api(self) -> None:
+        async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=13),
+                headers={"user-agent": f"Berrizdown/{__version__} (+https://github.com/twkenxtis/Berrizdown)"},
+            ) as session:
+            response = await session.head(self.host)
+            if response.status != 200:
+                logger.warning(f"Could not test Remote API version [{response.status}]")
+            if not response.headers or "playready serve" not in str(response.headers):
+                logger.warning(f"This Remote CDM API does not seem to be a playready serve API ({response.headers}).")
+    
     @classmethod
     def from_device(cls, device: Device) -> RemoteCdm:
         raise NotImplementedError("You cannot load a RemoteCdm from a local Device file.")
 
     async def open(self) -> bytes:
+        await self.test_remote_api()
+        self.__session: TPD_RemoteCDM_Request = TPD_RemoteCDM_Request(self.secret)
         response = await self.__session.get(
             f"{self.host}/{self.device_name}/open",
             use_proxy,
         )
+        if response is None:
+            return b""
         return bytes.fromhex(response["data"]["session_id"])
 
     async def close(self, session_id: bytes) -> None:

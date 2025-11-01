@@ -39,9 +39,13 @@ class Remotecdm_Playready:
         request_data: str = await rcdm.get_license_challenge(session_id, pssh.wrm_headers[0])
         return request_data
 
-    async def get_license_key(self, pssh_input: str, acquirelicenseassertion: str):
+    async def get_license_key(self, pssh_input: str, acquirelicenseassertion: str) -> list[str]:
         rcdm: remotecdm = self.get_rcdm()
         session_id: bytes = await rcdm.open()
+        
+        if session_id == b"":
+            return []
+        
         headers = {
             "user-agent": USERAGENT,
             "content-type": "application/octet-stream",

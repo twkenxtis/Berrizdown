@@ -94,7 +94,7 @@ async def handle_response(obj):
             error_msg = api_error_handle(obj["code"])
             logger.warning(f"{error_msg} | {Color.fg('mint')}{raw_response}{Color.reset()}")
         except KeyError:
-            if obj.get("message", "").lower() in ("success", "ok"):
+            if any(keyword in obj.get("message", "").lower() for keyword in ("success", "ok")):
                 return obj
             else:
                 logger.error(f"Unknown error: {raw_response}")
@@ -1030,7 +1030,7 @@ class TPD_RemoteCDM_Request(BerrizAPIClient):
         if d is not None:
             return await handle_response(d)
         
-
+        
 class Community_id_checker:
     def __init__(self, community_id: int | str) -> None:
         self.input = community_id
