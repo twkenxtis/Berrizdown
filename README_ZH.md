@@ -452,3 +452,4 @@ https://github.com/devine-dl/pywidevine
 https://github.com/ready-dl/pyplayready
 https://github.com/chu23465/VT-PR
 https://github.com/devine-dl/devine
+https://git.gay/ready-dl/pywidevine
