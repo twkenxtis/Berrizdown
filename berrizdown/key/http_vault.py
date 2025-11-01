@@ -38,7 +38,7 @@ class HTTP_API:
         wv_pssh: str = pssh[0]
         playready_pssh: str = pssh[1]
 
-        url = HTTP_API.URL
+        url = HTTP_API.URL or "None"
         license_url: str | None = self.get_license_url(wv_pssh or playready_pssh)
         headers: dict[str, str] = {
             "accept": "application/json, text/plain, */*",
