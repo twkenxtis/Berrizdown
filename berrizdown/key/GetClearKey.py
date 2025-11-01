@@ -49,7 +49,8 @@ async def get_clear_key(wv_pssh: str, pr_pssh: str, acquirelicenseassertion_inpu
     if drm_type == "playready":
         prd_path_obj = Path(prd_device_path)
         final_path = prd_path_obj if prd_path_obj.exists() else prd_path_obj.with_name(prd_path_obj.name + ".prd")
-        if not final_path.exists():
+        
+        if len(str(prd_device_path)) < 1:
             logger.warning(f"PlayReady CDM file not found: {final_path}")
             return None
         pssh_input: str = pr_pssh
@@ -65,13 +66,11 @@ async def get_clear_key(wv_pssh: str, pr_pssh: str, acquirelicenseassertion_inpu
     if drm_type == "widevine":
         original_path_obj = Path(wv_device_path)
 
-        final_wv_path_obj = original_path_obj if original_path_obj.exists() else original_path_obj.with_name(original_path_obj.name + ".wvd")
-
-        if not final_wv_path_obj.exists():
+        final_path = original_path_obj if original_path_obj.exists() else original_path_obj.with_name(original_path_obj.name + ".wvd")
+        if len(str(wv_device_path)) < 1:
             logger.warning(f"Widevine CDM file not found. Neither the original path nor the .wvd fallback exists: {str(final_wv_path_obj)}")
             return None
-
-        wv_device_path = str(final_wv_path_obj)
+        wv_device_path = str(final_path)
         pssh_input: str = wv_pssh
     if drm_type == "http_api":
         if test_setting("widevine") is False:
