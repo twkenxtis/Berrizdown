@@ -1,0 +1,82 @@
+[project]
+name = "Berrizdown"
+version = "0.1.0"
+description = "Image Video Post Comment Berriz download tool "
+readme = "README.md"
+requires-python = "==3.12.*"
+license = "AGPL-3.0-or-later"
+authors = [
+  {name = "omenbibi", email = "ytiq8nxnm@mozmail.com"}
+]
+dependencies = [
+  "pycryptodome>=3.23,<4",
+  "PyJWT>=2.10,<3",
+  "python-dateutil>=2.9,<3",
+  "pytz>=2025.2,<2026",
+  "tzdata>=2025.2,<2026",
+  "pydantic",
+  "PyYAML~=6.0.1",
+
+  "aiohttp>=3.12,<4",
+  "aiolimiter>=1.0.0,<2",
+  "httpx>=0.28,<1",
+  "httpx[http2]>=0.28,<1",
+  "aiodns>=3.5,<4",
+  "urllib3>=2.5,<3",
+  "requests>=2.32,<3",
+  "pip-system-certs>=5.2,<6",
+
+  "async-lru",
+  "lxml>=6.0,<7",
+  "orjson>=3.11,<4",
+  "ruamel.yaml>=0.18,<1",
+  "bs4>=0.0.2,<1",
+  "validators>=0.35,<1",
+  "email_validator>=2.3,<3",
+
+  "click>=8.3,<9",
+  "cryptography~=45.0.6",
+  "platformdirs~=4.4.0", 
+  "ECPy~=1.2.5",
+  "construct==2.8.8",
+  "InquirerPy>=0.3,<1",
+  "inputimeout>=1.0.4,<2",
+  "rich>=14.1,<15",
+  "aiofiles>=24.1,<25",
+  "aioshutil>=1.5,<2",
+
+  "ffmpeg-python>=0.2,<1",
+  "pywidevine>=1.8,<2",
+
+  "dotenv>=0.9.9,<1",
+  "certifi>=2025.8,<2026",
+  "httpagentparser>=1.9.5,<2",
+  "fake-useragent>=2.2,<3"
+]
+
+[project.scripts]
+berriz = "berrizdown.__main__:main"
+
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["logs", "tests", "docs"]
+
+[tool.ruff]
+line-length = 221
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+exclude = [
+    "readydl_pyplayready",
+    "wvd",
+    "pywidevine",
+    "pyplayready"
+]
+
+[tool.ruff.format]
+quote-style = "double"
