@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import base64
+from typing import Optional, Union
 from uuid import UUID
 
 from Crypto.Cipher import AES
 from Crypto.Util import Padding
 
-from wvd.pywidevine.license_protocol_pb2 import License
+from pywidevine.license_protocol_pb2 import License
 
 
 class Key:
-    def __init__(self, type_: str, kid: UUID, key: bytes, permissions: list[str] | None = None):
+    def __init__(self, type_: str, kid: UUID, key: bytes, permissions: Optional[list[str]] = None):
         self.type = type_
         self.kid = kid
         self.key = key
@@ -19,7 +20,7 @@ class Key:
     def __repr__(self) -> str:
         return "{name}({items})".format(
             name=self.__class__.__name__,
-            items=", ".join([f"{k}={repr(v)}" for k, v in self.__dict__.items()]),
+            items=", ".join([f"{k}={repr(v)}" for k, v in self.__dict__.items()])
         )
 
     @classmethod
@@ -34,12 +35,15 @@ class Key:
         return Key(
             type_=License.KeyContainer.KeyType.Name(key.type),
             kid=cls.kid_to_uuid(key.id),
-            key=Padding.unpad(AES.new(enc_key, AES.MODE_CBC, iv=key.iv).decrypt(key.key), 16),
-            permissions=permissions,
+            key=Padding.unpad(
+                AES.new(enc_key, AES.MODE_CBC, iv=key.iv).decrypt(key.key),
+                16
+            ),
+            permissions=permissions
         )
 
     @staticmethod
-    def kid_to_uuid(kid: str | bytes) -> UUID:
+    def kid_to_uuid(kid: Union[str, bytes]) -> UUID:
         """
         Convert a Key ID from a string or bytes to a UUID object.
         At first this may seem very simple but some types of Key IDs

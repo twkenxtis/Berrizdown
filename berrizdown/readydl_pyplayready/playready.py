@@ -1,4 +1,4 @@
-from functools import cached_property
+from functools import cached_property, lru_cache
 
 import aiohttp
 
@@ -18,30 +18,29 @@ class PlayReadyDRM:
     @cached_property
     def session_id(self) -> bytes:
         return self.cdm.open()
+    
+    @lru_cache(maxsize=1)
+    def build_pr_headers(self, acquirelicenseassertion: str) -> dict[str, str]:
+        return {
+            "user-agent": "Berriz/20250912.1136 CFNetwork/1498.700.2 Darwin/23.6.0",
+            "content-type": "application/octet-stream",
+            "acquirelicenseassertion": acquirelicenseassertion,
+        }
+        
+    def pr_pssh_checker(self, pssh: str) -> PSSH:
+        pssh_obj: PSSH = PSSH(pssh)
+        if not pssh_obj.wrm_headers:
+            logger.error("Invalid PSSH: No WRM headers found")
+            raise ValueError("Invalid PSSH: No WRM headers found")
+        if len(pssh) < 76:
+            raise ValueError("Invalid PSSH: WRM header length is too short")
+        return pssh_obj
 
     async def get_license_key(self, pssh: str, acquirelicenseassertion: str) -> list[str] | None:
-        """
-        使用 PSSH 與 acquirelicenseassertion 取得 PlayReady license key 列表
-
-        :param pssh: Base64 或 Hex 編碼的 PSSH 字串
-        :param acquirelicenseassertion: DRM 授權驗證字串
-        :return: content key 列表或 None
-        """
         try:
-            pssh_obj: PSSH = PSSH(pssh)
-            if not pssh_obj.wrm_headers:
-                logger.error("Invalid PSSH: No WRM headers found")
-                return None
-            if len(pssh) < 76:
-                raise ValueError("Invalid PSSH: WRM header length is too short")
-
+            pssh_obj: PSSH = self.pr_pssh_checker(pssh)
             challenge: bytes = self.cdm.get_license_challenge(self.session_id, pssh_obj.wrm_headers[0])
-
-            headers: dict[str, str] = {
-                "user-agent": "Berriz/20250912.1136 CFNetwork/1498.700.2 Darwin/23.6.0",
-                "content-type": "application/octet-stream",
-                "acquirelicenseassertion": acquirelicenseassertion,
-            }
+            headers: dict[str, str] = self.build_pr_headers(acquirelicenseassertion)
 
             async with aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=13.0),
@@ -57,15 +56,7 @@ class PlayReadyDRM:
                     else:
                         license_text = await response.text()
                         self.cdm.parse_license(self.session_id, license_text)
-
-                keys: list = self.cdm.get_keys(self.session_id)
-                content_keys: list[str] = []
-                for key in keys:
-                    kid: str = key.key_id.hex() if isinstance(key.key_id, bytes) else str(key.key_id)
-                    kid = kid.replace("-", "")
-                    value: str = key.key.hex() if isinstance(key.key, bytes) else str(key.key)
-                    content_keys.append(f"{kid}:{value}")
-                return content_keys
+                        return self.parse_response_key()
 
         except Exception as e:
             logger.error(e)
@@ -79,3 +70,13 @@ class PlayReadyDRM:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.cdm.close(self.session_id)
+        
+    def parse_response_key(self) -> list[str]:
+        content_keys: list[str] = []
+        keys: list = self.cdm.get_keys(self.session_id)
+        for key in keys:
+            kid: str = key.key_id.hex() if isinstance(key.key_id, bytes) else str(key.key_id)
+            kid = kid.replace("-", "")
+            value: str = key.key.hex() if isinstance(key.key, bytes) else str(key.key)
+            content_keys.append(f"{kid}:{value}")
+        return content_keys

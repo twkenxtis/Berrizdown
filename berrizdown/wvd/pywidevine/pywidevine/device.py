@@ -4,32 +4,17 @@ import base64
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
-from construct import (
-    BitStruct,
-    Bytes,
-    Const,
-    ConstructError,
-    Container,
-    Int8ub,
-    Int16ub,
-    Padded,
-    Padding,
-    Struct,
-    this,
-)
+from construct import BitStruct, Bytes, Const, ConstructError, Container
 from construct import Enum as CEnum
+from construct import Int8ub, Int16ub
 from construct import Optional as COptional
+from construct import Padded, Padding, Struct, this
 from Crypto.PublicKey import RSA
 from google.protobuf.message import DecodeError
 
-from wvd.pywidevine.license_protocol_pb2 import (
-    ClientIdentification,
-    DrmCertificate,
-    FileHashes,
-    SignedDrmCertificate,
-)
+from pywidevine.license_protocol_pb2 import ClientIdentification, DrmCertificate, VmpData, SignedDrmCertificate
 
 
 class DeviceTypes(Enum):
@@ -40,52 +25,49 @@ class DeviceTypes(Enum):
 class _Structures:
     magic = Const(b"WVD")
 
-    header = Struct("signature" / magic, "version" / Int8ub)
+    header = Struct(
+        "signature" / magic,
+        "version" / Int8ub
+    )
 
     # - Removed vmp and vmp_len as it should already be within the Client ID
     v2 = Struct(
         "signature" / magic,
         "version" / Const(Int8ub, 2),
-        "type_" / CEnum(Int8ub, **{t.name: t.value for t in DeviceTypes}),
-        "security_level" / Int8ub,
-        "flags"
-        / Padded(
-            1,
-            COptional(
-                BitStruct(
-                    # no per-device flags yet
-                    Padding(8)
-                )
-            ),
+        "type_" / CEnum(
+            Int8ub,
+            **{t.name: t.value for t in DeviceTypes}
         ),
+        "security_level" / Int8ub,
+        "flags" / Padded(1, COptional(BitStruct(
+            # no per-device flags yet
+            Padding(8)
+        ))),
         "private_key_len" / Int16ub,
         "private_key" / Bytes(this.private_key_len),
         "client_id_len" / Int16ub,
-        "client_id" / Bytes(this.client_id_len),
+        "client_id" / Bytes(this.client_id_len)
     )
 
     # - Removed system_id as it can be retrieved from the Client ID's DRM Certificate
     v1 = Struct(
         "signature" / magic,
         "version" / Const(Int8ub, 1),
-        "type_" / CEnum(Int8ub, **{t.name: t.value for t in DeviceTypes}),
-        "security_level" / Int8ub,
-        "flags"
-        / Padded(
-            1,
-            COptional(
-                BitStruct(
-                    # no per-device flags yet
-                    Padding(8)
-                )
-            ),
+        "type_" / CEnum(
+            Int8ub,
+            **{t.name: t.value for t in DeviceTypes}
         ),
+        "security_level" / Int8ub,
+        "flags" / Padded(1, COptional(BitStruct(
+            # no per-device flags yet
+            Padding(8)
+        ))),
         "private_key_len" / Int16ub,
         "private_key" / Bytes(this.private_key_len),
         "client_id_len" / Int16ub,
         "client_id" / Bytes(this.client_id_len),
         "vmp_len" / Int16ub,
-        "vmp" / Bytes(this.vmp_len),
+        "vmp" / Bytes(this.vmp_len)
     )
 
 
@@ -98,10 +80,10 @@ class Device:
         *_: Any,
         type_: DeviceTypes,
         security_level: int,
-        flags: dict | None,
-        private_key: bytes | None,
-        client_id: bytes | None,
-        **__: Any,
+        flags: Optional[dict],
+        private_key: Optional[bytes],
+        client_id: Optional[bytes],
+        **__: Any
     ):
         """
         This is the device key data that is needed for the CDM (Content Decryption Module).
@@ -125,21 +107,11 @@ class Device:
         self.flags = flags or {}
         self.private_key = RSA.importKey(private_key)
         self.client_id = ClientIdentification()
-        try:
-            self.client_id.ParseFromString(client_id)
-            if self.client_id.SerializeToString() != client_id:
-                raise DecodeError("partial parse")
-        except DecodeError as e:
-            raise DecodeError(f"Failed to parse client_id as a ClientIdentification, {e}")
+        self.client_id.ParseFromString(client_id)
 
-        self.vmp = FileHashes()
+        self.vmp = VmpData()
         if self.client_id.vmp_data:
-            try:
-                self.vmp.ParseFromString(self.client_id.vmp_data)
-                if self.vmp.SerializeToString() != self.client_id.vmp_data:
-                    raise DecodeError("partial parse")
-            except DecodeError as e:
-                raise DecodeError(f"Failed to parse Client ID's VMP data as a FileHashes, {e}")
+            self.vmp.ParseFromString(self.client_id.vmp_data)
 
         signed_drm_certificate = SignedDrmCertificate()
         drm_certificate = DrmCertificate()
@@ -163,11 +135,11 @@ class Device:
     def __repr__(self) -> str:
         return "{name}({items})".format(
             name=self.__class__.__name__,
-            items=", ".join([f"{k}={repr(v)}" for k, v in self.__dict__.items()]),
+            items=", ".join([f"{k}={repr(v)}" for k, v in self.__dict__.items()])
         )
 
     @classmethod
-    def loads(cls, data: bytes | str) -> Device:
+    def loads(cls, data: Union[bytes, str]) -> Device:
         if isinstance(data, str):
             data = base64.b64decode(data)
         if not isinstance(data, bytes):
@@ -175,7 +147,7 @@ class Device:
         return cls(**cls.supported_structure.parse(data))
 
     @classmethod
-    def load(cls, path: Path | str) -> Device:
+    def load(cls, path: Union[Path, str]) -> Device:
         if not isinstance(path, (Path, str)):
             raise ValueError(f"Expecting Path object or path string, got {path!r}")
         with Path(path).open(mode="rb") as f:
@@ -183,20 +155,18 @@ class Device:
 
     def dumps(self) -> bytes:
         private_key = self.private_key.export_key("DER") if self.private_key else None
-        return self.supported_structure.build(
-            dict(
-                version=2,
-                type_=self.type.value,
-                security_level=self.security_level,
-                flags=self.flags,
-                private_key_len=len(private_key) if private_key else 0,
-                private_key=private_key,
-                client_id_len=(len(self.client_id.SerializeToString()) if self.client_id else 0),
-                client_id=(self.client_id.SerializeToString() if self.client_id else None),
-            )
-        )
+        return self.supported_structure.build(dict(
+            version=2,
+            type_=self.type.value,
+            security_level=self.security_level,
+            flags=self.flags,
+            private_key_len=len(private_key) if private_key else 0,
+            private_key=private_key,
+            client_id_len=len(self.client_id.SerializeToString()) if self.client_id else 0,
+            client_id=self.client_id.SerializeToString() if self.client_id else None
+        ))
 
-    def dump(self, path: Path | str) -> None:
+    def dump(self, path: Union[Path, str]) -> None:
         if not isinstance(path, (Path, str)):
             raise ValueError(f"Expecting Path object or path string, got {path!r}")
         path = Path(path)
@@ -204,7 +174,7 @@ class Device:
         path.write_bytes(self.dumps())
 
     @classmethod
-    def migrate(cls, data: bytes | str) -> Device:
+    def migrate(cls, data: Union[bytes, str]) -> Device:
         if isinstance(data, str):
             data = base64.b64decode(data)
         if not isinstance(data, bytes):
@@ -222,23 +192,13 @@ class Device:
             v1_struct.version = 2  # update version to 2 to allow loading
             v1_struct.flags = Container()  # blank flags that may have been used in v1
 
-            vmp = FileHashes()
+            vmp = VmpData()
             if v1_struct.vmp:
-                try:
-                    vmp.ParseFromString(v1_struct.vmp)
-                    if vmp.SerializeToString() != v1_struct.vmp:
-                        raise DecodeError("partial parse")
-                except DecodeError as e:
-                    raise DecodeError(f"Failed to parse VMP data as FileHashes, {e}")
+                vmp.ParseFromString(v1_struct.vmp)
                 v1_struct.vmp = vmp
 
                 client_id = ClientIdentification()
-                try:
-                    client_id.ParseFromString(v1_struct.client_id)
-                    if client_id.SerializeToString() != v1_struct.client_id:
-                        raise DecodeError("partial parse")
-                except DecodeError as e:
-                    raise DecodeError(f"Failed to parse VMP data as FileHashes, {e}")
+                client_id.ParseFromString(v1_struct.client_id)
 
                 new_vmp_data = v1_struct.vmp.SerializeToString()
                 if client_id.vmp_data and client_id.vmp_data != new_vmp_data:

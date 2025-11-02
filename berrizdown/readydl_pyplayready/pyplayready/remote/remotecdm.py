@@ -14,7 +14,7 @@ from static.version import __version__
 from unit.http.request_berriz_api import TPD_RemoteCDM_Request
 from unit.handle.handle_log import setup_logging
 
-logger = setup_logging("remotecdm", "mint")
+logger = setup_logging("playready.remotecdm", "mint")
 
 
 class RemoteCdm(Cdm):

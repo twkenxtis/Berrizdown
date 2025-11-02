@@ -1,4 +1,5 @@
 import aiohttp
+
 from lib.load_yaml_config import CFG
 from readydl_pyplayready.pyplayready.remote import remotecdm
 from readydl_pyplayready.pyplayready.system.pssh import PSSH
@@ -33,27 +34,40 @@ class Remotecdm_Playready:
         else:
             pssh = PSSH(pssh_input)
             return pssh
+        
+    def build_headers(self, acquirelicenseassertion: str):
+        return {
+            "user-agent": USERAGENT,
+            "content-type": "application/octet-stream",
+            "acquirelicenseassertion": acquirelicenseassertion,
+        }
 
     async def make_request_data(self, rcdm: remotecdm.RemoteCdm, session_id: bytes, pssh_input: str) -> str:
         pssh: PSSH = self.get_pssh(pssh_input)
         request_data: str = await rcdm.get_license_challenge(session_id, pssh.wrm_headers[0])
         return request_data
 
-    async def get_license_key(self, pssh_input: str, acquirelicenseassertion: str):
+    async def get_license_key(self, pssh_input: str, acquirelicenseassertion: str) -> list[str]:
         rcdm: remotecdm = self.get_rcdm()
         session_id: bytes = await rcdm.open()
-        headers = {
-            "user-agent": USERAGENT,
-            "content-type": "application/octet-stream",
-            "acquirelicenseassertion": acquirelicenseassertion,
-        }
+        
+        if session_id == b"":
+            return []
+        
+        headers: dict[str, str] = self.build_headers(acquirelicenseassertion)
         request_data: str = await self.make_request_data(rcdm, session_id, pssh_input)
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=13.0),
+            connector=aiohttp.TCPConnector(ssl=True)
+            ) as session:   
             async with session.post(self.url, headers=headers, data=request_data) as response:
+                if response.status != 200:
+                    raise Exception("Error getting license key")
                 license_response = await response.text()
-
         await rcdm.parse_license(session_id, license_response)
+        return await self.parse_response_key(rcdm, session_id)
 
+    async def parse_response_key(self, rcdm: remotecdm.RemoteCdm, session_id: bytes):
         key_list: list[str] = []
         for key in await rcdm.get_keys(session_id):
             key_list.append(f"{key.key_id.hex}:{key.key.hex()}")

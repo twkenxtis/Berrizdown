@@ -1,77 +1,85 @@
-import httpx
-from lib.load_yaml_config import CFG
-from pywidevine.cdm import Cdm
-from pywidevine.device import Device
-from pywidevine.pssh import PSSH
+import aiohttp
+from functools import cached_property, lru_cache
+from wvd.pywidevine.cdm import Cdm
+from wvd.pywidevine.device import Device
+from wvd.pywidevine.pssh import PSSH
 from unit.handle.handle_log import setup_logging
 
 logger = setup_logging("widevine", "navy")
 
 
 class WidevineDRM:
-    # 類別屬性型別註釋
     device: Device
     cdm: Cdm
-    session_id: bytes  # 根據 pywidevine 文件，session_id 是一個 bytes 類型
+    session_id: bytes
 
     def __init__(self, device_path: str) -> None:
-        # device 和 cdm 假設為 pywidevine 庫中定義的型別
         self.device: Device = Device.load(device_path)
         self.cdm: Cdm = Cdm.from_device(self.device)
-        self.session_id: bytes = self.cdm.open()
-
-    # get_license_key 是一個非同步方法，接受 str 參數，回傳 List[str] 或 None
-    async def get_license_key(self, pssh: str, acquirelicenseassertion: str) -> list[str] | None:
-        req_pssh: PSSH = PSSH(pssh)
-
-        # 處理 PSSH 驗證
-        if not pssh:
-            logger.error("Invalid PSSH: No WRM headers found")
-            return None
-        if len(pssh) < 76:
-            # 這裡應該使用 logger.error 並返回 None 或 List[str]
-            # 由於原始碼使用 raise ValueError，我們保留這個行為
-            raise ValueError("Invalid PSSH: WRM header length is too short")
-
-        # 定義 HTTP 請求頭
-        headers: dict[str, str] = {
-            "User-Agent": f"{CFG['headers']['User-Agent']}",
-            "Connection": "Keep-Alive",
-            "Content-Type": "application/octet-stream",
+    
+    @cached_property
+    def session_id(self) -> bytes:
+        return self.cdm.open()
+    
+    @lru_cache(maxsize=1)
+    def build_wv_headers(self, acquirelicenseassertion: str) -> dict[str, str]:
+        return {
+            "user-agent": "Berriz/20250912.1136 CFNetwork/1498.700.2 Darwin/23.6.0",
+            "content-type": "application/octet-stream",
             "acquirelicenseassertion": acquirelicenseassertion,
         }
+        
+    def wv_pssh_checker(self, pssh: str) -> PSSH:
+        req_pssh: PSSH = PSSH(pssh)
+        if not pssh:
+            logger.error("Invalid PSSH: No WRM headers found")
+            raise ValueError("Invalid PSSH: No WRM headers found")
+        if len(pssh) < 76:
+            raise ValueError("Invalid PSSH: WRM header length is too short")
+        return req_pssh
 
-        # 獲取授權挑戰 (challenge 應為 bytes)
-        challenge: bytes = self.cdm.get_license_challenge(self.session_id, req_pssh)
+    async def get_license_key(self, pssh: str, acquirelicenseassertion: str) -> list[str] | None:
+        try:
+            req_pssh: PSSH = self.wv_pssh_checker(pssh)
+            challenge: bytes = self.cdm.get_license_challenge(self.session_id, req_pssh)
+            headers: dict[str, str] = self.build_wv_headers(acquirelicenseassertion)
 
-        # 異步 HTTP 請求
-        async with httpx.AsyncClient(timeout=13.0, verify=True, http2=True) as client:
-            response: httpx.Response = await client.post(
-                url="https://berriz.drmkeyserver.com/widevine_license",
-                headers=headers,
-                data=challenge,
-            )
-            # 檢查 HTTP 狀態碼
-            response.raise_for_status()
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=13.0),
+                connector=aiohttp.TCPConnector(ssl=True)
+                ) as client:
+                async with client.post(
+                    url="https://berriz.drmkeyserver.com/widevine_license",
+                    headers=headers,
+                    data=challenge,
+                ) as response:
+                    if response.status not in range(200, 299):
+                            logger.error(f"Invalid response status code: {response.status} {await response.read()}")
+                    else:
+                        license_content: bytes = await response.read()
+                        self.cdm.parse_license(self.session_id, license_content)
+                        return self.parse_response_key()
+        except Exception as e:
+            logger.error(e)
+            return None
+            
+        finally:
+            self.cdm.close(self.session_id)
+            
+    def __enter__(self) -> "WidevineDRM":
+        return self
 
-        # 解析授權內容
-        self.cdm.parse_license(self.session_id, response.content)
-
-        # 提取 Content Keys
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.cdm.close(self.session_id)
+    
+    def parse_response_key(self) -> list[str]:
         content_keys: list[str] = []
-        # cdm.get_keys 返回一個 Key 列表 (pywidevine.cdm.key.Key)
         for key in self.cdm.get_keys(self.session_id):
             if key.type == "CONTENT":
-                kid: str = key.kid.hex  # key.kid.hex 返回 str
+                kid: str = key.kid.hex
                 kid_str: str = str(kid) if isinstance(kid, bytes) else str(kid)
                 kid_str = kid_str.replace("-", "")
-
                 value: str | bytes = key.key.hex() if hasattr(key.key, "hex") else str(key.key)
                 value_str: str = str(value) if isinstance(value, bytes) else str(value)
-
                 content_keys.append(f"{kid_str}:{value_str}")
-
-        # 關閉 session
-        self.cdm.close(self.session_id)
-
         return content_keys
