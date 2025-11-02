@@ -2,51 +2,35 @@ from __future__ import annotations
 
 import base64
 import binascii
-import re
+from typing import Optional, Union
 
-import aiohttp
+import requests
 from Crypto.Hash import SHA1
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pss
 from google.protobuf.message import DecodeError
 
-from wvd.pywidevine.cdm import Cdm
-from wvd.pywidevine.device import Device, DeviceTypes
-from wvd.pywidevine.exceptions import (
-    DeviceMismatch,
-    InvalidInitData,
-    InvalidLicenseMessage,
-    InvalidLicenseType,
-    SignatureMismatch,
-)
-from wvd.pywidevine.key import Key
-from wvd.pywidevine.license_protocol_pb2 import (
-    ClientIdentification,
-    License,
-    LicenseType,
-    SignedDrmCertificate,
-    SignedMessage,
-)
-from wvd.pywidevine.pssh import PSSH
-from lib.__init__ import use_proxy
-from static.version import __version__
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import TPD_RemoteCDM_Request
-
-logger = setup_logging("widevine.remotecdm", "mint")
+from pywidevine.cdm import Cdm
+from pywidevine.device import Device, DeviceTypes
+from pywidevine.exceptions import (InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
+                                   SignatureMismatch)
+from pywidevine.key import Key
+from pywidevine.license_protocol_pb2 import (ClientIdentification, License, LicenseType, SignedDrmCertificate,
+                                             SignedMessage)
+from pywidevine.pssh import PSSH
 
 
 class RemoteCdm(Cdm):
-    """Remote Accessible CDM using pywidevine's serve schema."""
+    """Remote Accessible CDM using pywidevinex's serve schema."""
 
     def __init__(
         self,
-        device_type: DeviceTypes | str,
+        device_type: Union[DeviceTypes, str],
         system_id: int,
         security_level: int,
         host: str,
         secret: str,
-        device_name: str,
+        device_name: str
     ):
         """Initialize a Widevine Content Decryption Module (CDM)."""
         if not device_type:
@@ -81,71 +65,46 @@ class RemoteCdm(Cdm):
         if not isinstance(device_name, str):
             raise TypeError(f"Expected device_name to be a {str} not {device_name!r}")
 
-        self.device_type: DeviceTypes = device_type
-        self.system_id: int = system_id
-        self.security_level: int = security_level
-        self.host: str = host
-        self.device_name: str = device_name
-        self.secret: str = secret
+        self.device_type = device_type
+        self.system_id = system_id
+        self.security_level = security_level
+        self.host = host
+        self.device_name = device_name
 
         # spoof client_id and rsa_key just so we can construct via super call
-        super().__init__(
-            device_type,
-            system_id,
-            security_level,
-            ClientIdentification(),
-            RSA.generate(2048),
-        )
+        super().__init__(device_type, system_id, security_level, ClientIdentification(), RSA.generate(2048))
 
-    async def test_remote_api(self) -> None:
-        async with aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(total=13),
-                headers={"user-agent": f"Berrizdown/{__version__} (+https://github.com/twkenxtis/Berrizdown)"},
-            ) as session:
-            response = await session.head(self.host)
-            if response.status != 200:
-                logger.warning(f"Could not test Remote API version [{response.status}]")
-            if not response.headers or "pywidevine serve" not in str(response.headers):
-                logger.warning(f"This Remote CDM API does not seem to be a pywidevine serve API ({response.headers}).")
-            server_version_re = re.search(r"pywidevine serve v([\d.]+)", str(response.headers), re.IGNORECASE)
-            if not server_version_re:
-                raise ValueError("The pywidevine server API is not stating the version correctly, cannot continue.")
-            server_version = server_version_re.group(1)
-            if server_version < "1.4.3":
-                raise ValueError(f"This pywidevine serve API version ({server_version}) is not supported.")
+        self.__session = requests.Session()
+        self.__session.headers.update({
+            "X-Secret-Key": secret
+        })
+
+        r = requests.head(self.host)
+        if r.status_code != 200:
+            raise ValueError(f"Could not test Remote API version [{r.status_code}]")
 
     @classmethod
     def from_device(cls, device: Device) -> RemoteCdm:
         raise NotImplementedError("You cannot load a RemoteCdm from a local Device file.")
 
-    async def open(self) -> bytes:
-        await self.test_remote_api()
-        self.__session: TPD_RemoteCDM_Request = TPD_RemoteCDM_Request(self.secret)
-        r = await self.__session.get(
-            f"{self.host}/{self.device_name}/open",
-            use_proxy,
-        )
-        if r["status"] != 200:
+    def open(self) -> bytes:
+        r = self.__session.get(
+            url=f"{self.host}/{self.device_name}/open"
+        ).json()
+        if r['status'] != 200:
             raise ValueError(f"Cannot Open CDM Session, {r['message']} [{r['status']}]")
         r = r["data"]
 
-        if int(r["device"]["system_id"]) != self.system_id:
-            raise DeviceMismatch("The System ID specified does not match the one specified in the API response.")
-
-        if int(r["device"]["security_level"]) != self.security_level:
-            raise DeviceMismatch("The Security Level specified does not match the one specified in the API response.")
-
         return bytes.fromhex(r["session_id"])
 
-    async def close(self, session_id: bytes) -> None:
-        r = await self.__session.get(
-            f"{self.host}/{self.device_name}/close/{session_id.hex()}",
-            use_proxy,
-        )
+    def close(self, session_id: bytes) -> None:
+        r = self.__session.get(
+            url=f"{self.host}/{self.device_name}/close/{session_id.hex()}"
+        ).json()
         if r["status"] != 200:
             raise ValueError(f"Cannot Close CDM Session, {r['message']} [{r['status']}]")
 
-    async def set_service_certificate(self, session_id: bytes, certificate: bytes | str | None) -> str:
+    def set_service_certificate(self, session_id: bytes, certificate: Optional[Union[bytes, str]]) -> str:
         if certificate is None:
             certificate_b64 = None
         elif isinstance(certificate, str):
@@ -155,23 +114,26 @@ class RemoteCdm(Cdm):
         else:
             raise DecodeError(f"Expecting Certificate to be base64 or bytes, not {certificate!r}")
 
-        r = await self.__session.post(
-            f"{self.host}/{self.device_name}/set_service_certificate",
-            {"session_id": session_id.hex(), "certificate": certificate_b64},
-            use_proxy,
-        )
+        r = self.__session.post(
+            url=f"{self.host}/{self.device_name}/set_service_certificate",
+            json={
+                "session_id": session_id.hex(),
+                "certificate": certificate_b64
+            }
+        ).json()
         if r["status"] != 200:
             raise ValueError(f"Cannot Set CDMs Service Certificate, {r['message']} [{r['status']}]")
         r = r["data"]
 
         return r["provider_id"]
 
-    async def get_service_certificate(self, session_id: bytes) -> SignedDrmCertificate | None:
-        r = await self.__session.post(
-            f"{self.host}/{self.device_name}/get_service_certificate",
-            {"session_id": session_id.hex()},
-            use_proxy,
-        )
+    def get_service_certificate(self, session_id: bytes) -> Optional[SignedDrmCertificate]:
+        r = self.__session.post(
+            url=f"{self.host}/{self.device_name}/get_service_certificate",
+            json={
+                "session_id": session_id.hex()
+            }
+        ).json()
         if r["status"] != 200:
             raise ValueError(f"Cannot Get CDMs Service Certificate, {r['message']} [{r['status']}]")
         r = r["data"]
@@ -192,21 +154,23 @@ class RemoteCdm(Cdm):
             raise DecodeError(f"Could not parse certificate as a SignedDrmCertificate, {e}")
 
         try:
-            pss.new(RSA.import_key(self.root_cert.public_key)).verify(
-                msg_hash=SHA1.new(signed_drm_certificate.drm_certificate),
-                signature=signed_drm_certificate.signature,
-            )
+            pss. \
+                new(RSA.import_key(self.root_cert.public_key)). \
+                verify(
+                    msg_hash=SHA1.new(signed_drm_certificate.drm_certificate),
+                    signature=signed_drm_certificate.signature
+                )
         except (ValueError, TypeError):
             raise SignatureMismatch("Signature Mismatch on SignedDrmCertificate, rejecting certificate")
 
         return signed_drm_certificate
 
-    async def get_license_challenge(
+    def get_license_challenge(
         self,
         session_id: bytes,
         pssh: PSSH,
         license_type: str = "STREAMING",
-        privacy_mode: bool = True,
+        privacy_mode: bool = True
     ) -> bytes:
         if not pssh:
             raise InvalidInitData("A pssh must be provided.")
@@ -216,17 +180,19 @@ class RemoteCdm(Cdm):
         if not isinstance(license_type, str):
             raise InvalidLicenseType(f"Expected license_type to be a {str}, not {license_type!r}")
         if license_type not in LicenseType.keys():
-            raise InvalidLicenseType(f"Invalid license_type value of '{license_type}'. Available values: {LicenseType.keys()}")
+            raise InvalidLicenseType(
+                f"Invalid license_type value of '{license_type}'. "
+                f"Available values: {LicenseType.keys()}"
+            )
 
-        r = await self.__session.post(
-            f"{self.host}/{self.device_name}/get_license_challenge/{license_type}",
-            {
+        r = self.__session.post(
+            url=f"{self.host}/{self.device_name}/get_license_challenge/{license_type}",
+            json={
                 "session_id": session_id.hex(),
                 "init_data": pssh.dumps(),
-                "privacy_mode": privacy_mode,
-            },
-            use_proxy,
-        )
+                "privacy_mode": privacy_mode
+            }
+        ).json()
         if r["status"] != 200:
             raise ValueError(f"Cannot get Challenge, {r['message']} [{r['status']}]")
         r = r["data"]
@@ -242,7 +208,7 @@ class RemoteCdm(Cdm):
 
         return license_message.SerializeToString()
 
-    async def parse_license(self, session_id: bytes, license_message: SignedMessage | bytes | str) -> None:
+    def parse_license(self, session_id: bytes, license_message: Union[SignedMessage, bytes, str]) -> None:
         if not license_message:
             raise InvalidLicenseMessage("Cannot parse an empty license_message")
 
@@ -266,20 +232,22 @@ class RemoteCdm(Cdm):
             raise InvalidLicenseMessage(f"Expecting license_response to be a SignedMessage, got {license_message!r}")
 
         if license_message.type != SignedMessage.MessageType.Value("LICENSE"):
-            raise InvalidLicenseMessage(f"Expecting a LICENSE message, not a '{SignedMessage.MessageType.Name(license_message.type)}' message.")
+            raise InvalidLicenseMessage(
+                f"Expecting a LICENSE message, not a "
+                f"'{SignedMessage.MessageType.Name(license_message.type)}' message."
+            )
 
-        r = await self.__session.post(
-            f"{self.host}/{self.device_name}/parse_license",
-            {
+        r = self.__session.post(
+            url=f"{self.host}/{self.device_name}/parse_license",
+            json={
                 "session_id": session_id.hex(),
-                "license_message": base64.b64encode(license_message.SerializeToString()).decode(),
-            },
-            use_proxy,
-        )
+                "license_message": base64.b64encode(license_message.SerializeToString()).decode()
+            }
+        ).json()
         if r["status"] != 200:
             raise ValueError(f"Cannot parse License, {r['message']} [{r['status']}]")
 
-    async def get_keys(self, session_id: bytes, type_: int | str | None = None) -> list[Key]:
+    def get_keys(self, session_id: bytes, type_: Optional[Union[int, str]] = None) -> list[Key]:
         try:
             if isinstance(type_, str):
                 License.KeyContainer.KeyType.Value(type_)  # only test
@@ -292,11 +260,12 @@ class RemoteCdm(Cdm):
         except ValueError as e:
             raise ValueError(f"Could not parse type_ as a {License.KeyContainer.KeyType}, {e}")
 
-        r = await self.__session.post(
-            f"{self.host}/{self.device_name}/get_keys/{type_}",
-            {"session_id": session_id.hex()},
-            use_proxy,
-        )
+        r = self.__session.post(
+            url=f"{self.host}/{self.device_name}/get_keys/{type_}",
+            json={
+                "session_id": session_id.hex()
+            }
+        ).json()
         if r["status"] != 200:
             raise ValueError(f"Could not get {type_} Keys, {r['message']} [{r['status']}]")
         r = r["data"]
@@ -306,7 +275,7 @@ class RemoteCdm(Cdm):
                 type_=key["type"],
                 kid=Key.kid_to_uuid(bytes.fromhex(key["key_id"])),
                 key=bytes.fromhex(key["key"]),
-                permissions=key["permissions"],
+                permissions=key["permissions"]
             )
             for key in r["keys"]
         ]

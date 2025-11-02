@@ -4,6 +4,7 @@ import base64
 import binascii
 import string
 from io import BytesIO
+from typing import Optional, Union
 from uuid import UUID
 from xml.etree.ElementTree import XML
 
@@ -12,7 +13,7 @@ from construct import Container
 from google.protobuf.message import DecodeError
 from pymp4.parser import Box
 
-from wvd.pywidevine.license_protocol_pb2 import WidevinePsshData
+from pywidevine.license_protocol_pb2 import WidevinePsshData
 
 
 class PSSH:
@@ -25,7 +26,7 @@ class PSSH:
         Widevine = UUID(hex="edef8ba979d64acea3c827dcd51d21ed")
         PlayReady = UUID(hex="9a04f07998404286ab92e65be0885f95")
 
-    def __init__(self, data: Container | str | bytes, strict: bool = False):
+    def __init__(self, data: Union[Container, str, bytes], strict: bool = False):
         """
         Load a PSSH box, WidevineCencHeader, or PlayReadyHeader.
 
@@ -79,55 +80,43 @@ class PSSH:
 
             try:
                 box = Box.parse(data)
-            except (OSError, construct.ConstructError):  # not a box
+            except (IOError, construct.ConstructError):  # not a box
                 try:
                     widevine_pssh_data = WidevinePsshData()
                     widevine_pssh_data.ParseFromString(data)
                     data_serialized = widevine_pssh_data.SerializeToString()
                     if data_serialized != data:  # not actually a WidevinePsshData
                         raise DecodeError()
-                    box = Box.parse(
-                        Box.build(
-                            dict(
-                                type=b"pssh",
-                                version=0,
-                                flags=0,
-                                system_ID=PSSH.SystemId.Widevine,
-                                init_data=data_serialized,
-                            )
-                        )
-                    )
+                    box = Box.parse(Box.build(dict(
+                        type=b"pssh",
+                        version=0,
+                        flags=0,
+                        system_ID=PSSH.SystemId.Widevine,
+                        init_data=data_serialized
+                    )))
                 except DecodeError:  # not a widevine cenc header
                     if "</WRMHEADER>".encode("utf-16-le") in data:
                         # TODO: Actually parse `data` as a PlayReadyHeader object and store that instead
-                        box = Box.parse(
-                            Box.build(
-                                dict(
-                                    type=b"pssh",
-                                    version=0,
-                                    flags=0,
-                                    system_ID=PSSH.SystemId.PlayReady,
-                                    init_data=data,
-                                )
-                            )
-                        )
+                        box = Box.parse(Box.build(dict(
+                            type=b"pssh",
+                            version=0,
+                            flags=0,
+                            system_ID=PSSH.SystemId.PlayReady,
+                            init_data=data
+                        )))
                     elif strict:
                         raise DecodeError(f"Could not parse data as a {Container} nor a {WidevinePsshData}.")
                     else:
                         # Data is not a WidevineCencHeader nor a PlayReadyHeader.
                         # The license server likely has something custom to parse it.
                         # See doc-string about Lenient mode for more information.
-                        box = Box.parse(
-                            Box.build(
-                                dict(
-                                    type=b"pssh",
-                                    version=0,
-                                    flags=0,
-                                    system_ID=PSSH.SystemId.Widevine,
-                                    init_data=data,
-                                )
-                            )
-                        )
+                        box = Box.parse(Box.build(dict(
+                            type=b"pssh",
+                            version=0,
+                            flags=0,
+                            system_ID=PSSH.SystemId.Widevine,
+                            init_data=data
+                        )))
 
         self.version = box.version
         self.flags = box.flags
@@ -145,10 +134,10 @@ class PSSH:
     def new(
         cls,
         system_id: UUID,
-        key_ids: list[UUID | str | bytes] | None = None,
-        init_data: WidevinePsshData | str | bytes | None = None,
+        key_ids: Optional[list[Union[UUID, str, bytes]]] = None,
+        init_data: Optional[Union[WidevinePsshData, str, bytes]] = None,
         version: int = 0,
-        flags: int = 0,
+        flags: int = 0
     ) -> PSSH:
         """Craft a new version 0 or 1 PSSH Box."""
         if not system_id:
@@ -190,22 +179,18 @@ class PSSH:
                 else:
                     init_data = base64.b64decode(init_data)
             elif not isinstance(init_data, bytes):
-                raise TypeError(f"Expecting init_data to be {WidevinePsshData}, hex, base64, or bytes, not {init_data!r}")
-
-        pssh = cls(
-            Box.parse(
-                Box.build(
-                    dict(
-                        type=b"pssh",
-                        version=version,
-                        flags=flags,
-                        system_ID=system_id,
-                        init_data=[init_data, b""][init_data is None],
-                        # key_IDs should not be set yet
-                    )
+                raise TypeError(
+                    f"Expecting init_data to be {WidevinePsshData}, hex, base64, or bytes, not {init_data!r}"
                 )
-            )
-        )
+
+        pssh = cls(Box.parse(Box.build(dict(
+            type=b"pssh",
+            version=version,
+            flags=flags,
+            system_ID=system_id,
+            init_data=[init_data, b""][init_data is None]
+            # key_IDs should not be set yet
+        ))))
 
         if key_ids:
             # We must reinforce the version because pymp4 forces v0 if key_IDs is not set.
@@ -237,13 +222,9 @@ class PSSH:
             return [
                 # the key_ids value may or may not be hex underlying
                 (
-                    UUID(bytes=key_id)
-                    if len(key_id) == 16  # normal
-                    else (
-                        UUID(hex=key_id.decode())
-                        if len(key_id) == 32  # stored as hex
-                        else UUID(int=int.from_bytes(key_id, "big"))
-                    )  # assuming as number
+                    UUID(bytes=key_id) if len(key_id) == 16 else  # normal
+                    UUID(hex=key_id.decode()) if len(key_id) == 32 else  # stored as hex
+                    UUID(int=int.from_bytes(key_id, "big"))  # assuming as number
                 )
                 for key_id in cenc_header.key_ids
             ]
@@ -270,18 +251,31 @@ class PSSH:
                 prr_header = XML(prr_value.decode("utf-16-le"))
                 prr_header_version = prr_header.get("version")
                 if prr_header_version == "4.0.0.0":
-                    key_ids = [x.text for x in prr_header.findall("./wrm:DATA/wrm:KID", wrm_ns) if x.text]
+                    key_ids = [
+                        x.text
+                        for x in prr_header.findall("./wrm:DATA/wrm:KID", wrm_ns)
+                        if x.text
+                    ]
                 elif prr_header_version == "4.1.0.0":
-                    key_ids = [x.attrib["VALUE"] for x in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KID", wrm_ns)]
+                    key_ids = [
+                        x.attrib["VALUE"]
+                        for x in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KID", wrm_ns)
+                    ]
                 elif prr_header_version in ("4.2.0.0", "4.3.0.0"):
                     # TODO: Retain the Encryption Scheme information in v4.3.0.0
                     #       This is because some Key IDs can be AES-CTR while some are AES-CBC.
                     #       Conversion to WidevineCencHeader could use this information.
-                    key_ids = [x.attrib["VALUE"] for x in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KIDS/wrm:KID", wrm_ns)]
+                    key_ids = [
+                        x.attrib["VALUE"]
+                        for x in prr_header.findall("./wrm:DATA/wrm:PROTECTINFO/wrm:KIDS/wrm:KID", wrm_ns)
+                    ]
                 else:
                     raise ValueError(f"Unsupported PlayReadyHeader version {prr_header_version}")
 
-                return [UUID(bytes=base64.b64decode(key_id)) for key_id in key_ids]
+                return [
+                    UUID(bytes=base64.b64decode(key_id))
+                    for key_id in key_ids
+                ]
 
             raise ValueError("Unsupported PlayReadyObject, no PlayReadyHeader within the object.")
 
@@ -289,16 +283,14 @@ class PSSH:
 
     def dump(self) -> bytes:
         """Export the PSSH object as a full PSSH box in bytes form."""
-        return Box.build(
-            dict(
-                type=b"pssh",
-                version=self.version,
-                flags=self.flags,
-                system_ID=self.system_id,
-                key_IDs=self.key_ids if self.version == 1 and self.key_ids else None,
-                init_data=self.init_data,
-            )
-        )
+        return Box.build(dict(
+            type=b"pssh",
+            version=self.version,
+            flags=self.flags,
+            system_ID=self.system_id,
+            key_IDs=self.key_ids if self.version == 1 and self.key_ids else None,
+            init_data=self.init_data
+        ))
 
     def dumps(self) -> str:
         """Export the PSSH object as a full PSSH box in base64 form."""
@@ -315,7 +307,10 @@ class PSSH:
         if self.system_id == PSSH.SystemId.Widevine:
             raise ValueError("This is already a Widevine PSSH")
 
-        widevine_pssh_data = WidevinePsshData(key_ids=[x.bytes for x in self.key_ids], algorithm="AESCTR")
+        widevine_pssh_data = WidevinePsshData(
+            key_ids=[x.bytes for x in self.key_ids],
+            algorithm="AESCTR"
+        )
 
         if self.version == 1:
             # ensure both cenc header and box has same Key IDs
@@ -327,11 +322,11 @@ class PSSH:
 
     def to_playready(
         self,
-        la_url: str | None = None,
-        lui_url: str | None = None,
-        ds_id: bytes | None = None,
-        decryptor_setup: str | None = None,
-        custom_data: str | None = None,
+        la_url: Optional[str] = None,
+        lui_url: Optional[str] = None,
+        ds_id: Optional[bytes] = None,
+        decryptor_setup: Optional[str] = None,
+        custom_data: Optional[str] = None
     ) -> None:
         """
         Convert Widevine PSSH data to PlayReady v4.3.0.0 PSSH data.
@@ -373,11 +368,11 @@ class PSSH:
                 <PROTECTINFO>
                     <KIDS>{key_ids_xml}</KIDS>
                 </PROTECTINFO>
-                {"<LA_URL>%s</LA_URL>" % la_url if la_url else ""}
-                {"<LUI_URL>%s</LUI_URL>" % lui_url if lui_url else ""}
-                {"<DS_ID>%s</DS_ID>" % base64.b64encode(ds_id).decode() if ds_id else ""}
-                {"<DECRYPTORSETUP>%s</DECRYPTORSETUP>" % decryptor_setup if decryptor_setup else ""}
-                {'<CUSTOMATTRIBUTES xmlns="">%s</CUSTOMATTRIBUTES>' % custom_data if custom_data else ""}
+                {'<LA_URL>%s</LA_URL>' % la_url if la_url else ''}
+                {'<LUI_URL>%s</LUI_URL>' % lui_url if lui_url else ''}
+                {'<DS_ID>%s</DS_ID>' % base64.b64encode(ds_id).decode() if ds_id else ''}
+                {'<DECRYPTORSETUP>%s</DECRYPTORSETUP>' % decryptor_setup if decryptor_setup else ''}
+                {'<CUSTOMATTRIBUTES xmlns="">%s</CUSTOMATTRIBUTES>' % custom_data if custom_data else ''}
             </DATA>
         </WRMHEADER>
         """.encode("utf-16-le")
@@ -391,7 +386,7 @@ class PSSH:
         self.init_data = pro
         self.system_id = PSSH.SystemId.PlayReady
 
-    def set_key_ids(self, key_ids: list[UUID | str | bytes]) -> None:
+    def set_key_ids(self, key_ids: list[Union[UUID, str, bytes]]) -> None:
         """Overwrite all Key IDs with the specified Key IDs."""
         if self.system_id != PSSH.SystemId.Widevine:
             # TODO: Add support for setting the Key IDs in a PlayReady Header
@@ -407,12 +402,15 @@ class PSSH:
         cenc_header = WidevinePsshData()
         cenc_header.ParseFromString(self.init_data)
 
-        cenc_header.key_ids[:] = [key_id.bytes for key_id in key_id_uuids]
+        cenc_header.key_ids[:] = [
+            key_id.bytes
+            for key_id in key_id_uuids
+        ]
 
         self.init_data = cenc_header.SerializeToString()
 
     @staticmethod
-    def parse_key_ids(key_ids: list[UUID | str | bytes]) -> list[UUID]:
+    def parse_key_ids(key_ids: list[Union[UUID, str, bytes]]) -> list[UUID]:
         """
         Parse a list of Key IDs in hex, base64, or bytes to UUIDs.
 
@@ -428,7 +426,14 @@ class PSSH:
         uuids = [
             UUID(bytes=key_id_b)
             for key_id in key_ids
-            for key_id_b in [(key_id.bytes if isinstance(key_id, UUID) else ((bytes.fromhex(key_id) if all(c in string.hexdigits for c in key_id) else base64.b64decode(key_id)) if isinstance(key_id, str) else key_id))]
+            for key_id_b in [
+                key_id.bytes if isinstance(key_id, UUID) else
+                (
+                    bytes.fromhex(key_id) if all(c in string.hexdigits for c in key_id) else
+                    base64.b64decode(key_id)
+                ) if isinstance(key_id, str) else
+                key_id
+            ]
         ]
 
         return uuids
