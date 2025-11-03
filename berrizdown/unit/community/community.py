@@ -122,9 +122,10 @@ async def get_community_print() -> None:
     contents: list[CommunityDict] = data.get("data", {}).get("contents", [])
 
     for i in contents:
-        Community_id: int | None = i.get("communityId")
-        communityKey: str | None = i.get("communityKey")
-        logger.info(f"{Color.fg('light_gray')}Community_id: {Color.fg('steel_blue')}{Community_id}, {Color.fg('light_gray')}communityKey: {Color.fg('plum')}{communityKey}")
+        if "test" not in i.get("communityKey", "") and int(i.get("communityId")) < 9999999:
+            Community_id: int | None = i.get("communityId")
+            communityKey: str | None = i.get("communityKey")
+            logger.info(f"{Color.fg('light_gray')}Community_id: {Color.fg('steel_blue')}{Community_id}, {Color.fg('light_gray')}communityKey: {Color.fg('plum')}{communityKey}")
 
 
 @alru_cache(maxsize=1)
