@@ -91,7 +91,7 @@ def print_help() -> None:
         "Berriz account registration",
         "change current account password",
         "",
-        "choose video quality (1080p, 720p, 480p, 360p, 240p, 144p, ask, None)",
+        "choese video quality (1080p, 720p, 480p, 360p, 240p, 144p, ask, None)",
         "video codec | H264",
         "do not download audio tracks",
         "do not download video tracks",

@@ -124,7 +124,7 @@ Use your **Berriz account and password** (not Google/Apple login):
 | `--TT`, `--tt <datetime end>` | [Optional] Filter content by end date/time (use full year like `2025`)[ISO8601,YYMMDD,'19970101 00:00'] |
 | `--signup` | Berriz account registration |
 | `--change-password`, `--changepassword` | Change current account password |
-| `-q`, `--quality` | Choose video quality (`1080p`, `720p`, `480p`, etc.) |
+| `-q`, `--quality` | choese video quality (`1080p`, `720p`, `480p`, etc.) |
 | `-v`, `--vcodec` | Video codec (e.g., `H264`) |
 | `-na`, `-an`, `--no-audio`, `--skip-audio`, `--skip-a`, `--skipaudio` | Do not download audio tracks |
 | `-nv`, `-vn`, `--no-video`, `--skip-videos`, `--skip-v`, `--skip-video`, `--skipvideo` | Do not download video tracks |
