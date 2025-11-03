@@ -41,7 +41,7 @@ async def media_image() -> bool:
     # all the vaild url for images
     urls: list[HttpUrl] = [f"https://link.berriz.in/web/main/kiiikiii/media/content/{mediaid}/"]
     """1. URL_Parser class accept List|str"""
-    url: HttpUrl = (f"https://berriz.in/kiiikiii/media/content/{mediaid}/",)
+    url: HttpUrl = f"https://berriz.in/kiiikiii/media/content/{mediaid}/"
     bool_status: bool = await URL_Parser(urls).parser()
     return bool_status
 
@@ -52,7 +52,7 @@ async def notice() -> bool:
     # all the vaild url for notice
     urls: list[HttpUrl] = [f"https://link.berriz.in/web/main/iu/notice/{noticeid}/"]
     """1. URL_Parser class accept List|str"""
-    url: HttpUrl = (f"https://berriz.in/iu/notice/{noticeid}/",)
+    url: HttpUrl = f"https://berriz.in/iu/notice/{noticeid}/"
     bool_status: bool = await URL_Parser(urls).parser()
     return bool_status
 
@@ -65,7 +65,7 @@ async def board_post() -> bool:
     # all the vaild url for post
     urls: list[HttpUrl] = [f"https://link.berriz.in/web/main/kiiikiii/board/{boardid}/post/{postid}/"]
     """1. URL_Parser class accept List|str"""
-    url: HttpUrl = (f"https://berriz.in/kiiikiii/board/{boardid}/post/{postid}/",)
+    url: HttpUrl = f"https://berriz.in/kiiikiii/board/{boardid}/post/{postid}/"
     bool_status: bool = await URL_Parser(urls).parser()
     return bool_status
 
@@ -78,7 +78,7 @@ async def board_post_comment_last() -> bool:
     # all the vaild url for post-comment
     urls: list[HttpUrl] = [f"https://link.berriz.in/web/main/iu/board/{boardid}/post/{postid}/?focus=comment"]
     """1. URL_Parser class accept List|str"""
-    url: HttpUrl = (f"https://berriz.in/iu/board/{boardid}/post/{postid}/?focus=comment",)
+    url: HttpUrl = f"https://berriz.in/iu/board/{boardid}/post/{postid}/?focus=comment"
     bool_status: bool = await URL_Parser(urls).parser()
     return bool_status
 
@@ -93,7 +93,7 @@ async def board_post_reply_artis() -> bool:
         f"https://link.berriz.in/web/main/iu/board/{boardid}/post/{postid}/?reply=1759787",
     ]
     """1. URL_Parser class accept List|str"""
-    url: HttpUrl = (f"https://berriz.in/iu/board/{boardid}/post/{postid}/?reply=1759787",)
+    url: HttpUrl = f"https://berriz.in/iu/board/{boardid}/post/{postid}/?reply=1759787"
     bool_status: bool = await URL_Parser(urls).parser()
     return bool_status
 
@@ -108,7 +108,7 @@ async def board_post_reply_user2user() -> Never:
         f"https://link.berriz.in/web/main/ive/board/{boardid}/post/{postid}/?reply=2040500",
     ]
     """1. URL_Parser class accept List|str"""
-    url: HttpUrl = (f"https://berriz.in/ive/board/{boardid}/post/{postid}/?reply=2040500",)
+    url: HttpUrl = f"https://berriz.in/ive/board/{boardid}/post/{postid}/?reply=2040500"
     bool_status: bool = await URL_Parser(urls).parser()
     return bool_status
 
@@ -123,7 +123,7 @@ async def board_post_reply_user2artis() -> Never:
         f"https://link.berriz.in/web/main/iu/board/{boardid}/post/{postid}/?reply=2007535",
     ]
     """1. URL_Parser class accept List|str"""
-    url: HttpUrl = (f"https://berriz.in/iu/board/{boardid}/post/{postid}/?reply=2007535",)
+    url: HttpUrl = f"https://berriz.in/iu/board/{boardid}/post/{postid}/?reply=2007535"
     bool_status: bool = await URL_Parser(urls).parser()
     return bool_status
 
