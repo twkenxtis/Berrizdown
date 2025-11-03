@@ -157,6 +157,8 @@ class BerrizAPIClient:
     async def close_session(self):
         global _session
         if _session is not None:
+            # Wait 350 ms for the underlying SSL connections to close
+            await asyncio.sleep(0.350)
             await _session.close()
             _session = None
 
