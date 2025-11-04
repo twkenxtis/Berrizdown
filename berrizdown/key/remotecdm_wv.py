@@ -1,12 +1,12 @@
 import aiohttp
 
-from lib.load_yaml_config import CFG
-from lib.base64 import base64
-from wvd.pywidevine.remotecdm import RemoteCdm
-from wvd.pywidevine.pssh import PSSH
-from wvd.pywidevine.device import DeviceTypes
-from unit.__init__ import USERAGENT
-from unit.handle.handle_log import setup_logging
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.base64 import base64
+from berrizdown.wvd.pywidevine.remotecdm import RemoteCdm
+from berrizdown.wvd.pywidevine.pssh import PSSH
+from berrizdown.wvd.pywidevine.device import DeviceTypes
+from berrizdown.unit.__init__ import USERAGENT
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("remotecdm_wv", "crimson")
 

@@ -4,12 +4,13 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import httpx
-from lib.account.authgen import AuthManager, create_auth_request
-from static.api_error_handle import api_error_handle
-from static.color import Color
-from unit.handle.handle_log import setup_logging
-from unit.http.httpx_login_unban import Request
-from unit.http.request_berriz_api import BerrizAPIClient
+
+from berrizdown.lib.account.authgen import AuthManager, create_auth_request
+from berrizdown.static.api_error_handle import api_error_handle
+from berrizdown.static.color import Color
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.httpx_login_unban import Request
+from berrizdown.unit.http.request_berriz_api import BerrizAPIClient
 
 logger = setup_logging("signup", "periwinkle")
 

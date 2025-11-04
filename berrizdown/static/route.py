@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import rich.traceback
-from lib.path import Path
 from ruamel.yaml import YAML
+
+from berrizdown.lib.path import Path
 
 rich.traceback.install()
 

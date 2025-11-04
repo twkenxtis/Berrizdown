@@ -1,10 +1,11 @@
 import asyncio
 import shutil
 
-from lib.path import Path
 from rich.progress import BarColumn, DownloadColumn, Progress, SpinnerColumn, TextColumn
-from static.color import Color
-from unit.handle.handle_log import setup_logging
+
+from berrizdown.lib.path import Path
+from berrizdown.static.color import Color
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("merge", "blush")
 

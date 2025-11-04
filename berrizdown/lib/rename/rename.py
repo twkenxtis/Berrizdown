@@ -4,23 +4,24 @@ import shutil
 from functools import cached_property
 
 import aiofiles.os as aios
-from lib.__init__ import (
+
+from berrizdown.lib.__init__ import (
     File_date_time_formact,
     OutputFormatter,
     container,
     get_artis_list,
 )
-from lib.load_yaml_config import CFG
-from lib.mux.mux import FFmpegMuxer
-from lib.name_metadata import meta_name
-from lib.path import Path
-from lib.rename.extract_video_info import extract_video_info
-from static.color import Color
-from static.parameter import paramstore
-from static.PlaybackInfo import PlaybackInfo
-from static.PublicInfo import PublicInfo
-from unit.__init__ import FilenameSanitizer
-from unit.handle.handle_log import setup_logging
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.mux.mux import FFmpegMuxer
+from berrizdown.lib.name_metadata import meta_name
+from berrizdown.lib.path import Path
+from berrizdown.lib.rename.extract_video_info import extract_video_info
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.PlaybackInfo import PlaybackInfo
+from berrizdown.static.PublicInfo import PublicInfo
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("reName", "violet")
 

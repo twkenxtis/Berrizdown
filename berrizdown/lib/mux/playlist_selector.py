@@ -4,12 +4,13 @@ from enum import Enum
 from typing import Any
 
 from InquirerPy import inquirer
-from lib.mux.parse_hls import HLSAudioTrack, HLSContent, HLSSegment, HLSVariant
-from lib.mux.parse_mpd import MediaTrack, MPDContent, Segment
 from rich.console import Console
-from static.color import Color
-from static.parameter import paramstore
-from unit.handle.handle_log import setup_logging
+
+from berrizdown.lib.mux.parse_hls import HLSAudioTrack, HLSContent, HLSSegment, HLSVariant
+from berrizdown.lib.mux.parse_mpd import MediaTrack, MPDContent, Segment
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("playlist_selector", "periwinkle")
 

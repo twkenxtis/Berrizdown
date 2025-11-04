@@ -1,6 +1,6 @@
-from static.color import Color
-from static.PlaybackInfo import PlaybackInfo
-from unit.handle.handle_log import setup_logging
+from berrizdown.static.color import Color
+from berrizdown.static.PlaybackInfo import PlaybackInfo
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("console_print", "cyan")
 

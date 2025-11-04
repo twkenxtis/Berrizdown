@@ -17,8 +17,8 @@ from Crypto.Signature import pss
 from Crypto.Util import Padding
 from google.protobuf.message import DecodeError
 
-from wvd.pywidevine.device import Device, DeviceTypes
-from wvd.pywidevine.exceptions import (
+from berrizdown.wvd.pywidevine.device import Device, DeviceTypes
+from berrizdown.wvd.pywidevine.exceptions import (
     InvalidContext,
     InvalidInitData,
     InvalidLicenseMessage,
@@ -28,8 +28,8 @@ from wvd.pywidevine.exceptions import (
     SignatureMismatch,
     TooManySessions,
 )
-from wvd.pywidevine.key import Key
-from wvd.pywidevine.license_protocol_pb2 import (
+from berrizdown.wvd.pywidevine.key import Key
+from berrizdown.wvd.pywidevine.license_protocol_pb2 import (
     ClientIdentification,
     DrmCertificate,
     EncryptedClientIdentification,
@@ -39,9 +39,9 @@ from wvd.pywidevine.license_protocol_pb2 import (
     SignedDrmCertificate,
     SignedMessage,
 )
-from wvd.pywidevine.pssh import PSSH
-from wvd.pywidevine.session import Session
-from wvd.pywidevine.utils import get_binary_path
+from berrizdown.wvd.pywidevine.pssh import PSSH
+from berrizdown.wvd.pywidevine.session import Session
+from berrizdown.wvd.pywidevine.utils import get_binary_path
 
 
 class Cdm:

@@ -10,9 +10,9 @@ from Crypto.Hash import CMAC
 from Crypto.Util.strxor import strxor
 from construct import Const, GreedyRange, Struct, Int32ub, Bytes, Int16ub, this, Switch, LazyBound, Array, Container
 
-from readydl_pyplayready.pyplayready import ECCKey, Crypto
-from readydl_pyplayready.pyplayready.license.key import Key
-from readydl_pyplayready.pyplayready.misc.exceptions import InvalidXmrLicense
+from berrizdown.readydl_pyplayready.pyplayready import ECCKey, Crypto
+from berrizdown.readydl_pyplayready.pyplayready.license.key import Key
+from berrizdown.readydl_pyplayready.pyplayready.misc.exceptions import InvalidXmrLicense
 
 
 class XMRObjectTypes(IntEnum):

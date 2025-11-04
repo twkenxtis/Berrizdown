@@ -10,15 +10,15 @@ from urllib.parse import urlparse
 import aiofiles
 import rich.traceback
 from email_validator import EmailNotValidError, validate_email
-from key.cdm_path import CDM_PATH
 from ruamel.yaml import YAML
-from static.color import Color
-from static.parameter import paramstore
-from static.route import Route
-from static.version import __version__
-from unit.handle.handle_log import setup_logging
 
-from lib.path import Path
+from berrizdown.key.cdm_path import CDM_PATH
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.route import Route
+from berrizdown.static.version import __version__
+from berrizdown.lib.path import Path
+from berrizdown.unit.handle.handle_log import setup_logging
 
 rich.traceback.install()
 logger = setup_logging("load_yaml_config", "fresh_chartreuse")

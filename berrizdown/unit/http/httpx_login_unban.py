@@ -5,9 +5,10 @@ from typing import Any
 import httpx
 from httpx import Response
 from pydantic import BaseModel
-from static.color import Color
-from unit.__init__ import USERAGENT
-from unit.handle.handle_log import setup_logging
+
+from berrizdown.static.color import Color
+from berrizdown.unit.__init__ import USERAGENT
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("httpx_login_unban", "magenta")
 
@@ -38,13 +39,14 @@ class Request:
     def get_session(self) -> httpx.AsyncClient:
         global _session
         if _session is None:
-            _session = httpx.AsyncClient(http2=True, timeout=4, verify=True)
+            _session = httpx.AsyncClient(http2=True, timeout=13, verify=True)
         return _session
 
     async def close_session(self):
         global _session
         if _session is not None:
             await _session.aclose()
+            await asyncio.sleep(0.250)
             _session = None
 
     async def post(self, url: str, json_data: dict[str, Any] = None) -> httpx.Response:

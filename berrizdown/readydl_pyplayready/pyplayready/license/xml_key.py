@@ -1,7 +1,7 @@
 from ecpy.curves import Point, Curve
 
-from readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
-from readydl_pyplayready.pyplayready.system.util import Util
+from berrizdown.readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
+from berrizdown.readydl_pyplayready.pyplayready.system.util import Util
 
 
 class XmlKey:

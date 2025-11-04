@@ -5,10 +5,10 @@ from enum import IntEnum
 from pathlib import Path
 from typing import Union, Any, Optional
 
-from readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
-from readydl_pyplayready.pyplayready.device.structs import DeviceStructs
-from readydl_pyplayready.pyplayready.misc.exceptions import OutdatedDevice
-from readydl_pyplayready.pyplayready.system.bcert import CertificateChain
+from berrizdown.readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
+from berrizdown.readydl_pyplayready.pyplayready.device.structs import DeviceStructs
+from berrizdown.readydl_pyplayready.pyplayready.misc.exceptions import OutdatedDevice
+from berrizdown.readydl_pyplayready.pyplayready.system.bcert import CertificateChain
 
 
 class Device:

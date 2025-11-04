@@ -4,18 +4,18 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any, NamedTuple
 
-from lib.artis.menu import Board
-from lib.media_queue import MediaQueue
-from mystate.parse_my import request_my
-from static.color import Color
-from static.parameter import paramstore
-from unit.getall.GetMediaList import MediaFetcher
-from unit.getall.GetNotifyList import NotifyFetcher
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import BerrizAPIClient
-from unit.main_process import MediaProcessor
-from unit.media.media_json_process import MediaJsonProcessor
-from unit.user_choice import InquirerPySelector
+from berrizdown.lib.artis.menu import Board
+from berrizdown.lib.media_queue import MediaQueue
+from berrizdown.mystate.parse_my import request_my
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.getall.GetMediaList import MediaFetcher
+from berrizdown.unit.getall.GetNotifyList import NotifyFetcher
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import BerrizAPIClient
+from berrizdown.unit.main_process import MediaProcessor
+from berrizdown.unit.media.media_json_process import MediaJsonProcessor
+from berrizdown.unit.user_choice import InquirerPySelector
 
 logger = setup_logging("handle_choice", "light_slate_gray")
 

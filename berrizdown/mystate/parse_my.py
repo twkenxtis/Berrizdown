@@ -1,14 +1,15 @@
 import asyncio
 from typing import Any
 
-from lib.__init__ import use_proxy
-from lib.lock_cookie import Lock_Cookie, cookie_session
 from rich import box
 from rich.console import Console
 from rich.table import Table
-from static.color import Color
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import My
+
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.lib.lock_cookie import Lock_Cookie, cookie_session
+from berrizdown.static.color import Color
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import My, BerrizAPIClient
 
 logger = setup_logging("parse_my", "sunrise")
 MY: My = My()
@@ -21,14 +22,18 @@ async def request_my() -> None:
     if not cookie_session:
         await Lock_Cookie.cookie_session()
 
-    results = await asyncio.gather(
-        MY.fetch_my(use_proxy),
-        MY.fetch_location(use_proxy),
-        MY.notifications(use_proxy),
-        MY.fetch_me(use_proxy),
-        MY.get_me_info(use_proxy),
-        return_exceptions=True,
-    )
+    try:
+        results = await asyncio.gather(
+            MY.fetch_my(use_proxy),
+            MY.fetch_location(use_proxy),
+            MY.notifications(use_proxy),
+            MY.fetch_me(use_proxy),
+            MY.get_me_info(use_proxy),
+            return_exceptions=True,
+        )
+    except asyncio.CancelledError:
+        await BerrizAPIClient().close_session()
+        pass
     exceptions = [r for r in results if isinstance(r, Exception)]
     if exceptions:
         logger.error(f"Exceptions occurred: {exceptions}")

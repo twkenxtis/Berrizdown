@@ -2,7 +2,8 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
-from static.PlaybackInfo import PlaybackInfo
+
+from berrizdown.static.PlaybackInfo import PlaybackInfo
 
 
 def print_title(

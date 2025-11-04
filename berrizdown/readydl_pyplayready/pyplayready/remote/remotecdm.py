@@ -3,16 +3,16 @@ import aiohttp
 
 from uuid import UUID
 
-from lib.__init__ import use_proxy
-from readydl_pyplayready.pyplayready import InvalidXmrLicense
-from readydl_pyplayready.pyplayready.cdm import Cdm
-from readydl_pyplayready.pyplayready.device import Device
-from readydl_pyplayready.pyplayready.license.key import Key
-from readydl_pyplayready.pyplayready.misc.exceptions import InvalidInitData
-from readydl_pyplayready.pyplayready.system.wrmheader import WRMHeader
-from static.version import __version__
-from unit.http.request_berriz_api import TPD_RemoteCDM_Request
-from unit.handle.handle_log import setup_logging
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.readydl_pyplayready.pyplayready import InvalidXmrLicense
+from berrizdown.readydl_pyplayready.pyplayready.cdm import Cdm
+from berrizdown.readydl_pyplayready.pyplayready.device import Device
+from berrizdown.readydl_pyplayready.pyplayready.license.key import Key
+from berrizdown.readydl_pyplayready.pyplayready.misc.exceptions import InvalidInitData
+from berrizdown.readydl_pyplayready.pyplayready.system.wrmheader import WRMHeader
+from berrizdown.static.version import __version__
+from berrizdown.unit.http.request_berriz_api import TPD_RemoteCDM_Request
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("playready.remotecdm", "mint")
 

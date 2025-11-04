@@ -4,17 +4,18 @@ from functools import cached_property
 from uuid import UUID
 
 import aiofiles.os as aios
-from static.color import Color
-from static.parameter import paramstore
-from static.PublicInfo import PublicInfo
-from unit.__init__ import FilenameSanitizer
-from unit.community.community import custom_dict, get_community
-from unit.handle.handle_log import setup_logging
 
-from lib.__init__ import File_date_time_formact, OutputFormatter, dl_folder_name, get_artis_list, move_contents_to_parent, printer_video_folder_path_info
-from lib.load_yaml_config import CFG
-from lib.name_metadata import meta_name
-from lib.path import Path
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.PublicInfo import PublicInfo
+from berrizdown.lib.__init__ import File_date_time_formact, OutputFormatter, dl_folder_name, get_artis_list, move_contents_to_parent, printer_video_folder_path_info
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.name_metadata import meta_name
+from berrizdown.lib.path import Path
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.community.community import custom_dict, get_community
+from berrizdown.unit.handle.handle_log import setup_logging
+
 
 logger = setup_logging("video_folder", "chocolate")
 

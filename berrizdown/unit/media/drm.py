@@ -2,20 +2,21 @@ import asyncio
 from functools import cached_property
 from typing import Any
 
-from httpx import Response
-from lib.__init__ import use_proxy
-from lib.download.download import Start_Download_Queue
-from lib.mux.parse_m3u8 import rebuild_master_playlist
-from static.api_error_handle import api_error_handle
-from static.color import Color
-from static.parameter import paramstore
-from static.PlaybackInfo import LivePlaybackInfo, PlaybackInfo
-from static.PublicInfo import PublicInfo
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import Live, Playback_info, Public_context
-from unit.media.console_print import print_title
-from unit.media.drm_typing_dict import LivePlaybackResponse, PlaybackResponse, PublicResponse, SelectedMedia, SelectedMediaItem
-from unit.media.keyhandle import Key_handle
+from aiohttp import ClientResponse
+
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.lib.download.download import Start_Download_Queue
+from berrizdown.lib.mux.parse_m3u8 import rebuild_master_playlist
+from berrizdown.static.api_error_handle import api_error_handle
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.PlaybackInfo import LivePlaybackInfo, PlaybackInfo
+from berrizdown.static.PublicInfo import PublicInfo
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import Live, Playback_info, Public_context
+from berrizdown.unit.media.console_print import print_title
+from berrizdown.unit.media.drm_typing_dict import LivePlaybackResponse, PlaybackResponse, PublicResponse, SelectedMedia, SelectedMediaItem
+from berrizdown.unit.media.keyhandle import Key_handle
 
 logger = setup_logging("drm", "tomato")
 
@@ -197,12 +198,12 @@ class BerrizProcessor:
                 if not value:
                     logger.warning(f"Missing or invalid: {name} = {repr(value)}")
 
-    async def drm_handle(self, playback_info: PlaybackInfo | LivePlaybackInfo, public_info: PublicInfo) -> tuple[list[str] | None, str | None, Response | None]:
+    async def drm_handle(self, playback_info: PlaybackInfo | LivePlaybackInfo, public_info: PublicInfo) -> tuple[list[str] | None, str | None, ClientResponse | None]:
         if playback_info.code != "0000":
             logger.warning(f"{Color.bg('maroon')}{api_error_handle(playback_info.code)}{Color.reset()}")
             return None, None, None
 
-        raw_mpd: Response | None = None
+        raw_mpd: ClientResponse | None = None
         raw_hls: str | None = None
 
         if getattr(playback_info, "dash_playback_url", None):

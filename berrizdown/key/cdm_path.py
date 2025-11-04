@@ -1,6 +1,6 @@
 import logging
 
-from lib.path import Path
+from berrizdown.lib.path import Path
 
 
 class CDM_PATH:

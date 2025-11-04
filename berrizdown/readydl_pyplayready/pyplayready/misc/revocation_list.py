@@ -20,10 +20,10 @@ from ecpy.ecdsa import ECDSA
 from ecpy.keys import ECPublicKey
 import xml.etree.ElementTree as ET
 
-from readydl_pyplayready.pyplayready import Crypto
-from readydl_pyplayready.pyplayready.misc.exceptions import InvalidRevocationList
-from readydl_pyplayready.pyplayready.system.bcert import CertificateChain, BCertCertType, BCertKeyUsage
-from readydl_pyplayready.pyplayready.system.util import Util
+from berrizdown.readydl_pyplayready.pyplayready import Crypto
+from berrizdown.readydl_pyplayready.pyplayready.misc.exceptions import InvalidRevocationList
+from berrizdown.readydl_pyplayready.pyplayready.system.bcert import CertificateChain, BCertCertType, BCertKeyUsage
+from berrizdown.readydl_pyplayready.pyplayready.system.util import Util
 
 
 class FileTime(Adapter):

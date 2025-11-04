@@ -24,7 +24,7 @@ from construct import Optional as COptional
 from Crypto.PublicKey import RSA
 from google.protobuf.message import DecodeError
 
-from wvd.pywidevine.license_protocol_pb2 import (
+from berrizdown.wvd.pywidevine.license_protocol_pb2 import (
     ClientIdentification,
     DrmCertificate,
     FileHashes,

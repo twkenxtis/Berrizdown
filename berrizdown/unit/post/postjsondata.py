@@ -4,13 +4,14 @@ from typing import Any
 
 import aiofiles
 import orjson
-from lib.__init__ import printer_video_folder_path_info, resolve_conflict_path
-from lib.path import Path
-from static.color import Color
-from static.parameter import paramstore
-from unit.__init__ import FilenameSanitizer
-from unit.handle.handle_board_from import JsonBuilder
-from unit.handle.handle_log import setup_logging
+
+from berrizdown.lib.__init__ import printer_video_folder_path_info, resolve_conflict_path
+from berrizdown.lib.path import Path
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.handle.handle_board_from import JsonBuilder
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("PostJsonDate", "dark_gray")
 

@@ -6,16 +6,16 @@ import urllib
 from urllib.parse import urlparse, ParseResult
 from collections import defaultdict
 from typing import Any, ClassVar, Literal, NamedTuple, Never
+from pydantic import BaseModel, Field
 from urllib.parse import urlparse
 
-from lib.__init__ import use_proxy
-from pydantic import BaseModel, Field
-from static.color import Color
-from unit.community.community import custom_dict, get_community
-from unit.handle.handle_board_from import BoardMain
-from unit.handle.handle_choice import Handle_Choice
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import (
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.static.color import Color
+from berrizdown.unit.community.community import custom_dict, get_community
+from berrizdown.unit.handle.handle_board_from import BoardMain
+from berrizdown.unit.handle.handle_choice import Handle_Choice
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import (
     Arits,
     BerrizAPIClient,
     Public_context,

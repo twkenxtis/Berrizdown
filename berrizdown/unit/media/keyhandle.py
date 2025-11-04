@@ -2,15 +2,15 @@ import asyncio
 from functools import cached_property
 from typing import Any
 
-from key.GetClearKey import get_clear_key
-from key.local_vault import SQLiteKeyVault
-from key.msprpro import GetMPD_prd
-from key.pssh import GetMPD_wv
-from lib.load_yaml_config import CFG, ConfigLoader
-from static.color import Color
-from static.parameter import paramstore
-from static.PlaybackInfo import PlaybackInfo
-from unit.handle.handle_log import setup_logging
+from berrizdown.key.GetClearKey import get_clear_key
+from berrizdown.key.local_vault import SQLiteKeyVault
+from berrizdown.key.msprpro import GetMPD_prd
+from berrizdown.key.pssh import GetMPD_wv
+from berrizdown.lib.load_yaml_config import CFG, ConfigLoader
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.PlaybackInfo import PlaybackInfo
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("keyhandle", "amber")
 

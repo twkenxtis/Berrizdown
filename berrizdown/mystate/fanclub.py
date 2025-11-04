@@ -1,9 +1,9 @@
 from typing import Any
 
-from lib.__init__ import use_proxy
-from lib.lock_cookie import Lock_Cookie, cookie_session
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import My
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.lib.lock_cookie import Lock_Cookie, cookie_session
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import My
 
 logger = setup_logging("fanclub", "orange")
 

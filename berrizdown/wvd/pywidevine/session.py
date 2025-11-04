@@ -1,7 +1,7 @@
 from Crypto.Random import get_random_bytes
 
-from wvd.pywidevine.key import Key
-from wvd.pywidevine.license_protocol_pb2 import SignedDrmCertificate
+from berrizdown.wvd.pywidevine.key import Key
+from berrizdown.wvd.pywidevine.license_protocol_pb2 import SignedDrmCertificate
 
 
 class Session:

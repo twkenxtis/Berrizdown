@@ -6,14 +6,15 @@ from functools import cached_property
 from typing import Any, Optional
 
 import jwt
-from cookies.loadcookie import LoadCookie
-from cookies.pcidgen import PCID
-from cookies.Refresh_JWT import Refresh_JWT
-from lib.path import Path
-from static.color import Color
-from static.parameter import paramstore
-from static.route import Route
-from unit.handle.handle_log import setup_logging
+
+from berrizdown.cookies.loadcookie import LoadCookie
+from berrizdown.cookies.pcidgen import PCID
+from berrizdown.cookies.Refresh_JWT import Refresh_JWT
+from berrizdown.lib.path import Path
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.route import Route
+from berrizdown.unit.handle.handle_log import setup_logging
 
 route = Route()
 DEFAULT_COOKIE: Path = route.default_cookie

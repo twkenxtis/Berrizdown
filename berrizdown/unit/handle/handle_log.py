@@ -12,10 +12,10 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from static.color import Color
 
+from berrizdown.static.color import Color
 try:
-    from static.route import Route
+    from berrizdown.static.route import Route
 except FileNotFoundError as e:
     print(f"{Color.bg('ruby')}File not found error:{Color.reset()}{Color.fg('gold')} {e}{Color.reset()}")
     sys.exit(0)

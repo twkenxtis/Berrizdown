@@ -2,9 +2,10 @@ from typing import Any
 from uuid import UUID
 
 import orjson
-from lib.load_yaml_config import CFG
 from pydantic import BaseModel, Field, model_validator
-from unit.date.date import get_formatted_publish_date
+
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.unit.date.date import get_formatted_publish_date
 
 
 class MediaArtistModel(BaseModel):

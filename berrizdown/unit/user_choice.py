@@ -7,11 +7,11 @@ from zoneinfo import ZoneInfo
 
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
-from static.color import Color
-from static.parameter import paramstore
 
-from unit.community.community import custom_dict, get_community
-from unit.handle.handle_log import setup_logging
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.community.community import custom_dict, get_community
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("user_choice", "fresh_chartreuse")
 

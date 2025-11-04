@@ -7,16 +7,16 @@ import click
 import requests
 from Crypto.Random import get_random_bytes
 
-from readydl_pyplayready.pyplayready import __version__, InvalidCertificateChain, InvalidXmrLicense
-from readydl_pyplayready.pyplayready.cdm import Cdm
-from readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
-from readydl_pyplayready.pyplayready.crypto.key_wrap import unwrap_wrapped_key
-from readydl_pyplayready.pyplayready.device import Device
-from readydl_pyplayready.pyplayready.misc.exceptions import OutdatedDevice
-from readydl_pyplayready.pyplayready.misc.revocation_list import RevocationList
-from readydl_pyplayready.pyplayready.system.bcert import CertificateChain, Certificate, BCertCertType, BCertObjType, BCertFeatures, \
+from berrizdown.readydl_pyplayready.pyplayready import __version__, InvalidCertificateChain, InvalidXmrLicense
+from berrizdown.readydl_pyplayready.pyplayready.cdm import Cdm
+from berrizdown.readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
+from berrizdown.readydl_pyplayready.pyplayready.crypto.key_wrap import unwrap_wrapped_key
+from berrizdown.readydl_pyplayready.pyplayready.device import Device
+from berrizdown.readydl_pyplayready.pyplayready.misc.exceptions import OutdatedDevice
+from berrizdown.readydl_pyplayready.pyplayready.misc.revocation_list import RevocationList
+from berrizdown.readydl_pyplayready.pyplayready.system.bcert import CertificateChain, Certificate, BCertCertType, BCertObjType, BCertFeatures, \
     BCertKeyType, BCertKeyUsage
-from readydl_pyplayready.pyplayready.system.pssh import PSSH
+from berrizdown.readydl_pyplayready.pyplayready.system.pssh import PSSH
 
 
 @click.group(invoke_without_command=True)

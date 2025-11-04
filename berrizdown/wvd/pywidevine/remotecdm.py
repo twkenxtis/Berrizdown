@@ -10,28 +10,28 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import pss
 from google.protobuf.message import DecodeError
 
-from wvd.pywidevine.cdm import Cdm
-from wvd.pywidevine.device import Device, DeviceTypes
-from wvd.pywidevine.exceptions import (
+from berrizdown.wvd.pywidevine.cdm import Cdm
+from berrizdown.wvd.pywidevine.device import Device, DeviceTypes
+from berrizdown.wvd.pywidevine.exceptions import (
     DeviceMismatch,
     InvalidInitData,
     InvalidLicenseMessage,
     InvalidLicenseType,
     SignatureMismatch,
 )
-from wvd.pywidevine.key import Key
-from wvd.pywidevine.license_protocol_pb2 import (
+from berrizdown.wvd.pywidevine.key import Key
+from berrizdown.wvd.pywidevine.license_protocol_pb2 import (
     ClientIdentification,
     License,
     LicenseType,
     SignedDrmCertificate,
     SignedMessage,
 )
-from wvd.pywidevine.pssh import PSSH
-from lib.__init__ import use_proxy
-from static.version import __version__
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import TPD_RemoteCDM_Request
+from berrizdown.wvd.pywidevine.pssh import PSSH
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.static.version import __version__
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import TPD_RemoteCDM_Request
 
 logger = setup_logging("widevine.remotecdm", "mint")
 

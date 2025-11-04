@@ -2,9 +2,9 @@ from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
-from readydl_pyplayready.pyplayready.license.key import Key
-from readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
-from readydl_pyplayready.pyplayready.license.xml_key import XmlKey
+from berrizdown.readydl_pyplayready.pyplayready.license.key import Key
+from berrizdown.readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
+from berrizdown.readydl_pyplayready.pyplayready.license.xml_key import XmlKey
 
 
 class Session:

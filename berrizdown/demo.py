@@ -1,9 +1,10 @@
 import asyncio
 from typing import Never
 
-from lib.interface.interface import Community_Uniqueness, StartProcess, URL_Parser, selected_media_list
 from pydantic import HttpUrl
-from unit.http.request_berriz_api import BerrizAPIClient
+
+from berrizdown.lib.interface.interface import Community_Uniqueness, StartProcess, URL_Parser, selected_media_list
+from berrizdown.unit.http.request_berriz_api import BerrizAPIClient
 
 # main aiohttp session for all request
 BAPIClient: BerrizAPIClient = BerrizAPIClient()

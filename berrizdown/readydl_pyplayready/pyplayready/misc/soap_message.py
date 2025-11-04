@@ -4,8 +4,8 @@ import html
 import xml.etree.ElementTree as ET
 from typing import Union, Optional
 
-from readydl_pyplayready.pyplayready.misc.drmresults import DrmResult
-from readydl_pyplayready.pyplayready.misc.exceptions import InvalidSoapMessage, ServerException
+from berrizdown.readydl_pyplayready.pyplayready.misc.drmresults import DrmResult
+from berrizdown.readydl_pyplayready.pyplayready.misc.exceptions import InvalidSoapMessage, ServerException
 
 
 class SoapMessage:

@@ -6,7 +6,7 @@ from typing import Any, Optional, Union
 from aiohttp.typedefs import Handler
 from google.protobuf.message import DecodeError
 
-from pywidevine.pssh import PSSH
+from berrizdown.pywidevine.pssh import PSSH
 
 try:
     from aiohttp import web
@@ -18,10 +18,10 @@ except ImportError:
     )
     sys.exit(1)
 
-from pywidevine import __version__
-from pywidevine.cdm import Cdm
-from pywidevine.device import Device
-from pywidevine.exceptions import (InvalidContext, InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
+from berrizdown.pywidevine import __version__
+from berrizdown.pywidevine.cdm import Cdm
+from berrizdown.pywidevine.device import Device
+from berrizdown.pywidevine.exceptions import (InvalidContext, InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
                                    InvalidSession, SignatureMismatch, TooManySessions)
 
 routes = web.RouteTableDef()

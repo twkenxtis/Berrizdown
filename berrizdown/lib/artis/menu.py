@@ -5,15 +5,16 @@ from functools import cached_property
 from typing import Any
 
 from InquirerPy import inquirer
-from lib.__init__ import use_proxy
-from lib.artis.artis_archive import Archive
-from static.api_error_handle import api_error_handle
-from static.color import Color
-from static.parameter import paramstore
-from unit.cmt.cmt import CMT
-from unit.handle.handle_board_from import BoardMain, BoardNotice
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import Arits, Community
+
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.lib.artis.artis_archive import Archive
+from berrizdown.static.api_error_handle import api_error_handle
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.cmt.cmt import CMT
+from berrizdown.unit.handle.handle_board_from import BoardMain, BoardNotice
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import Arits, Community, BerrizAPIClient
 
 logger = setup_logging("menu", "ivory")
 
@@ -115,6 +116,7 @@ class Board:
             )
         except KeyboardInterrupt:
             logger.info(f"Program interrupted: {Color.fg('light_gray')}User canceled{Color.reset()}")
+            await BerrizAPIClient().close_session()
             sys.exit(0)
 
     async def call_auto_choese(self, choices: list[dict]) -> dict:

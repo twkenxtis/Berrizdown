@@ -5,8 +5,8 @@ from uuid import UUID
 from construct import Struct, Int32ul, Int16ul, this, Bytes, Switch, Int8ub, Int24ub, Int32ub, Const, Container, \
     ConstructError, Rebuild, Default, If, PrefixedArray, Prefixed, GreedyBytes
 
-from readydl_pyplayready.pyplayready.misc.exceptions import InvalidPssh
-from readydl_pyplayready.pyplayready.system.wrmheader import WRMHeader
+from berrizdown.readydl_pyplayready.pyplayready.misc.exceptions import InvalidPssh
+from berrizdown.readydl_pyplayready.pyplayready.system.wrmheader import WRMHeader
 
 
 class _PlayreadyPSSHStructs:

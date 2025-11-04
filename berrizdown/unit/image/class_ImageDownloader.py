@@ -4,12 +4,12 @@ import shutil
 from io import BytesIO
 from typing import Any
 
-from lib.__init__ import printer_video_folder_path_info, resolve_conflict_path
-from lib.path import Path
-from static.color import Color
-from unit.__init__ import USERAGENT, FilenameSanitizer
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import GetRequest
+from berrizdown.lib.__init__ import printer_video_folder_path_info, resolve_conflict_path
+from berrizdown.lib.path import Path
+from berrizdown.static.color import Color
+from berrizdown.unit.__init__ import USERAGENT, FilenameSanitizer
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import GetRequest
 
 logger = setup_logging("class_ImageDownloader", "sienna")
 semaphore: asyncio.Semaphore = asyncio.Semaphore(7)

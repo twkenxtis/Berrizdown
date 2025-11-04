@@ -8,10 +8,10 @@ from uuid import UUID
 
 from Crypto.Random import get_random_bytes
 
-from readydl_pyplayready.pyplayready import ECCKey, Crypto
-from readydl_pyplayready.pyplayready.misc.revocation_list import RevocationList
-from readydl_pyplayready.pyplayready.misc.storage import Storage
-from readydl_pyplayready.pyplayready.system.bcert import CertificateChain
+from berrizdown.readydl_pyplayready.pyplayready import ECCKey, Crypto
+from berrizdown.readydl_pyplayready.pyplayready.misc.revocation_list import RevocationList
+from berrizdown.readydl_pyplayready.pyplayready.misc.storage import Storage
+from berrizdown.readydl_pyplayready.pyplayready.system.bcert import CertificateChain
 
 
 class XmlBuilder:

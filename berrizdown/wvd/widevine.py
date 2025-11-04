@@ -1,9 +1,10 @@
 import aiohttp
 from functools import cached_property, lru_cache
-from wvd.pywidevine.cdm import Cdm
-from wvd.pywidevine.device import Device
-from wvd.pywidevine.pssh import PSSH
-from unit.handle.handle_log import setup_logging
+
+from berrizdown.wvd.pywidevine.cdm import Cdm
+from berrizdown.wvd.pywidevine.device import Device
+from berrizdown.wvd.pywidevine.pssh import PSSH
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("widevine", "navy")
 

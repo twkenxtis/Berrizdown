@@ -1,12 +1,12 @@
 import functools
 import random
 
-from static.color import Color
-from static.route import Route
-from unit.handle.handle_log import setup_logging
 
-from lib.load_yaml_config import CFG
-from lib.path import Path
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.path import Path
+from berrizdown.static.color import Color
+from berrizdown.static.route import Route
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("Proxy", "cerulean")
 

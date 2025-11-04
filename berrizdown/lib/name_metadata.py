@@ -1,10 +1,10 @@
 from urllib.parse import urlparse
 
-from unit.__init__ import FilenameSanitizer
-from unit.date.date import get_timestamp_formact
 
-from lib.load_yaml_config import CFG
-from lib.path import Path
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.path import Path
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.date.date import get_timestamp_formact
 
 fmt_files: str = get_timestamp_formact(CFG["output_template"]["date_formact"])
 fmt_dir: str = get_timestamp_formact(CFG["donwload_dir_name"]["date_formact"])

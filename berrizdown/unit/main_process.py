@@ -7,20 +7,20 @@ from typing import Any
 
 import aiofiles
 import yaml
-from lib.lock_cookie import cookie_session
-from lib.media_queue import MediaQueue
-from lib.path import Path
-from lock.donwnload_lock import UUIDSetStore
-from static.color import Color
-from static.parameter import paramstore
-from static.route import Route
 
-from unit.cmt.cmt import RUN_CMT
-from unit.handle.handle_log import setup_logging
-from unit.image.image import IMGmediaDownloader
-from unit.media.drm import BerrizProcessor
-from unit.notice.notice import RunNotice
-from unit.post.post import Run_Post_dl
+from berrizdown.lib.lock_cookie import cookie_session
+from berrizdown.lib.media_queue import MediaQueue
+from berrizdown.lib.path import Path
+from berrizdown.lock.donwnload_lock import UUIDSetStore
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.route import Route
+from berrizdown.unit.cmt.cmt import RUN_CMT
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.image.image import IMGmediaDownloader
+from berrizdown.unit.media.drm import BerrizProcessor
+from berrizdown.unit.notice.notice import RunNotice
+from berrizdown.unit.post.post import Run_Post_dl
 
 logger = setup_logging("main_process", "light_peach")
 

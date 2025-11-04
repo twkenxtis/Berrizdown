@@ -13,7 +13,7 @@ from construct import Container
 from google.protobuf.message import DecodeError
 from pymp4.parser import Box
 
-from pywidevine.license_protocol_pb2 import WidevinePsshData
+from berrizdown.pywidevine.license_protocol_pb2 import WidevinePsshData
 
 
 class PSSH:

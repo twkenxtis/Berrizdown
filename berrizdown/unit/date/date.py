@@ -3,9 +3,10 @@ from datetime import datetime, timedelta, timezone
 
 from dateutil import parser as dateutil_parser
 from inputimeout import TimeoutOccurred, inputimeout
-from lib.load_yaml_config import CFG, ConfigLoader
-from static.color import Color
-from unit.handle.handle_log import setup_logging
+
+from berrizdown.lib.load_yaml_config import CFG, ConfigLoader
+from berrizdown.static.color import Color
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("data", "soft_coral")
 
