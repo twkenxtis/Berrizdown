@@ -1,9 +1,9 @@
 import asyncio
 
-from lib.mux.videoinfo import VideoInfo
-from lib.path import Path
-from static.parameter import paramstore
-from unit.handle.handle_log import setup_logging
+from berrizdown.lib.mux.videoinfo import VideoInfo
+from berrizdown.lib.path import Path
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("extract_video_info", "dark_green")
 

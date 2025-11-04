@@ -6,10 +6,10 @@ try:
 except KeyboardInterrupt:
     raise KeyboardInterrupt("KeyboardInterrupt")
 
-from lib.__init__ import use_proxy
-from static.color import Color
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import BerrizAPIClient, Community, My
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.static.color import Color
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import BerrizAPIClient, Community, My
 
 logger = setup_logging("community", "ivory")
 

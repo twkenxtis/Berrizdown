@@ -7,15 +7,15 @@ from urllib.parse import urlparse
 import aiofiles
 import httpx
 import orjson
-from static.color import Color
-from static.parameter import paramstore
-from static.PlaybackInfo import PlaybackInfo
-from static.PublicInfo import PublicInfo
-from unit.__init__ import FilenameSanitizer
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import GetRequest
 
-from lib.__init__ import (
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.PlaybackInfo import PlaybackInfo
+from berrizdown.static.PublicInfo import PublicInfo
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import GetRequest
+from berrizdown.lib.__init__ import (
     File_date_time_formact,
     OutputFormatter,
     get_artis_list,
@@ -23,8 +23,8 @@ from lib.__init__ import (
     resolve_conflict_path,
     use_proxy,
 )
-from lib.load_yaml_config import CFG
-from lib.path import Path
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.path import Path
 
 logger = setup_logging("save_json_data", "peach")
 

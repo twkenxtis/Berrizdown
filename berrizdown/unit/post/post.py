@@ -4,20 +4,20 @@ from collections.abc import Awaitable, Callable
 from functools import cached_property
 from typing import Any, TypeAlias
 
-from lib.__init__ import File_date_time_formact, OutputFormatter
-from lib.load_yaml_config import CFG
-from lib.name_metadata import fmt_files, get_image_ext_basename, meta_name
-from lib.path import Path
-from static.color import Color
-from static.parameter import paramstore
-from unit.__init__ import FilenameSanitizer
-from unit.date.date import get_formatted_publish_date
-from unit.foldermanger import POSTFolderManager
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import Arits, Translate
-from unit.image.class_ImageDownloader import ImageDownloader
-from unit.post.postjsondata import PostJsonData
-from unit.post.save_html import SaveHTML, open_template_post_html
+from berrizdown.lib.__init__ import File_date_time_formact, OutputFormatter
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.name_metadata import fmt_files, get_image_ext_basename, meta_name
+from berrizdown.lib.path import Path
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.date.date import get_formatted_publish_date
+from berrizdown.unit.foldermanger import POSTFolderManager
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import Arits, Translate
+from berrizdown.unit.image.class_ImageDownloader import ImageDownloader
+from berrizdown.unit.post.postjsondata import PostJsonData
+from berrizdown.unit.post.save_html import SaveHTML, open_template_post_html
 
 logger = setup_logging("post", "daffodil")
 semaphore = asyncio.Semaphore(7)

@@ -1,10 +1,10 @@
 import aiohttp
 
-from lib.load_yaml_config import CFG
-from readydl_pyplayready.pyplayready.remote import remotecdm
-from readydl_pyplayready.pyplayready.system.pssh import PSSH
-from unit.__init__ import USERAGENT
-from unit.handle.handle_log import setup_logging
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.readydl_pyplayready.pyplayready.remote import remotecdm
+from berrizdown.readydl_pyplayready.pyplayready.system.pssh import PSSH
+from berrizdown.unit.__init__ import USERAGENT
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("remotecdm_pr", "turquoise")
 

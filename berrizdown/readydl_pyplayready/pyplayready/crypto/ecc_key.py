@@ -9,7 +9,7 @@ from Crypto.PublicKey import ECC
 from Crypto.PublicKey.ECC import EccKey
 from ecpy.curves import Curve, Point
 
-from readydl_pyplayready.pyplayready.system.util import Util
+from berrizdown.readydl_pyplayready.pyplayready.system.util import Util
 
 
 class ECCKey:

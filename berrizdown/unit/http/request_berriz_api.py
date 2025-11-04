@@ -12,17 +12,18 @@ from itertools import repeat
 from typing import Any
 
 import aiohttp
-from cookies.cookies import Refresh_JWT
-from lib.base64 import base64
-from lib.load_yaml_config import CFG
-from lib.lock_cookie import Lock_Cookie, cookie_session
-from lib.Proxy import Proxy
 from pydantic import BaseModel, Field, ValidationError
-from static.api_error_handle import api_error_handle
-from static.color import Color
-from static.parameter import paramstore
-from unit.__init__ import USERAGENT
-from unit.handle.handle_log import setup_logging
+
+from berrizdown.cookies.cookies import Refresh_JWT
+from berrizdown.lib.base64 import base64
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.lock_cookie import Lock_Cookie, cookie_session
+from berrizdown.lib.Proxy import Proxy
+from berrizdown.static.api_error_handle import api_error_handle
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.__init__ import USERAGENT
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("request_berriz_api", "aluminum")
 
@@ -157,9 +158,8 @@ class BerrizAPIClient:
     async def close_session(self):
         global _session
         if _session is not None:
-            # Wait 350 ms for the underlying SSL connections to close
-            await asyncio.sleep(0.350)
             await _session.close()
+            await asyncio.sleep(0.350)
             _session = None
 
     @lru_cache(maxsize=1)
@@ -284,6 +284,8 @@ class BerrizAPIClient:
             except (TimeoutError, aiohttp.ClientConnectorError, aiohttp.ServerDisconnectedError, aiohttp.ClientOSError, aiohttp.ClientPayloadError) as e:
                 await self._handle_connection_error(e, attempt, max_retries)
                 attempt += 1
+            except asyncio.CancelledError:
+                await self.close_session()
 
         logger.error(f"Retry exceeded for {url}")
         return None

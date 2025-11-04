@@ -1,9 +1,10 @@
 from typing import Any
 
 import httpx
-from lib.load_yaml_config import CFG
-from static.color import Color
-from unit.handle.handle_log import setup_logging
+
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.static.color import Color
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("http_vault", "apple_green")
 

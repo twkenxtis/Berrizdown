@@ -18,10 +18,10 @@ from construct import Bytes, Const, Int32ub, GreedyRange, Switch, Container, Lis
 from construct import Int16ub, Array
 from construct import Struct, this
 
-from readydl_pyplayready.pyplayready.system.util import Util
-from readydl_pyplayready.pyplayready.crypto import Crypto
-from readydl_pyplayready.pyplayready.misc.exceptions import InvalidCertificateChain, InvalidCertificate
-from readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
+from berrizdown.readydl_pyplayready.pyplayready.system.util import Util
+from berrizdown.readydl_pyplayready.pyplayready.crypto import Crypto
+from berrizdown.readydl_pyplayready.pyplayready.misc.exceptions import InvalidCertificateChain, InvalidCertificate
+from berrizdown.readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
 
 
 class BCertCertType(IntEnum):

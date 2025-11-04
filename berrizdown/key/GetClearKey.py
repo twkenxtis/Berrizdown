@@ -1,15 +1,15 @@
-from key.cdm_path import CDM_PATH
-from key.http_vault import HTTP_API
-from key.remotecdm_pr import Remotecdm_Playready
-from key.remotecdm_wv import Remotecdm_Widevine
-from key.watora import Watora_wv
-from lib.load_yaml_config import CFG
-from lib.path import Path
-from readydl_pyplayready.playready import PlayReadyDRM
-from static.color import Color
-from static.parameter import paramstore
-from unit.handle.handle_log import setup_logging
-from wvd.widevine import WidevineDRM
+from berrizdown.key.cdm_path import CDM_PATH
+from berrizdown.key.http_vault import HTTP_API
+from berrizdown.key.remotecdm_pr import Remotecdm_Playready
+from berrizdown.key.remotecdm_wv import Remotecdm_Widevine
+from berrizdown.key.watora import Watora_wv
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.path import Path
+from berrizdown.readydl_pyplayready.playready import PlayReadyDRM
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.wvd.widevine import WidevineDRM
 
 logger = setup_logging("GetClearKey", "honeydew")
 

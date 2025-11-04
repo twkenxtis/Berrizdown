@@ -7,8 +7,8 @@ import xml.etree.ElementTree as ET
 
 from Crypto.Cipher import AES
 
-from readydl_pyplayready.pyplayready.misc.exceptions import InvalidWrmHeader, InvalidChecksum
-from readydl_pyplayready.pyplayready.system.util import Util
+from berrizdown.readydl_pyplayready.pyplayready.misc.exceptions import InvalidWrmHeader, InvalidChecksum
+from berrizdown.readydl_pyplayready.pyplayready.system.util import Util
 
 
 class WRMHeader:

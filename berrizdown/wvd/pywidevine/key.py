@@ -6,7 +6,7 @@ from uuid import UUID
 from Crypto.Cipher import AES
 from Crypto.Util import Padding
 
-from wvd.pywidevine.license_protocol_pb2 import License
+from berrizdown.wvd.pywidevine.license_protocol_pb2 import License
 
 
 class Key:

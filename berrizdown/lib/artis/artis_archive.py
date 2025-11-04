@@ -4,14 +4,14 @@ from datetime import datetime
 from functools import cached_property
 from typing import Any
 
-from lib.__init__ import use_proxy
-from static.api_error_handle import api_error_handle
-from static.artisarchive import ArtistContent
-from static.color import Color
-from static.parameter import paramstore
-from unit.getall.GetMediaList import FanClubFilter
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import Arits
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.static.api_error_handle import api_error_handle
+from berrizdown.static.artisarchive import ArtistContent
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.getall.GetMediaList import FanClubFilter
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import Arits
 
 logger = setup_logging("artis_archive", "khaki")
 

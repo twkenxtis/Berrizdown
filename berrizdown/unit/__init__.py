@@ -7,16 +7,16 @@ import aiofiles
 import httpagentparser
 import yaml
 from fake_useragent import UserAgent
-from lib.path import Path
-from static.color import Color
-from static.version import __version__
 
-from unit.handle.handle_log import setup_logging
+from berrizdown.lib.path import Path
+from berrizdown.static.color import Color
+from berrizdown.static.version import __version__
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("unit.__init__", "green")
 
 try:
-    from static.route import Route
+    from berrizdown.static.route import Route
 except FileNotFoundError as e:
     logger.error(e)
 

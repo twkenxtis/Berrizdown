@@ -3,7 +3,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from static.route import Route
+from berrizdown.static.route import Route
 
 
 class SQLiteKeyVault:

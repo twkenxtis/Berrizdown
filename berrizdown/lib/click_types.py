@@ -5,9 +5,9 @@ from typing import Any
 
 import click
 
-from lib.urlextra import URLExtractor
-from static.color import Color
-from unit.handle.handle_log import setup_logging
+from berrizdown.lib.urlextra import URLExtractor
+from berrizdown.static.color import Color
+from berrizdown.unit.handle.handle_log import setup_logging
 
 
 logger = setup_logging("click_types", "mint")
@@ -551,7 +551,7 @@ def main(
     
     logger.info(f"{Color.fg('mint')}Arguments parsed successfully{Color.reset()}")
 
-    from static.parameter import paramstore
+    from berrizdown.static.parameter import paramstore
     
     if version:
         from static.version import __version__

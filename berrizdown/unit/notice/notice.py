@@ -4,21 +4,21 @@ from functools import cached_property
 from typing import Any
 
 import orjson
-from lib.__init__ import (
+from berrizdown.lib.__init__ import (
     File_date_time_formact,
     printer_video_folder_path_info,
     resolve_conflict_path,
 )
-from lib.path import Path
-from lib.save_json_data import save_json_data
-from static.color import Color
-from static.parameter import paramstore
-from unit.__init__ import FilenameSanitizer
-from unit.foldermanger import NOTICEFolderManager
-from unit.handle.handle_board_from import BoardNoticeINFO, NoticeINFOFetcher
-from unit.handle.handle_log import setup_logging
-from unit.notice.get_body_images import DownloadImage
-from unit.notice.save_html import SaveHTML, open_template_post_html
+from berrizdown.lib.path import Path
+from berrizdown.lib.save_json_data import save_json_data
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.foldermanger import NOTICEFolderManager
+from berrizdown.unit.handle.handle_board_from import BoardNoticeINFO, NoticeINFOFetcher
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.notice.get_body_images import DownloadImage
+from berrizdown.unit.notice.save_html import SaveHTML, open_template_post_html
 
 logger = setup_logging("notice", "forest_green")
 

@@ -4,25 +4,26 @@ from functools import cached_property
 from typing import Any
 
 import orjson
-from lib.__init__ import (
+
+from berrizdown.lib.__init__ import (
     OutputFormatter,
     printer_video_folder_path_info,
     resolve_conflict_path,
     use_proxy,
 )
-from lib.load_yaml_config import CFG
-from lib.name_metadata import fmt_dir, fmt_files, get_image_ext_basename, meta_name
-from lib.path import Path
-from lib.save_json_data import save_json_data
-from static.color import Color
-from static.parameter import paramstore
-from unit.__init__ import FilenameSanitizer
-from unit.community.community import custom_dict
-from unit.date.date import get_formatted_publish_date
-from unit.foldermanger import CMTFolderManager
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import Arits, Translate
-from unit.image.class_ImageDownloader import ImageDownloader
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.name_metadata import fmt_dir, fmt_files, get_image_ext_basename, meta_name
+from berrizdown.lib.path import Path
+from berrizdown.lib.save_json_data import save_json_data
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.community.community import custom_dict
+from berrizdown.unit.date.date import get_formatted_publish_date
+from berrizdown.unit.foldermanger import CMTFolderManager
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import Arits, Translate
+from berrizdown.unit.image.class_ImageDownloader import ImageDownloader
 
 logger = setup_logging("cmt", "aluminum")
 

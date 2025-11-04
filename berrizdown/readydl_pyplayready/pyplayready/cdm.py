@@ -8,18 +8,18 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from ecpy.curves import Point, Curve
 
-from readydl_pyplayready.pyplayready.crypto import Crypto
-from readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
-from readydl_pyplayready.pyplayready.license.key import Key
-from readydl_pyplayready.pyplayready.license.license import License
-from readydl_pyplayready.pyplayready.misc.exceptions import (InvalidSession, TooManySessions, InvalidXmrLicense)
-from readydl_pyplayready.pyplayready.misc.revocation_list import RevocationList
-from readydl_pyplayready.pyplayready.misc.soap_message import SoapMessage
-from readydl_pyplayready.pyplayready.misc.storage import Storage
-from readydl_pyplayready.pyplayready.system.bcert import CertificateChain
-from readydl_pyplayready.pyplayready.system.builder import XmlBuilder
-from readydl_pyplayready.pyplayready.system.session import Session
-from readydl_pyplayready.pyplayready.system.wrmheader import WRMHeader
+from berrizdown.readydl_pyplayready.pyplayready.crypto import Crypto
+from berrizdown.readydl_pyplayready.pyplayready.crypto.ecc_key import ECCKey
+from berrizdown.readydl_pyplayready.pyplayready.license.key import Key
+from berrizdown.readydl_pyplayready.pyplayready.license.license import License
+from berrizdown.readydl_pyplayready.pyplayready.misc.exceptions import (InvalidSession, TooManySessions, InvalidXmrLicense)
+from berrizdown.readydl_pyplayready.pyplayready.misc.revocation_list import RevocationList
+from berrizdown.readydl_pyplayready.pyplayready.misc.soap_message import SoapMessage
+from berrizdown.readydl_pyplayready.pyplayready.misc.storage import Storage
+from berrizdown.readydl_pyplayready.pyplayready.system.bcert import CertificateChain
+from berrizdown.readydl_pyplayready.pyplayready.system.builder import XmlBuilder
+from berrizdown.readydl_pyplayready.pyplayready.system.session import Session
+from berrizdown.readydl_pyplayready.pyplayready.system.wrmheader import WRMHeader
 
 
 class Cdm:

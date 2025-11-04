@@ -1,18 +1,18 @@
 import asyncio
 
-from lib.__init__ import OutputFormatter, dl_folder_name, resolve_conflict_path
-from lib.load_yaml_config import CFG
-from lib.name_metadata import fmt_dir, meta_name
-from lib.path import Path
-from static.parameter import paramstore
+from berrizdown.lib.__init__ import OutputFormatter, dl_folder_name, resolve_conflict_path
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.name_metadata import fmt_dir, meta_name
+from berrizdown.lib.path import Path
+from berrizdown.static.parameter import paramstore
 
-from unit.__init__ import FilenameSanitizer
-from unit.community.community import custom_dict, get_community
-from unit.date.date import get_formatted_publish_date
-from unit.handle.handle_board_from import BoardFetcher
-from unit.handle.handle_log import setup_logging
-from unit.image.cache_image_info import CachePublicINFO
-from unit.image.parse_public_contexts import IMG_PublicContext
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.community.community import custom_dict, get_community
+from berrizdown.unit.date.date import get_formatted_publish_date
+from berrizdown.unit.handle.handle_board_from import BoardFetcher
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.image.cache_image_info import CachePublicINFO
+from berrizdown.unit.image.parse_public_contexts import IMG_PublicContext
 
 logger = setup_logging("foldermanger", "soft_salmon")
 

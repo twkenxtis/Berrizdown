@@ -11,26 +11,26 @@ from io import BytesIO
 from typing import Any
 
 import aiohttp
-from aiohttp import ClientTimeout
-from httpx import Response
-from lib.__init__ import container
-from lib.load_yaml_config import CFG, ConfigLoader
-from lib.mux.merge import MERGE
-from lib.mux.parse_hls import HLS_Paser, HLSContent
-from lib.mux.parse_mpd import MediaTrack, MPDContent, MPDParser
-from lib.mux.playlist_selector import PlaylistSelector
-from lib.path import Path
-from lib.processbar.processbar import MultiTrackProgressManager
-from lib.rename.rename import SUCCESS
-from lib.save_json_data import save_json_data
-from lib.video_folder import Video_folder
-from static.color import Color
-from static.parameter import paramstore
-from static.PlaybackInfo import PlaybackInfo
-from static.PublicInfo import PublicInfo
-from unit.__init__ import USERAGENT
-from unit.date.date import video_start2end_time
-from unit.handle.handle_log import setup_logging
+from aiohttp import ClientTimeout, ClientResponse
+
+from berrizdown.lib.__init__ import container
+from berrizdown.lib.load_yaml_config import CFG, ConfigLoader
+from berrizdown.lib.mux.merge import MERGE
+from berrizdown.lib.mux.parse_hls import HLS_Paser, HLSContent
+from berrizdown.lib.mux.parse_mpd import MediaTrack, MPDContent, MPDParser
+from berrizdown.lib.mux.playlist_selector import PlaylistSelector
+from berrizdown.lib.path import Path
+from berrizdown.lib.processbar.processbar import MultiTrackProgressManager
+from berrizdown.lib.rename.rename import SUCCESS
+from berrizdown.lib.save_json_data import save_json_data
+from berrizdown.lib.video_folder import Video_folder
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.PlaybackInfo import PlaybackInfo
+from berrizdown.static.PublicInfo import PublicInfo
+from berrizdown.unit.__init__ import USERAGENT
+from berrizdown.unit.date.date import video_start2end_time
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("download", "peach")
 
@@ -529,14 +529,14 @@ class Start_Download_Queue:
         decryption_key: list[str],
         public_info: PublicInfo,
         playback_info: PlaybackInfo,
-        raw_mpd: Response,
+        raw_mpd: ClientResponse,
         raw_hls: str,
         input_community_name: str,
     ) -> None:
         self.decryption_key: list[str] = decryption_key
         self.public_info: PublicInfo = public_info
         self.playback_info: PlaybackInfo = playback_info
-        self.raw_mpd: Response = raw_mpd
+        self.raw_mpd: ClientResponse = raw_mpd
         self.raw_hls: str = raw_hls
         self.input_community_name: str = input_community_name
         self._community_name = None

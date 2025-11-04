@@ -5,9 +5,9 @@ import sqlite3
 import threading
 import time
 
-from lib.path import Path
-from static.route import Route
-from unit.handle.handle_log import setup_logging
+from berrizdown.lib.path import Path
+from berrizdown.static.route import Route
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("download_lock", "forest_green")
 

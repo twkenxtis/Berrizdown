@@ -4,17 +4,17 @@ from datetime import datetime
 from functools import cached_property
 from typing import Any
 
-from lib.__init__ import OutputFormatter, use_proxy
-from lib.load_yaml_config import CFG
-from lib.name_metadata import fmt_dir, meta_name
-from static.Board_from import Board_from
-from static.Notice import Notice, Notice_info
-from static.parameter import paramstore
-from unit.__init__ import FilenameSanitizer
-from unit.community.community import custom_dict, get_community
-from unit.date.date import get_formatted_publish_date
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import Arits, Translate
+from berrizdown.lib.__init__ import OutputFormatter, use_proxy
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.name_metadata import fmt_dir, meta_name
+from berrizdown.static.Board_from import Board_from
+from berrizdown.static.Notice import Notice, Notice_info
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.community.community import custom_dict, get_community
+from berrizdown.unit.date.date import get_formatted_publish_date
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import Arits, Translate
 
 logger = setup_logging("handle_board_from", "midnight_blue")
 

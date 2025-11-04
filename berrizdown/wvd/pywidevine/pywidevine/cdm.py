@@ -19,16 +19,16 @@ from Crypto.Util import Padding
 from google._upb._message import RepeatedCompositeContainer
 from google.protobuf.message import DecodeError
 
-from pywidevine.device import Device, DeviceTypes
-from pywidevine.exceptions import (InvalidContext, InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
+from berrizdown.pywidevine.device import Device, DeviceTypes
+from berrizdown.pywidevine.exceptions import (InvalidContext, InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
                                    InvalidSession, NoKeysLoaded, SignatureMismatch, TooManySessions)
-from pywidevine.key import Key
-from pywidevine.license_protocol_pb2 import (ClientIdentification, DrmCertificate, EncryptedClientIdentification,
+from berrizdown.pywidevine.key import Key
+from berrizdown.pywidevine.license_protocol_pb2 import (ClientIdentification, DrmCertificate, EncryptedClientIdentification,
                                              License, LicenseRequest, LicenseType, SignedDrmCertificate,
                                              SignedMessage)
-from pywidevine.pssh import PSSH
-from pywidevine.session import Session
-from pywidevine.utils import get_binary_path
+from berrizdown.pywidevine.pssh import PSSH
+from berrizdown.pywidevine.session import Session
+from berrizdown.pywidevine.utils import get_binary_path
 
 
 class Cdm:

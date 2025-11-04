@@ -2,12 +2,12 @@ import re
 import sys
 from typing import Any
 
-from cookies.cookies import Berriz_cookie, Refresh_JWT
-from cookies.loadcookie import LoadCookie
-from lib.__init__ import use_proxy
-from static.color import Color
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import Password_Change
+from berrizdown.cookies.cookies import Berriz_cookie, Refresh_JWT
+from berrizdown.cookies.loadcookie import LoadCookie
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.static.color import Color
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import Password_Change
 
 logger = setup_logging("change_pawword", "magenta_pink")
 

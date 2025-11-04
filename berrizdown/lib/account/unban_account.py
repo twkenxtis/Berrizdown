@@ -2,10 +2,11 @@ import sys
 from typing import Any
 
 from httpx import Response
-from static.api_error_handle import api_error_handle
-from static.color import Color
-from unit.handle.handle_log import setup_logging
-from unit.http.httpx_login_unban import Request
+
+from berrizdown.static.api_error_handle import api_error_handle
+from berrizdown.static.color import Color
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.httpx_login_unban import Request
 
 logger = setup_logging("unban_account", "linen")
 

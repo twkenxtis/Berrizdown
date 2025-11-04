@@ -4,17 +4,18 @@ from typing import Any
 from urllib.parse import ParseResult, parse_qs, urlparse
 
 import httpx
-from cookies.loadcookie import LoadCookie
-from lib.account.authgen import get_auth_request
-from lib.account.unban_account import unban_main
-from lib.load_yaml_config import CFG
-from lib.path import Path
-from static.api_error_handle import api_error_handle
-from static.color import Color
-from static.parameter import paramstore
-from static.route import Route
-from unit.handle.handle_log import setup_logging
-from unit.http.httpx_login_unban import Request
+
+from berrizdown.cookies.loadcookie import LoadCookie
+from berrizdown.lib.account.authgen import get_auth_request
+from berrizdown.lib.account.unban_account import unban_main
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.path import Path
+from berrizdown.static.api_error_handle import api_error_handle
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.route import Route
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.httpx_login_unban import Request
 
 logger = setup_logging("login", "flamingo_pink")
 

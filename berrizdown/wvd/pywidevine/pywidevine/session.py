@@ -2,8 +2,8 @@ from typing import Optional
 
 from Crypto.Random import get_random_bytes
 
-from pywidevine.key import Key
-from pywidevine.license_protocol_pb2 import SignedDrmCertificate
+from berrizdown.pywidevine.key import Key
+from berrizdown.pywidevine.license_protocol_pb2 import SignedDrmCertificate
 
 
 class Session:

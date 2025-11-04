@@ -10,14 +10,14 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import pss
 from google.protobuf.message import DecodeError
 
-from pywidevine.cdm import Cdm
-from pywidevine.device import Device, DeviceTypes
-from pywidevine.exceptions import (InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
+from berrizdown.pywidevine.cdm import Cdm
+from berrizdown.pywidevine.device import Device, DeviceTypes
+from berrizdown.pywidevine.exceptions import (InvalidInitData, InvalidLicenseMessage, InvalidLicenseType,
                                    SignatureMismatch)
-from pywidevine.key import Key
-from pywidevine.license_protocol_pb2 import (ClientIdentification, License, LicenseType, SignedDrmCertificate,
+from berrizdown.pywidevine.key import Key
+from berrizdown.pywidevine.license_protocol_pb2 import (ClientIdentification, License, LicenseType, SignedDrmCertificate,
                                              SignedMessage)
-from pywidevine.pssh import PSSH
+from berrizdown.pywidevine.pssh import PSSH
 
 
 class RemoteCdm(Cdm):

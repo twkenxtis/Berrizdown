@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from lib.__init__ import use_proxy
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import Notify
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import Notify
 
 logger = setup_logging("GetMediaList", "turquoise")
 

@@ -4,9 +4,9 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urljoin
 
-from lib.__init__ import use_proxy
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import GetRequest
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import GetRequest
 
 logger = setup_logging("parse_hls", "periwinkle")
 

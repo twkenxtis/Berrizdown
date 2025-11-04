@@ -7,15 +7,15 @@ import string
 from concurrent.futures import ThreadPoolExecutor
 from functools import cache, lru_cache
 
-from static.color import Color
-from static.parameter import paramstore
-from unit.__init__ import FilenameSanitizer
-from unit.date.date import get_formatted_publish_date, get_timestamp_formact
-from unit.handle.handle_log import setup_logging
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.date.date import get_formatted_publish_date, get_timestamp_formact
+from berrizdown.unit.handle.handle_log import setup_logging
 
-from lib.load_yaml_config import CFG, ConfigLoader
-from lib.name_metadata import meta_name
-from lib.path import Path
+from berrizdown.lib.load_yaml_config import CFG, ConfigLoader
+from berrizdown.lib.name_metadata import meta_name
+from berrizdown.lib.path import Path
 
 logger = setup_logging("lib.__init__", "fern")
 executor = ThreadPoolExecutor()

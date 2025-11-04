@@ -4,12 +4,12 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from lib.__init__ import container
-from lib.load_yaml_config import CFG, ConfigLoader
-from static.color import Color
-from static.parameter import paramstore
-from static.route import Route
-from unit.handle.handle_log import setup_logging
+from berrizdown.lib.__init__ import container
+from berrizdown.lib.load_yaml_config import CFG, ConfigLoader
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.route import Route
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("mux", "lavender")
 

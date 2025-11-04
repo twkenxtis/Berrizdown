@@ -5,15 +5,15 @@ import re
 from functools import cached_property
 from urllib.parse import ParseResult, urlparse
 
-from lib.__init__ import OutputFormatter
-from lib.load_yaml_config import CFG
-from lib.name_metadata import fmt_files, get_image_ext_basename, meta_name
-from lib.path import Path
-from unit.__init__ import FilenameSanitizer
-from unit.date.date import get_formatted_publish_date
-from unit.handle.handle_board_from import NoticeINFOFetcher
-from unit.handle.handle_log import setup_logging
-from unit.image.class_ImageDownloader import ImageDownloader
+from berrizdown.lib.__init__ import OutputFormatter
+from berrizdown.lib.load_yaml_config import CFG
+from berrizdown.lib.name_metadata import fmt_files, get_image_ext_basename, meta_name
+from berrizdown.lib.path import Path
+from berrizdown.unit.__init__ import FilenameSanitizer
+from berrizdown.unit.date.date import get_formatted_publish_date
+from berrizdown.unit.handle.handle_board_from import NoticeINFOFetcher
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.image.class_ImageDownloader import ImageDownloader
 
 logger = setup_logging("get_body_images", "cerulean")
 

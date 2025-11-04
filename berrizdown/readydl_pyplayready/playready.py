@@ -2,10 +2,10 @@ from functools import cached_property, lru_cache
 
 import aiohttp
 
-from readydl_pyplayready.pyplayready.cdm import Cdm
-from readydl_pyplayready.pyplayready.device import Device
-from readydl_pyplayready.pyplayready.system.pssh import PSSH
-from unit.handle.handle_log import setup_logging
+from berrizdown.readydl_pyplayready.pyplayready.cdm import Cdm
+from berrizdown.readydl_pyplayready.pyplayready.device import Device
+from berrizdown.readydl_pyplayready.pyplayready.system.pssh import PSSH
+from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("playready", "graphite")
 

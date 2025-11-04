@@ -2,10 +2,10 @@ import http.cookiejar
 import sys
 import time
 from http.cookiejar import MozillaCookieJar
-from pathlib import Path
 
-from static.route import Route
-from unit.handle.handle_log import setup_logging
+from berrizdown.lib.path import Path
+from berrizdown.static.route import Route
+from berrizdown.unit.handle.handle_log import setup_logging
 
 route = Route()
 DEFAULT_COOKIE: Path = route.default_cookie

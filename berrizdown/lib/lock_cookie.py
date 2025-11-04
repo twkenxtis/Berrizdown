@@ -1,6 +1,6 @@
 import asyncio
 
-from cookies.cookies import Berriz_cookie
+from berrizdown.cookies.cookies import Berriz_cookie
 
 
 class Lock_Cookie:

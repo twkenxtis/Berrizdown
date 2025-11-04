@@ -6,13 +6,14 @@ from functools import cached_property
 
 import aiohttp
 import jwt
-from cookies.loadcookie import LoadCookie
-from lib.account.login import LoginManager
-from lib.path import Path
-from static.color import Color
-from static.parameter import paramstore
-from static.route import Route
-from unit.handle.handle_log import setup_logging
+
+from berrizdown.cookies.loadcookie import LoadCookie
+from berrizdown.lib.account.login import LoginManager
+from berrizdown.lib.path import Path
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.static.route import Route
+from berrizdown.unit.handle.handle_log import setup_logging
 
 route = Route()
 DEFAULT_COOKIE: Path = route.default_cookie

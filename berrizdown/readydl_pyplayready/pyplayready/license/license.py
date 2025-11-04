@@ -8,11 +8,11 @@ from typing import Union, Iterator
 
 from Crypto.PublicKey import ECC
 
-from readydl_pyplayready.pyplayready import Crypto
-from readydl_pyplayready.pyplayready.license.xmrlicense import XMRLicense
-from readydl_pyplayready.pyplayready.misc.exceptions import InvalidLicense
-from readydl_pyplayready.pyplayready.system.bcert import CertificateChain, BCertKeyUsage
-from readydl_pyplayready.pyplayready.system.util import Util
+from berrizdown.readydl_pyplayready.pyplayready import Crypto
+from berrizdown.readydl_pyplayready.pyplayready.license.xmrlicense import XMRLicense
+from berrizdown.readydl_pyplayready.pyplayready.misc.exceptions import InvalidLicense
+from berrizdown.readydl_pyplayready.pyplayready.system.bcert import CertificateChain, BCertKeyUsage
+from berrizdown.readydl_pyplayready.pyplayready.system.util import Util
 
 
 class License:

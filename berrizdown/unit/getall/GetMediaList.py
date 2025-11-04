@@ -4,13 +4,13 @@ from datetime import datetime
 from functools import cached_property
 from typing import Any, TypedDict
 
-from lib.__init__ import use_proxy
-from lib.lock_cookie import cookie_session
-from mystate.fanclub import FanClub
-from static.color import Color
-from static.parameter import paramstore
-from unit.handle.handle_log import setup_logging
-from unit.http.request_berriz_api import Live, MediaList
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.lib.lock_cookie import cookie_session
+from berrizdown.mystate.fanclub import FanClub
+from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
+from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.http.request_berriz_api import Live, MediaList
 
 MediaItem = dict[str, str | dict | bool]
 SelectedMedia = dict[str, list[dict]]

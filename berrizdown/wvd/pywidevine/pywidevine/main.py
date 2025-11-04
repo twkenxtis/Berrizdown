@@ -11,11 +11,11 @@ from construct import ConstructError
 from google.protobuf.json_format import MessageToDict
 from unidecode import UnidecodeError, unidecode
 
-from pywidevine import __version__
-from pywidevine.cdm import Cdm
-from pywidevine.device import Device, DeviceTypes
-from pywidevine.license_protocol_pb2 import VmpData, LicenseType
-from pywidevine.pssh import PSSH
+from berrizdown.pywidevine import __version__
+from berrizdown.pywidevine.cdm import Cdm
+from berrizdown.pywidevine.device import Device, DeviceTypes
+from berrizdown.pywidevine.license_protocol_pb2 import VmpData, LicenseType
+from berrizdown.pywidevine.pssh import PSSH
 
 
 @click.group(invoke_without_command=True)

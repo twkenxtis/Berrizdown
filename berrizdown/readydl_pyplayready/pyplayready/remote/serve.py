@@ -5,11 +5,10 @@ from uuid import UUID
 from aiohttp.typedefs import Handler
 from aiohttp import web
 
-from pyplayready import __version__, PSSH
-from pyplayready.cdm import Cdm
-from pyplayready.device import Device
-
-from pyplayready.misc.exceptions import (InvalidSession, TooManySessions, InvalidXmrLicense, InvalidPssh)
+from berrizdown.pyplayready import __version__, PSSH
+from berrizdown.pyplayready.cdm import Cdm
+from berrizdown.pyplayready.device import Device
+from berrizdown.pyplayready.misc.exceptions import (InvalidSession, TooManySessions, InvalidXmrLicense, InvalidPssh)
 
 routes = web.RouteTableDef()
 
