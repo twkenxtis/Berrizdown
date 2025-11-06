@@ -118,11 +118,11 @@ class MainProcessor:
         )
         await asyncio.gather(*tasks)
 
-    def make_cmt_link(self, data: dict[str, Any]) -> str:
+    def make_cmt_link(self) -> str:
         if self.index["replyInfo"]["isReply"] is True:
-            return f"https://berriz.in/{self.community_name}/board/{data['board']['boardId']}/post/{data['mediaId']}?reply={self.index['replyInfo']['parentCommentSeq']}"
+            return f"https://berriz.in/{self.community_name}/board/{self.index['board']['boardId']}/post/{self.index['mediaId']}?reply={self.index['replyInfo']['parentCommentSeq']}"
         else:
-            return f"https://berriz.in/{self.community_name}/board/{data['board']['boardId']}/post/{data['mediaId']}?focus=comment"
+            return f"https://berriz.in/{self.community_name}/board/{self.index['board']['boardId']}/post/{self.index['mediaId']}?focus=comment"
 
     async def save_CMT_json(self) -> None:
         """Save CMT data to json file."""
@@ -135,7 +135,7 @@ class MainProcessor:
                     {
                         "CMT": self.index,
                         "info": data,
-                        "link": self.make_cmt_link(self.index),
+                        "link": self.make_cmt_link(),
                     },
                     option=orjson.OPT_INDENT_2,
                 )
