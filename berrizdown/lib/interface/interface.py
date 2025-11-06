@@ -848,7 +848,7 @@ class URL_Parser:
     def urlparse(self, url: str) -> str:
         return url.replace("/web/main", "").replace("/applink", "").replace("app/main", "")
 
-    async def community_name_check(self, community_name: str) -> str:
+    async def community_name_check(self, community_name: str) -> int:
         return await get_community(community_name)
 
     def url2berrizin(self, url: str) -> ParseResult:
