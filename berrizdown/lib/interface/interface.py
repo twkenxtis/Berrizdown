@@ -424,7 +424,7 @@ class PostResponse(BaseModel):
 
 class Media:
     def __init__(self, info_tuple: tuple[str, object, list[str]]):
-        self.indo_tuple = info_tuple
+        self.info_tuple = info_tuple
         self.community_id = info_tuple[0]
         self.community_name = info_tuple[1]
         self.mediaType = info_tuple[2]
@@ -472,7 +472,7 @@ class Media:
 
 class CMT:
     def __init__(self, info_tuple: tuple[str, object, list[str]]):
-        self.indo_tuple = info_tuple
+        self.info_tuple = info_tuple
         self.community_id = info_tuple[0]
         self.community_name = info_tuple[1]
         self.mediaType = info_tuple[2]
@@ -691,7 +691,7 @@ class CMT:
 
 class POST:
     def __init__(self, info_tuple: tuple[str, object, list[str]]):
-        self.indo_tuple = info_tuple
+        self.info_tuple = info_tuple
         self.community_id = info_tuple[0]
         self.community_name = info_tuple[1]
         self.mediaType = info_tuple[2]
