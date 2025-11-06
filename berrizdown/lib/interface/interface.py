@@ -296,7 +296,7 @@ class PostDetil(BaseModel):
             languageCode: str
 
             class Media(BaseModel):
-                analysis: list[str]
+                analysis: Any
                 link: list[str]
                 photo: Any
 
