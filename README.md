@@ -46,7 +46,8 @@ uv run berrizdown -?
 > Make sure fully read and setting YAML config
 > `berrizconfig.yaml` and `berrizconfig.example.yaml` files in the berrizdown folder contain default values ​​and references
 - **YAML Config** \- Edit `berrizconfig.yaml` file to customize your settings
-    
+> [!IMPORTANT]
+> Un support board 【Calendar】 [issues#1](https://github.com/twkenxtis/Berrizdown/issues/1)
 
 #### FFmpeg only require when download videos
 Put ffmpeg in `berrizdown\\lib\\tools` and add ffmpeg name in `berrizconfig.yaml` or `ffmpeg` in system env

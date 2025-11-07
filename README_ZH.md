@@ -45,7 +45,8 @@ uv run berrizdown -?
 > 確保完整閱讀 YAML 配置文件
 > berrizdown檔案夾內的`berrizconfig.yaml`, berrizconfig.example.yaml為預設值和參考
 - **YAML Config** \- 編輯 `berrizconfig.yaml` 檔案來確保你的客製設定
-    
+> [!IMPORTANT]
+> 不支持看板 【Calendar】 [issues#1](https://github.com/twkenxtis/Berrizdown/issues/1)
 
 #### FFmpeg 需求只有在需要下載影片
 將 ffmpeg 放到 `berrizdown\\lib\\tools` 和ffmpeg檔名寫入 `berrizconfig.yaml` 或 `ffmpeg` 已經在系統環境變數
