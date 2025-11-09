@@ -159,10 +159,10 @@ class Board:
             return None
         selected, selected_list = await self.match_noticeonly(self.make_choice(community_menu))
         if selected is None:
-            return None  # 如果沒有選擇，提前返回
+            return None
 
         selected_list: list[dict[str:Any]]
-        selected: dict[str]
+        selected: dict[str]|None
         _type: str
         iconType: str
         _id: int | str
@@ -176,7 +176,7 @@ class Board:
         self,
         iconType: str,
         name: str,
-        selected: dict,
+        selected: dict|None,
         selected_list: list,
         result_notice: list,
     ) -> tuple[Any, str] | None:
@@ -217,8 +217,11 @@ class Board:
         name: str = selected["name"]
         return _type, iconType, _id, name
 
-    async def handle_artist_board(self, selected: dict[str, Any]) -> list[dict[str, Any]]:
+    async def handle_artist_board(self, selected: dict[str, Any]|None) -> list[dict[str, Any]]:
         board_list: list[dict[str, Any]] | None = await self.sort_board_list(selected)
+        if board_list is None:
+            logger.error(f"Fail to get board list {Color.fg('light_gray')} {selected}")
+            return []
         return await BoardMain(board_list, self.time_a, self.time_b).main()
 
     async def handle_artist_archive(self) -> tuple[list[dict], list[dict]]:
@@ -237,14 +240,18 @@ class Board:
             archive_cmt = await self.cmt.normalization(__archive_cmt)
         return archive_post_list, archive_cmt
 
-    async def handle_artist_notice(self, selected: dict[str, Any]) -> list[dict[str, Any]]:
+    async def handle_artist_notice(self, selected: dict[str, Any]|None) -> list[dict[str, Any]]:
         if paramstore.get("fanclub") is True:
             logger.info("No Notice in Fanclub skip")
             return []
         board_list: list[dict[str, Any]] | None = await self.sort_board_list(selected)
+        if board_list is None:
+            return []
         return await BoardNotice(board_list, self.communityid, self.time_a, self.time_b).notice_list()
 
-    async def sort_board_list(self, data: dict[str, Any]) -> list[dict[str, Any]] | None:
+    async def sort_board_list(self, data: dict[str, Any]|None) -> list[dict[str, Any]] | None:
+        if data is None:
+            return None
         boards_id: int | str = data.get("id", "")
         boards_name: int | str = data.get("name", "")
         if data.get("type") in ("board", "shop", "event", "Event", "SHOP", "Shop"):
