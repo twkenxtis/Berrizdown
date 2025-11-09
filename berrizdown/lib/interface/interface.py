@@ -289,7 +289,7 @@ class PostDetil(BaseModel):
             body: str
             communityId: int
             createdAt: str
-            hashtags: list[str]
+            hashtags: Any
             isActive: bool
             isBaned: bool
             isUpdated: bool
@@ -387,7 +387,7 @@ class PostResponse(BaseModel):
         body: str
         communityId: int
         createdAt: str
-        hashtags: list[str] = []
+        hashtags: Any
         isActive: bool
         isBaned: bool
         isUpdated: bool
