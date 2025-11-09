@@ -538,7 +538,10 @@ class CMT:
     async def request_cmt_info(self, comment_type: str) -> Public_context|dict:
         match comment_type:
             case "reply":
-                comment_id: str = self.parsed.query.split("=")[1]
+                try:
+                    comment_id: str = self.parsed.query.split("=")[1]
+                except IndexError:
+                    comment_id:str = ""
                 if comment_id.isdigit() is True:
                     self.data: Comment = Comment.model_validate(await self.artis.comment(int(comment_id), use_proxy)).model_dump()
                     if self.data.get("code") == "0000":
