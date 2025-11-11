@@ -314,7 +314,15 @@ class BerrizAPIClient:
             # return the JSON error
             return await response.json()
 
-        if message in ("FS_ER4020", "FS_AU4020", "FS_AU4021", "Jwt is expired", "Jwt is not in the form of Header.Payload.Signature with two dots and 3 sections"):
+        error = (
+            "FS_ER4020",
+            "FS_AU4020",
+            "FS_AU4021",
+            "Jwt is expired",
+            "Jwt is not in the form of Header.Payload.Signature with two dots and 3 sections",
+        )
+
+        if any(t in message for t in error):
             # force refresh cookie
             await self.cookie(True)
 
