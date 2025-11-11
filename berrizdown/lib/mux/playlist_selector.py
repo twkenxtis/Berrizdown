@@ -174,7 +174,6 @@ class PlaylistSelector:
             ).execute_async()
         except KeyboardInterrupt:
             sys.exit(0)
-
         return track_map[answer]
 
     async def _auto_select_track(self, target: int, track_type: TrackType) -> tuple[HLSVariant | HLSAudioTrack | MediaTrack | None, str | None]:
@@ -183,7 +182,7 @@ class PlaylistSelector:
 
         if not candidates:
             if track_type == TrackType.AUDIO:
-                return self._fallback_audio_selection(target)
+                return await self._fallback_audio_selection(target)
             raise ValueError(f"{track_type.value} track not found for target {target}")
 
         best = max(candidates, key=lambda x: x[2])
@@ -303,7 +302,7 @@ class PlaylistSelector:
             tolerance = target * 0.2 if hasattr(track, "id") else target * 0.1
             return abs(track_kbps - target) <= tolerance
 
-    def _fallback_audio_selection(self, target_kbps: int) -> tuple[HLSAudioTrack | MediaTrack | None, str | None]:
+    async def _fallback_audio_selection(self, target_kbps: int) -> tuple[HLSAudioTrack | MediaTrack | None, str | None]:
         """音訊回退選擇（選擇最高碼率）"""
         all_tracks = []
 
@@ -316,8 +315,13 @@ class PlaylistSelector:
             best = max(all_tracks, key=lambda x: x[2])
             logger.warning(f"Using highest bitrate audio: [{best[1].upper()}] {best[2] // 1000:,} kbps")
             return best[0], best[1]
-
-        raise ValueError("No audio tracks available")
+        
+        logger.warning("Fail to auto select audio track, fallback to ask mode")
+        
+        if not self._collect_all_track_items(TrackType.AUDIO):
+            raise ValueError("No audio tracks available")
+        else:
+            return await self._ask_track(TrackType.AUDIO)
 
     async def _apply_filters(self, track: Any | None, track_type: str | None) -> tuple[Any | None, float | None, float | None]:
         """應用時間過濾到軌道"""
