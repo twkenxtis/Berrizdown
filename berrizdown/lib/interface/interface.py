@@ -953,6 +953,12 @@ class Community_Uniqueness:
             custom_cm_name: str = await custom_dict(cm_name)
             result.append({(cid, cm_name, custom_cm_name): srcs})
         """return is single List[Dict]"""
+        selected_media_list.photo_list = []
+        selected_media_list.post_list = []
+        selected_media_list.notice_list = []
+        selected_media_list.cmt_list = []
+        selected_media_list.vod_list = []
+        selected_media_list.live_list = []
         return result
 
 
