@@ -44,7 +44,7 @@ class GetMPD_wv:
     @staticmethod
     def parse_pssh(raw_mpd: requests.Response) -> list[str] | None:
         """
-        解析 MPD 檔案的回應，提取 PSSH 值，並過濾出長度為 76 的有效值
+        解析 MPD 檔案的回應，提取 PSSH 值，並過濾出長度為 300 的有效值
         """
         # extract_pssh 返回 List[str]
         pssh_values: list[str] = extract_pssh(raw_mpd)
@@ -54,11 +54,11 @@ class GetMPD_wv:
 
         valid_pssh_list: list[str] = []
         for pssh in pssh_values:
-            if len(pssh) == 76:
+            if len(pssh) < 300:
                 valid_pssh_list.append(pssh)
 
         if valid_pssh_list:
             return valid_pssh_list
         else:
-            logger.error("No MSPR:PRO PSSH value with exactly 76 characters found")
+            logger.error("No MSPR:PRO PSSH value with exactly 300 characters found")
             return None
