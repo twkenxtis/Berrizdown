@@ -151,18 +151,16 @@ class FFmpegMuxer:
                 text=True,
             )
             logger.debug(f"Packager output: {result.stdout}")
-
-            # 成功後.m4v 改回指定副檔名
-            final_output_path = packager_output_path.with_suffix(f".{container}")
-            packager_output_path.rename(final_output_path)
-            return True
-
         except subprocess.CalledProcessError as e:
             logger.error(f"Packager failed: {e.stderr}")
             return False
         except Exception as e:
             logger.exception(f"Unexpected error running packager: {e}")
             return False
+        # 成功後.m4v 改回指定副檔名
+        final_output_path = packager_output_path.with_suffix(f".{container}")
+        packager_output_path.rename(final_output_path)
+        return True
 
     async def mux_main(self, tempfile_path: Path) -> bool:
         if paramstore.get("nodl") is True:
