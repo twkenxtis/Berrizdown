@@ -45,7 +45,7 @@ class GetMPD_prd:
     @staticmethod
     def parse_pssh(raw_mpd: requests.Response) -> list[str] | None:
         """
-        解析 MPD 文件並過濾 MSPR:PRO PSSH 值（長度大於 76 的值）
+        解析 MPD 文件並過濾 MSPR:PRO PSSH 值（長度大於 400 的值）
 
         :param raw_mpd: requests.Response 物件
         :return: PSSH 列表或 None
@@ -58,11 +58,11 @@ class GetMPD_prd:
 
         valid_pssh_list: list[str] = []
         for pssh in pssh_values:
-            if len(pssh) > 76:
+            if len(pssh) > 399:
                 valid_pssh_list.append(pssh)
 
         if valid_pssh_list:
             return valid_pssh_list
         else:
-            logger.error("No MSPR:PRO PSSH value with exactly 76 characters found")
+            logger.error("No MSPR:PRO PSSH value with exactly 400 characters found")
             return None
