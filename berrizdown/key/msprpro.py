@@ -30,7 +30,7 @@ def extract_pssh(response: str | bytes) -> list[str]:
             "mspr": "urn:microsoft:playready",
         }
 
-        pssh_elements = root.xpath("//cenc:pssh", namespaces=namespaces)
+        pssh_elements = root.xpath("//mspr:pro", namespaces=namespaces)
         return [pssh.text.strip() for pssh in pssh_elements if pssh.text]
 
     except etree.XMLSyntaxError as e:
