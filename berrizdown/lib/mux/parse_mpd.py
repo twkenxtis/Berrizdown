@@ -156,10 +156,27 @@ class MPDParser:
             return []
 
         segments = []
+        # 追蹤累積時間
+        current_time = 0  
+        
         for s_elem in seg_timeline.findall("./S", self.namespaces):
             try:
-                segment = self._parse_segment_element(s_elem)
+                # 獲取屬性，t 可能是 None
+                t_attr = self._get_attr(s_elem, "t", attr_type=int, default=None)
+                d = self._get_attr(s_elem, "d", attr_type=int, required=True, elem_name="Segment 'S'")
+                r = self._get_attr(s_elem, "r", attr_type=int, default=0)
+                
+                # 如果有 t 屬性，使用它 否則使用累積時間
+                if t_attr is not None:
+                    current_time = t_attr
+                
+                # 創建 Segment 對象
+                segment = Segment(t=current_time, d=d, r=r)
                 segments.append(segment)
+                
+                # 更新累積時間為下一個 segment 的開始位置
+                current_time += d * (r + 1)
+                
             except ValueError as e:
                 logger.warning(f"Skipping invalid segment: {e}")
 
@@ -268,12 +285,14 @@ class MPDParser:
         return init_template, media_template
 
     def _extract_optional_attributes(self, rep: ET.Element, adapt_set: ET.Element, seg_template: ET.Element) -> dict[str, Any]:
+        mime_type = rep.get("mimeType") or adapt_set.get("mimeType", "")
+        
         return {
             "width": self._get_attr(rep, "width", attr_type=int),
             "height": self._get_attr(rep, "height", attr_type=int),
             "audio_sampling_rate": self._get_attr(rep, "audioSamplingRate", attr_type=int),
             "timescale": self._get_attr(seg_template, "timescale", attr_type=int, default=1),
-            "mime_type": adapt_set.get("mimeType", ""),
+            "mime_type": mime_type,
         }
 
     async def parse_all_tracks(self) -> MPDContent:
@@ -285,16 +304,21 @@ class MPDParser:
         video_tracks, audio_tracks = [], []
 
         for adapt_set in period.findall("./AdaptationSet", self.namespaces):
-            mime_type = adapt_set.get("mimeType", "")
+            # 從 AdaptationSet 層級讀取 (可能是空的)
+            adapt_mime_type = adapt_set.get("mimeType", "")
             lang = adapt_set.get("lang", "")
 
             for rep_element in adapt_set.findall("./Representation", self.namespaces):
                 track = self._parse_representation(rep_element, adapt_set, lang)
 
                 if track:
-                    if mime_type.startswith("video"):
+                    # 先使用 AdaptationSet 的 mimeType
+                    # 不存在用 Representation 的 mimeType (已存儲在 track.mime_type)
+                    effective_mime = adapt_mime_type or track.mime_type
+
+                    if effective_mime.startswith("video"):
                         video_tracks.append(track)
-                    elif mime_type.startswith("audio"):
+                    elif effective_mime.startswith("audio"):
                         audio_tracks.append(track)
 
         return MPDContent(
