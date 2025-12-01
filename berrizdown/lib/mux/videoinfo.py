@@ -1,20 +1,24 @@
 import os
 
 import ffmpeg
+from berrizdown.static.parameter import paramstore
 
 
 class VideoInfo:
     def __init__(self, path: str):
         if not os.path.exists(path):
             raise FileNotFoundError(f"File not found: {path}")
+        
         self.path = path
-        self._probe_data = ffmpeg.probe(self.path)
+        
+        if paramstore.get("ffprobe_path_ok") is True:
+            self._probe_data = ffmpeg.probe(self.path)
 
-        self._format = self._probe_data["format"]
-        self._vstreams = self._probe_data["streams"]
+            self._format = self._probe_data["format"]
+            self._vstreams = self._probe_data["streams"]
 
-        self._size_bytes = int(self._format.get("size", 0))
-        self._duration_sec = float(self._format.get("duration", 0.0))
+            self._size_bytes = int(self._format.get("size", 0))
+            self._duration_sec = float(self._format.get("duration", 0.0))
 
     @property
     def size(self) -> str:
@@ -96,10 +100,19 @@ class VideoInfo:
         return "unknown"
 
     def as_dict(self) -> dict:
-        return {
-            "size": self.size,
-            "duration": self.duration,
-            "video_codec": self.codec,
-            "quality": self.quality_label,
-            "audio_codec": self.audio_codec,
-        }
+        if paramstore.get("ffprobe_path_ok") is True:
+            return {
+                "size": self.size,
+                "duration": self.duration,
+                "video_codec": self.codec,
+                "quality": self.quality_label,
+                "audio_codec": self.audio_codec,
+            }
+        else:
+            return {
+                "size": 0,
+                "duration": -1,
+                "video_codec": "unknown",
+                "quality": "unknown",
+                "audio_codec": "unknown",
+            }
