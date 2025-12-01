@@ -26,3 +26,4 @@ class Route:
         self.Proxy_list = mainpath.parent.parent.joinpath("static", "proxy", "proxy.txt")
         self.download_info_db = mainpath.parent.parent.joinpath("lock", "download_info.db")
         self.ffmpeg = mainpath.parent.parent.joinpath("lib", "tools", CFG["Container"]["ffmpeg"])
+        self.ffprobe = mainpath.parent.parent.joinpath("lib", "tools", CFG["Container"]["ffprobe"])
