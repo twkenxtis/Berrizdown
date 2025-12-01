@@ -730,6 +730,7 @@ def tools_check() -> None:
         "packager": R.packager_path,
         "mkvmerge": R.mkvmerge_path,
         "ffmpeg": R.ffmpeg,
+        "ffprobe": R.ffprobe,
     }
     if _check_tool_version(["mkvmerge", "--version"]):
         # 版本檢查成功，不再需要檢查路徑
@@ -743,6 +744,10 @@ def tools_check() -> None:
         # 版本檢查成功，不再需要檢查路徑
         paramstore._store["ffmpeg_path_ok"] = True
         tools.pop("ffmpeg", None)
+    if _check_tool_version(["ffprobe", "-version"]):
+        # 版本檢查成功，不再需要檢查路徑
+        paramstore._store["ffprobe_path_ok"] = True
+        tools.pop("ffprobe", None)
     if _check_tool_version(["packager", "--version"]):
         # 版本檢查成功，不再需要檢查路徑
         paramstore._store["packager_path_ok"] = True
