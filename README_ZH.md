@@ -24,13 +24,22 @@ cd Berrizdown
 uv sync
 uv run berrizdown -?
 ```
+# 代理加速下快速开始
+```
+git clone --depth=1 https://githubfast.com/twkenxtis/Berrizdown
+cd Berrizdown
+uv sync --index https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+打开berrizdown档案夹中的 berrizconfig.yaml 编辑设定， ctrl+F 搜索 Proxy_Enable
+调整成 true 并设定本地http(s)代理
+uv run berrizdown -?
+```
 
 
 # 必要條件
 #### Python 3.11 或更新版本
 - UV 需要在您的系統上安裝
     [UV](https://docs.astral.sh/uv/getting-started/installation/)
-    check UV docs for more information
+    到UV官網查看詳細資訊
     ```
     Windows:
     powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
@@ -53,6 +62,8 @@ uv run berrizdown -?
 - Windows: [AnimMouse's FFmpeg Builds](https://github.com/AnimMouse/ffmpeg-stable-autobuild/releases)
 - Linux: [John Van Sickle's FFmpeg Builds](https://johnvansickle.com/ffmpeg/)
 
+將 ffprobe 放到 `berrizdown\\lib\\tools` 和ffprobe檔名寫入 `berrizconfig.yaml` 或 `ffprobe` 已經在系統環境變數
+
 
 
 # Cookie / Login
@@ -63,7 +74,7 @@ uv run berrizdown -?
 
 從你的瀏覽器導出 **Netscape format** 正常再Berriz登入的 cookie:
 
-- **Firefox**: [Export Cookies](https://addons.mozilla.org/addon/export-cookies-txt)
+- **Firefox**: [Get cookies.txt LOCALLY](https://addons.mozilla.org/en-US/firefox/addon/get-cookies-txt-locally/)
 - **Chromium**: [Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
 
 📁 複製 `default.txt` 到 `berrizdown\\cookies\\Berriz` 檔案夾內，確保在複製前重新命名.txt

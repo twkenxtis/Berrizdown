@@ -54,6 +54,8 @@ Put ffmpeg in `berrizdown\\lib\\tools` and add ffmpeg name in `berrizconfig.yaml
 - Windows: [AnimMouse's FFmpeg Builds](https://github.com/AnimMouse/ffmpeg-stable-autobuild/releases)
 - Linux: [John Van Sickle's FFmpeg Builds](https://johnvansickle.com/ffmpeg/)
 
+Put ffprobe in `berrizdown\\lib\\tools` and add ffprobe name in `berrizconfig.yaml` or `ffprobe` in system env
+
 
 
 # Cookie / Login
@@ -64,7 +66,7 @@ Put ffmpeg in `berrizdown\\lib\\tools` and add ffmpeg name in `berrizconfig.yaml
 
 Export your browser cookies in **Netscape format** while logged in with an active at the Berriz website:
 
-- **Firefox**: [Export Cookies](https://addons.mozilla.org/addon/export-cookies-txt)
+- **Firefox**: [Get cookies.txt LOCALLY](https://addons.mozilla.org/en-US/firefox/addon/get-cookies-txt-locally/)
 - **Chromium**: [Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
 
 📁 Copy `default.txt` to `berrizdown\\cookies\\Berriz` folder.  
