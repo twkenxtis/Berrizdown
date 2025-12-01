@@ -88,7 +88,7 @@ async def board_post_reply_artis() -> bool:
     # sample post uuid
     postid: str = "0199c97e-8cbf-ebd6-7952-ac1a68998050"
     """Vaild UUID for board ID, Here I use null UUID for demo"""
-    boardid: str = "00000000-0000-0000-0000-000000000000"
+    boardid: str = "0196c3b8-8469-2bde-b656-2c53e750c910"
     # all the vaild url for post-replay
     urls: list[HttpUrl] = [
         f"https://link.berriz.in/web/main/iu/board/{boardid}/post/{postid}/?reply=1759787",
@@ -103,7 +103,7 @@ async def board_post_reply_user2user() -> Never:
     # sample post uuid
     postid: str = "019a3860-2851-c927-0e6f-678dcf6424cc"
     """Vaild UUID for board ID, Here I use null UUID for demo"""
-    boardid: str = "00000000-0000-0000-0000-000000000000"
+    boardid: str = "01971b77-33b1-6468-b965-a3278bb4577a"
     # all the vaild url for post-replay
     urls: list[HttpUrl] = [
         f"https://link.berriz.in/web/main/ive/board/{boardid}/post/{postid}/?reply=2040500",
@@ -118,7 +118,7 @@ async def board_post_reply_user2artis() -> Never:
     # sample post uuid
     postid: str = "019a27bf-d625-4cf3-0443-dc91b64608e9"
     """Vaild UUID for board ID, Here I use null UUID for demo"""
-    boardid: str = "00000000-0000-0000-0000-000000000000"
+    boardid: str = "0196c3b8-d5e6-6ec7-345b-680fc6601ca8"
     # all the vaild url for post-replay
     urls: list[HttpUrl] = [
         f"https://link.berriz.in/web/main/iu/board/{boardid}/post/{postid}/?reply=2007535",
