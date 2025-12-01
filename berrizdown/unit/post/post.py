@@ -14,7 +14,6 @@ from berrizdown.unit.__init__ import FilenameSanitizer
 from berrizdown.unit.date.date import get_formatted_publish_date
 from berrizdown.unit.foldermanger import POSTFolderManager
 from berrizdown.unit.handle.handle_log import setup_logging
-from berrizdown.unit.http.request_berriz_api import Arits, Translate
 from berrizdown.unit.image.class_ImageDownloader import ImageDownloader
 from berrizdown.unit.post.postjsondata import PostJsonData
 from berrizdown.unit.post.save_html import SaveHTML, open_template_post_html
@@ -170,14 +169,6 @@ class Run_Post_dl:
     def __init__(self, selected_media: list[dict], community_name: str):
         self.selected_media = selected_media
         self.input_community_name: str = community_name
-
-    @cached_property
-    def artis(self) -> Arits:
-        return Arits()
-
-    @cached_property
-    def translate(self) -> Translate:
-        return Translate()
 
     async def img_stage0_process(self, index: dict[str, Any]) -> tuple[Any, Path] | None:
         folder = None
