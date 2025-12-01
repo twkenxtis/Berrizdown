@@ -176,23 +176,31 @@ class SUCCESS:
         video_codec: str
         video_quality_label: str
         video_audio_codec: str
-        video_codec, video_quality_label, video_audio_codec = await extract_video_info(self.path)
+        if paramstore.get("ffprobe_path_ok") is True:
+            video_codec, video_quality_label, video_audio_codec = await extract_video_info(self.path)
+        else:
+            video_codec, video_quality_label, video_audio_codec = "unknow_codec", "unknown_resolution", "unknown_audio_codec"
+            
         video_meta: dict[str, str] = meta_name(
             self.time_str,
             self.publicinfo.title,
             self.community_name,
             self.artis_name,
         )
+        
         video_meta["quality"] = video_quality_label
         video_meta["video"] = video_codec
         video_meta["audio"] = video_audio_codec
         filename_formact: str = CFG["output_template"]["video"]
+        
         if video_codec == "{video}":
             filename_formact = filename_formact.replace(".{quality}", "")
             filename_formact = filename_formact.replace(".{video}", "")
         if video_audio_codec == "{audio}":
             filename_formact = filename_formact.replace(".{audio}", "")
+            
         filename = OutputFormatter(filename_formact).format(video_meta) + f".{container}"
+        
         # 重新命名並移動到上級目錄
         await aios.rename(self.path, Path(self.base_dir).parent / filename)
         return filename
