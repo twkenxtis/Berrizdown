@@ -45,6 +45,7 @@ Container:
   shaka-packager: packager-win-x64.exe
   mkvmerge: mkvmerge.exe
   ffmpeg: ffmpeg.exe
+  ffprobe: ffprobe.exe
 
 Video:
   # 1080, 720, 480, 360, 144, ask, None
