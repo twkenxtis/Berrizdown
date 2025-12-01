@@ -1,4 +1,5 @@
 import asyncio
+import random
 from datetime import datetime
 from typing import Any
 from functools import cached_property
@@ -9,6 +10,8 @@ import jwt
 
 from berrizdown.cookies.loadcookie import LoadCookie
 from berrizdown.lib.account.login import LoginManager
+from berrizdown.lib.__init__ import use_proxy
+from berrizdown.lib.Proxy import Proxy
 from berrizdown.lib.path import Path
 from berrizdown.static.color import Color
 from berrizdown.static.parameter import paramstore
@@ -46,6 +49,7 @@ class Refresh_JWT:
             data: dict[str, Any] = await _send_post_http(self.cookie_bz_r.value)
         except AttributeError:
             return ""
+        
         if data.get("code", "") == "FS_AU4021":
             if Refresh_JWT.fsau4021_log is True:
                 Refresh_JWT.fsau4021_log = False
@@ -119,6 +123,7 @@ class Refresh_JWT:
 
 
 async def _send_post_http(bz_r: str) -> dict | None:
+    proxy: str | None = await _get_random_proxy()
     url = "https://account.berriz.in/auth/v1/token:refresh"
     timeout = aiohttp.ClientTimeout(total=7)
     headers = {
@@ -133,6 +138,7 @@ async def _send_post_http(bz_r: str) -> dict | None:
                 headers=headers,
                 json={"clientId": "e8faf56c-575a-42d2-933d-7b2e279ad827"},
                 ssl=True,
+                proxy=proxy,
             ) as response:
                 logger.info(f"{response.status} {url} {response.reason}")
                 if response is not None:
@@ -140,8 +146,23 @@ async def _send_post_http(bz_r: str) -> dict | None:
                 else:
                     raise aiohttp.ClientError("No response")
     except aiohttp.ClientConnectorError as e:
-        logger.warning(f"{Color.fg('light_gray')}Request connection error:{Color.reset()} {Color.fg('periwinkle')}{url}{Color.reset()} - {e}")
+        logger.warning(f"Request connection error: {url} - {e}")
     except asyncio.CancelledError:
-        logger.warning(f"{Color.fg('light_gray')}Request cancelled{Color.reset()}")
+        logger.warning("Request cancelled")
         return
     return None
+
+
+async def _get_random_proxy() -> str:
+    """Select a random proxy from the proxy list, throttled to one call per second."""
+    if use_proxy is not True:
+        return ""
+    
+    raw: str = random.choice(Proxy._load_proxies())
+    raw = raw.strip().rstrip(",")
+    try:
+        host, port, user, password = raw.split(":", maxsplit=3)
+        proxy_url: str = f"http://{user}:{password}@{host}:{port}"
+    except ValueError:
+        proxy_url: str = raw
+    return proxy_url
