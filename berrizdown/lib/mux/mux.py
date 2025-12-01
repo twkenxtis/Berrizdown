@@ -157,6 +157,7 @@ class FFmpegMuxer:
         except Exception as e:
             logger.exception(f"Unexpected error running packager: {e}")
             return False
+        asyncio.sleep(1.255)
         # 成功後.m4v 改回指定副檔名
         final_output_path = packager_output_path.with_suffix(f".{container}")
         packager_output_path.rename(final_output_path)
