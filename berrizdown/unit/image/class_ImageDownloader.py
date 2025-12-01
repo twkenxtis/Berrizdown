@@ -4,7 +4,7 @@ import shutil
 from io import BytesIO
 from typing import Any
 
-from berrizdown.lib.__init__ import printer_video_folder_path_info, resolve_conflict_path
+from berrizdown.lib.__init__ import printer_video_folder_path_info, resolve_conflict_path, use_proxy
 from berrizdown.lib.path import Path
 from berrizdown.static.color import Color
 from berrizdown.unit.__init__ import USERAGENT, FilenameSanitizer
@@ -74,7 +74,6 @@ class ImageDownloader:
     async def download_image(self, url: str) -> bytes | None:
         """Download image and return raw bytes. Caller handles saving."""
         params = {}
-        use_proxy = False
         usecookie = False
         bytes_data: Any = await self.getrequest._send_request("get", url, params, self.header, use_proxy, usecookie, response_object=False)
         if not isinstance(bytes_data, bytes):
