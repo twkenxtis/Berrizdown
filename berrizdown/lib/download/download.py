@@ -1,6 +1,7 @@
 import asyncio
 import os
 import socket
+import random
 import sys
 import time
 from collections.abc import Callable
@@ -13,7 +14,9 @@ from typing import Any
 import aiohttp
 from aiohttp import ClientTimeout, ClientResponse
 
+from berrizdown.lib.__init__ import use_proxy
 from berrizdown.lib.__init__ import container
+from berrizdown.lib.Proxy import Proxy
 from berrizdown.lib.load_yaml_config import CFG, ConfigLoader
 from berrizdown.lib.mux.merge import MERGE
 from berrizdown.lib.mux.parse_hls import HLS_Paser, HLSContent
@@ -36,6 +39,22 @@ logger = setup_logging("download", "peach")
 
 
 progress_manager = MultiTrackProgressManager()
+
+
+
+async def _get_random_proxy() -> str:
+    """Select a random proxy from the proxy list, throttled to one call per second."""
+    if use_proxy is not True:
+        return ""
+    
+    raw: str = random.choice(Proxy._load_proxies())
+    raw = raw.strip().rstrip(",")
+    try:
+        host, port, user, password = raw.split(":", maxsplit=3)
+        proxy_url: str = f"http://{user}:{password}@{host}:{port}"
+    except ValueError:
+        proxy_url: str = raw
+    return proxy_url
 
 
 @dataclass
@@ -186,6 +205,7 @@ class MediaDownloader:
                     url,
                     allow_redirects=True,
                     timeout=ClientTimeout(total=10),
+                    proxy=await _get_random_proxy() or "",
                 ) as resp:
                     return url, {
                         "size": int(resp.headers.get("Content-Length", 0)),
@@ -238,7 +258,10 @@ class MediaDownloader:
             try:
                 assert self.session is not None
 
-                async with self.session.get(url) as response:
+                async with self.session.get(
+                    url,
+                    proxy = await _get_random_proxy() or "",
+                    ) as response:
                     logger.debug(f"Downloading {Color.fg('cyan')}{url}{Color.reset()} to {save_path}")
 
                     if response.status not in (200, 206):
@@ -633,37 +656,36 @@ class Start_Download_Queue:
         start_time = None
         end_time = None
 
-        try:
-            v_resolution_choice, a_resolution_choice, video_codec = ConfigLoader._check_hls_dash(CFG)
+        v_resolution_choice, a_resolution_choice, video_codec = ConfigLoader._check_hls_dash(CFG)
 
-            if paramstore.get("start_time") is not None:
-                start_time = self.video_start2end_time(paramstore.get("start_time"))
-            if paramstore.get("end_time") is not None:
-                end_time = self.video_start2end_time(paramstore.get("end_time"))
-            hls_parser = HLS_Paser()
-            hls_content = await hls_parser.parse_playlist(self.raw_hls, self.playback_info.hls_playback_url)
-            mpd_parser = MPDParser(self.raw_mpd, self.playback_info.dash_playback_url)
-            mpd_content = await mpd_parser.parse_all_tracks()
+        if paramstore.get("start_time") is not None:
+            start_time = self.video_start2end_time(paramstore.get("start_time"))
+        if paramstore.get("end_time") is not None:
+            end_time = self.video_start2end_time(paramstore.get("end_time"))
+        hls_parser = HLS_Paser()
+        hls_content = await hls_parser.parse_playlist(self.raw_hls, self.playback_info.hls_playback_url)
+        mpd_parser = MPDParser(self.raw_mpd, self.playback_info.dash_playback_url)
+        mpd_content = await mpd_parser.parse_all_tracks()
 
-            if self.playback_info.drm_info is None:
-                selector = PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time)
-            else:
-                selector = PlaylistSelector(hls_content, mpd_content, "mpd", start_time, end_time)
+        if self.playback_info.drm_info is None:
+            selector = PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time)
+        else:
+            selector = PlaylistSelector(hls_content, mpd_content, "mpd", start_time, end_time)
 
-            match paramstore.get("get_v_list"):
-                case True:
-                    PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time).print_parsed_content()
-                case _:
-                    playlist_content = await selector.select_tracks(v_resolution_choice, a_resolution_choice, video_codec)
+        match paramstore.get("get_v_list"):
+            case True:
+                PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time).print_parsed_content()
+            case _:
+                playlist_content = await selector.select_tracks(v_resolution_choice, a_resolution_choice, video_codec)
 
-                    if paramstore.get("nodl") is True:
-                        logger.info(f"{Color.fg('light_gray')}Skip downloading{Color.reset()}")
-                        return False
-                    else:
-                        await self.start_download_queue(playlist_content, self.playback_info.duration)
+                if paramstore.get("nodl") is True:
+                    logger.info(f"{Color.fg('light_gray')}Skip downloading{Color.reset()}")
+                    return False
+                else:
+                    await self.start_download_queue(playlist_content, self.playback_info.duration)
 
-        except ValueError as e:
-            logger.error(f"{e}{Color.reset()}{Color.fg('orange')} Check your input parameters [--ss / --to]")
+        # except ValueError as e:
+        #     logger.error(f"{e}{Color.reset()}{Color.fg('orange')} Check your input parameters [--ss / --to]")
 
     def video_start2end_time(self, time: float | int | str) -> float:
         sort_time = video_start2end_time(time)
