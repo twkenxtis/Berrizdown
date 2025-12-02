@@ -50,6 +50,9 @@ class Refresh_JWT:
         except AttributeError:
             return ""
         
+        if data is None:
+            return None
+        
         if data.get("code", "") == "FS_AU4021":
             if Refresh_JWT.fsau4021_log is True:
                 Refresh_JWT.fsau4021_log = False
