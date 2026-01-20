@@ -26,12 +26,13 @@ from berrizdown.lib.path import Path
 from berrizdown.lib.processbar.processbar import MultiTrackProgressManager
 from berrizdown.lib.rename.rename import SUCCESS
 from berrizdown.lib.save_json_data import save_json_data
+from berrizdown.lib.subdl import SaveSub
 from berrizdown.lib.video_folder import Video_folder
 from berrizdown.static.color import Color
 from berrizdown.static.parameter import paramstore
 from berrizdown.static.PlaybackInfo import PlaybackInfo
 from berrizdown.static.PublicInfo import PublicInfo
-from berrizdown.unit.__init__ import USERAGENT
+from berrizdown.unit.__init__ import USERAGENT, FilenameSanitizer
 from berrizdown.unit.date.date import video_start2end_time
 from berrizdown.unit.handle.handle_log import setup_logging
 
@@ -642,12 +643,18 @@ class Start_Download_Queue:
             logger.error("Failed to parse Playlist.")
             return
         output_dir, custom_community_name, community_name = await self.get_output_dir()
-        if output_dir is not None and os.path.exists(output_dir):
+        if output_dir is not None and os.path.exists(output_dir) and not paramstore.get("subs_only") is True:
             await self.task_of_info(output_dir, custom_community_name, community_name, playlist_content)
             success = await self.start_request_download(output_dir, playlist_content, video_duration)
             # 處理成功後的混流、重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
+            if not paramstore.get("no_subs") is True:
+                await SaveSub(output_dir, self.raw_hls, video_file_name).start()
             await self.vv.re_name_folder(video_file_name, mux_bool_status)
+        elif paramstore.get("subs_only") is True:
+            await SaveSub(
+                output_dir, self.raw_hls, FilenameSanitizer.sanitize_filename(self.public_info.title)
+            ).start()
         else:
             logger.error("Failed to create output directory.")
             raise ValueError
