@@ -2,12 +2,16 @@ import sys
 
 from berrizdown.lib.click_types import *
 from berrizdown.static.help import print_help
+from berrizdown.static.version import __version__
 
 if show_help():
     print_help()
     sys.exit(0)
 
 if version():
+    print(f"{Color.fg('yellow')}/" * 26)
+    print(f"{Color.fg('aquamarine')}Berrizdown version: {Color.fg('gold')}{__version__}{Color.reset()}")
+    print(f"{Color.fg('yellow')}\{Color.reset()}" * 26)
     sys.exit(0)
 
 import rich.traceback
