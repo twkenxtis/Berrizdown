@@ -61,10 +61,12 @@ def print_help() -> None:
         "--cdm",
         "--cache",
         "--no-cache",
-        "",
         "--save-dir",
+        "",
+        "-S, --subs-only",
+        "-ns, --no-subs",
+        "",
         "--version, --v",
-        "--nofolder --nodir",
     ]
 
     descriptions: list[str] = [
@@ -117,6 +119,9 @@ def print_help() -> None:
         "disable the use of the CDM and only retrieve decryption keys from Key Vaults",
         "disable the use of Key Vaults and retrieve decryption keys only from CDM",
         "Set output directory",
+        "",
+        "Only download subtitle tracks",
+        "Do not download subtitle tracks",
         "",
         "Show version",
     ]
