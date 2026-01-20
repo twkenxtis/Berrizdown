@@ -14,6 +14,7 @@
 * **自訂** \- YAML\-豐富設定
 * **自動化** \- 互動式選單或使用網址快速自動輸入並檢測
 * **Log** \- 自動跳過已經下載過的項目
+* **字幕** \- 支持下載Berriz AI字幕
 
 ![DEMO](https://github.com/twkenxtis/Berrizdown/blob/main/dmeo.gif)
 
@@ -107,7 +108,6 @@ uv run berrizdown -?
 
 
 > [!IMPORTANT]
-> 沒有支持Live實時直播的下載,該功能將未來添加
 > 如果終端報錯提示缺少工具 請按造指引添加到路徑中 `berrizdown\\lib\\tools`
 
 
@@ -159,6 +159,8 @@ uv run berrizdown -?
 | `--cache` | 只使用本地Key資料庫解密 |
 | `--no-cache` | 只使用cdm解密 |
 | `--save-dir` | 指定下載的檔案夾路徑並覆蓋原始設定值 |
+| `-S`, `--subs-only` | 只下載字幕 |
+| `-ns`, `--no-subs` | 跳過下載字幕 |
 | `--version`, `--v` | 顯示版本 |
 
 
@@ -237,6 +239,16 @@ uv run berrizdown -?
 - 下載 Woodz 評論並指定下載目錄
     ```
     uv run berrizdown https://berriz.in/en/woodz/board/0197e392-1bc8-27f8-36ff-1233e29f3c0a/post/01992d84-662c-14a6-7487-206ebc06292b/?focus=comment --save-dir "C:\\Users\\omenbibi\\Desktop\\berrizdown\\Woodz"
+    ```
+
+- 下載 i-dle 直播重播影片，僅需字幕
+    ```
+    uv run berrizdown https://berriz.in/en/i-dle/live/replay/019b4ed2-8b27-a4de-f4c2-30802de719ed/ --subs-only
+    ```
+
+- 下載 lightsum 直播重播影片，不需字幕
+    ```
+    uv run berrizdown -g lightsum -l --no-subs
     ```
 
 

@@ -14,6 +14,7 @@
 * **Customizable** \- YAML\-based configuration
 * **Auto-Detection** \- Interactive menus or automatic URL recognition
 * **Log** \- Automatically skip already downloaded files
+* **Subtitle** \- Can download berriz AI subtitle
 
 ![DEMO](https://github.com/twkenxtis/Berrizdown/blob/main/dmeo.gif)
 
@@ -99,7 +100,6 @@ Use your **Berriz account and password** (not Google/Apple login):
 
 
 > [!IMPORTANT]
-> No live stream support and no Youtube support, Live stream dl will be added in the future
 > If console show missing tool, please follow path and put it in `berrizdown\\lib\\tools`
 
 
@@ -151,6 +151,8 @@ Use your **Berriz account and password** (not Google/Apple login):
 | `--cache` | Use only Key Vaults for decryption keys |
 | `--no-cache` | Use only CDM for decryption keys |
 | `--save-dir` | Set output directory, and overwire berrizconfig.yaml |
+| `-S`, `--subs-only` | Only download subtitle tracks |
+| `-ns`, `--no-subs` | Do not download subtitle tracks |
 | `--version`, `--v` | Show version |
 
 
@@ -229,6 +231,16 @@ Use your **Berriz account and password** (not Google/Apple login):
 - Download Woodz comment and specify the download directory
     ```
     uv run berrizdown https://berriz.in/en/woodz/board/0197e392-1bc8-27f8-36ff-1233e29f3c0a/post/01992d84-662c-14a6-7487-206ebc06292b/?focus=comment --save-dir "C:\\Users\\omenbibi\\Desktop\\berrizdown\\Woodz"
+    ```
+
+- Download i-dle live-replay and only need subs
+    ```
+    uv run berrizdown https://berriz.in/en/i-dle/live/replay/019b4ed2-8b27-a4de-f4c2-30802de719ed/ --subs-only
+    ```
+
+- Download lightsum live-replay and without subs
+    ```
+    uv run berrizdown -g lightsum -l --no-subs
     ```
 
 
