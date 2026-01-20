@@ -62,7 +62,7 @@ Put ffprobe in `berrizdown\\lib\\tools` and add ffprobe name in `berrizconfig.ya
 
 > ⚠️ Only Fanclub and Videos require cookie
 
-## Berriz Cookies
+1. Berriz Cookies
 
 Export your browser cookies in **Netscape format** while logged in with an active at the Berriz website:
 
@@ -74,7 +74,7 @@ Export your browser cookies in **Netscape format** while logged in with an activ
 
 ---
 
-## Berriz Account Login
+1. Berriz Account Login
 
 Use your **Berriz account and password** (not Google/Apple login):
 

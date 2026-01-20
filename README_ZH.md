@@ -70,7 +70,7 @@ uv run berrizdown -?
 
 > ⚠️ 只有Fanclub和影片才要求Cookie
 
-## Berriz Cookies
+1. Berriz Cookies
 
 從你的瀏覽器導出 **Netscape format** 正常再Berriz登入的 cookie:
 
@@ -82,7 +82,7 @@ uv run berrizdown -?
 
 ---
 
-## Berriz Account Login
+1. Berriz Account Login
 
 使用 **Berriz 帳號 和 密碼** (非 Google/Apple login):
 
