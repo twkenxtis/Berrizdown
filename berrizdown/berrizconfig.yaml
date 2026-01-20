@@ -1,28 +1,28 @@
 duplicate:
   # Allow repeated downloads
-  default: false
+  default: true
   overrides:
-    image: false
-    video: false
-    post: false
-    notice: false
-    cmt: false
+    image: true
+    video: true
+    post: true
+    notice: true
+    cmt: true
 
 headers:
   # Enable fakeuseragent: false
   Fake-User-Agent: false
   # default user agent when fake-User-Agent is false
-  User-Agent: "Berrizdown / 0.1.4"
+  User-Agent: "Berrizdown / 0.2.0"
 
 output_template:
-  video: '{date}.{title}.{quality}.{community_name}.{artis}.{source}.WEB-DL.{video}.{audio}-{tag}'
+  video: '{date}.{title}.{quality}.{artis}.{source}.WEB-DL.{video}.{audio}-{tag}'
   json_file_name: '{date}.{title}.{community_name}.{artis}.{source}-{tag}'
   html_file_name: '{date}.{title}.{community_name}.{artis}.{source}-{tag}'
   image_file_name: '{date}.{title}.{raw_name}.{community_name}.{artis}.{source}-{tag}'
   playlist_file_name: '{date}.{title}.{community_name}.{artis}.{source}_manifest-{tag}'
   tag: ''
   # Default File datetime
-  date_formact: "%y%m%d.%H%M.%S"
+  date_formact: "%y%m%d"
 
 donwload_dir_name:
   download_dir: "Berriz.downloads"
@@ -30,7 +30,7 @@ donwload_dir_name:
   #dir_name: "{date}.{community_name}.{source}.{artis}.{title}"
   dir_name: "{date}.{community_name}.{source}.{artis}"
   # Default Folder datetime
-  date_formact: "%y%m%d.%H%M-%S"
+  date_formact: "%y%m%d"
 
 Container:
   # ffmpeg, mkvtoolnix
@@ -53,7 +53,7 @@ Video:
   # Berriz so far only [H.264]
   Video_codec: H264
   # 192, ask, None
-  Audio_Resolution_Choice: ask
+  Audio_Resolution_Choice: 192
 
 TimeZone:
   # UTC+9, utc+9, utc9, +9, 9, -9, [timezone should be in -12 ~ +14]
@@ -61,7 +61,7 @@ TimeZone:
 
 KeyService:
   # None, playready, widevine, remote_widevine, remote_playready | watora, http_api
-  source: None
+  source: remote_widevine
 
 remote_cdm:
   - name: "playready"
@@ -70,12 +70,12 @@ remote_cdm:
     host: 
     secret: 
   - name: "widevine"
-    device_name: 
+    device_name: public
     device_type: 'ANDROID'
     system_id: 22589
     security_level: 3
-    host: 
-    secret: 
+    host: https://cdrm-project.com/remotecdm/widevine
+    secret: 'CDRM'
   - name: "http_api"
     host: 
 
@@ -83,7 +83,7 @@ CDM:
   # "path \key\device\aosp_7.1.2_12e5a_4410_l3.wvd"
   widevine: 
   # "path \key\device\web_tv_os_1.1.3_sl300.prd"
-  playready: 
+  playready: hong_kong_konka_ltd_co_konka_mahanttan_sl3000.prd
 
 berriz:
   # only support Berriz account no OAuth2 support (No Google/No Apple)
