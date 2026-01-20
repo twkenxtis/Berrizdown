@@ -1,12 +1,12 @@
 duplicate:
   # Allow repeated downloads
-  default: false
+  default: true
   overrides:
-    image: false
-    video: false
-    post: false
-    notice: false
-    cmt: false
+    image: true
+    video: true
+    post: true
+    notice: true
+    cmt: true
 
 headers:
   # Enable fakeuseragent: false
@@ -15,14 +15,14 @@ headers:
   User-Agent: "Berrizdown / 0.2.0"
 
 output_template:
-  video: '{date}.{title}.{quality}.{community_name}.{artis}.{source}.WEB-DL.{video}.{audio}-{tag}'
+  video: '{date}.{title}.{quality}.{artis}.{source}.WEB-DL.{video}.{audio}-{tag}'
   json_file_name: '{date}.{title}.{community_name}.{artis}.{source}-{tag}'
   html_file_name: '{date}.{title}.{community_name}.{artis}.{source}-{tag}'
   image_file_name: '{date}.{title}.{raw_name}.{community_name}.{artis}.{source}-{tag}'
   playlist_file_name: '{date}.{title}.{community_name}.{artis}.{source}_manifest-{tag}'
   tag: ''
   # Default File datetime
-  date_formact: "%y%m%d.%H%M.%S"
+  date_formact: "%y%m%d"
 
 donwload_dir_name:
   download_dir: "Berriz.downloads"
@@ -30,7 +30,7 @@ donwload_dir_name:
   #dir_name: "{date}.{community_name}.{source}.{artis}.{title}"
   dir_name: "{date}.{community_name}.{source}.{artis}"
   # Default Folder datetime
-  date_formact: "%y%m%d.%H%M-%S"
+  date_formact: "%y%m%d"
 
 Container:
   # ffmpeg, mkvtoolnix
@@ -45,6 +45,7 @@ Container:
   shaka-packager: packager-win-x64.exe
   mkvmerge: mkvmerge.exe
   ffmpeg: ffmpeg.exe
+  ffprobe: ffprobe.exe
 
 Video:
   # 1080, 720, 480, 360, 144, ask, None
@@ -52,7 +53,7 @@ Video:
   # Berriz so far only [H.264]
   Video_codec: H264
   # 192, ask, None
-  Audio_Resolution_Choice: ask
+  Audio_Resolution_Choice: 192
 
 TimeZone:
   # UTC+9, utc+9, utc9, +9, 9, -9, [timezone should be in -12 ~ +14]
@@ -60,7 +61,7 @@ TimeZone:
 
 KeyService:
   # None, playready, widevine, remote_widevine, remote_playready | watora, http_api
-  source: None
+  source: remote_widevine
 
 remote_cdm:
   - name: "playready"
@@ -74,7 +75,7 @@ remote_cdm:
     system_id: 22589
     security_level: 3
     host: 
-    secret: 
+    secret: 'CDRM'
   - name: "http_api"
     host: 
 

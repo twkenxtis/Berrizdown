@@ -70,11 +70,11 @@ remote_cdm:
     host: 
     secret: 
   - name: "widevine"
-    device_name: public
+    device_name: 
     device_type: 'ANDROID'
     system_id: 22589
     security_level: 3
-    host: https://cdrm-project.com/remotecdm/widevine
+    host: 
     secret: 'CDRM'
   - name: "http_api"
     host: 
@@ -83,7 +83,7 @@ CDM:
   # "path \key\device\aosp_7.1.2_12e5a_4410_l3.wvd"
   widevine: 
   # "path \key\device\web_tv_os_1.1.3_sl300.prd"
-  playready: hong_kong_konka_ltd_co_konka_mahanttan_sl3000.prd
+  playready: 
 
 berriz:
   # only support Berriz account no OAuth2 support (No Google/No Apple)
