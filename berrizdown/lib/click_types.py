@@ -574,10 +574,6 @@ def main(
 
     from berrizdown.static.parameter import paramstore
     
-    if version:
-        from static.version import __version__
-        logger.info(f"{Color.fg('aquamarine')}Berrizdown version: {Color.fg('gold')}{__version__}{Color.reset()}")
-
     if urls:
         paramstore._store["click_urls"] = urls
     
