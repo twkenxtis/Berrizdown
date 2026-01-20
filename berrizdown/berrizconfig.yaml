@@ -61,23 +61,23 @@ TimeZone:
 
 KeyService:
   # None, playready, widevine, remote_widevine, remote_playready | watora, http_api
-  source: remote_widevine
+  source: None
 
 remote_cdm:
   - name: "playready"
-    device_name: 
-    security_level: 2000
-    host: 
-    secret: 
+    device_name: public
+    security_level: 3000
+    host: https://cdrm-project.com/remotecdm/playready
+    secret: 'CDRM'
   - name: "widevine"
-    device_name: 
+    device_name: public
     device_type: 'ANDROID'
-    system_id: 22589
+    system_id: 22590
     security_level: 3
-    host: 
+    host: https://cdrm-project.com/remotecdm/widevine
     secret: 'CDRM'
   - name: "http_api"
-    host: 
+    host: https://cdrm-project.com/api/decrypt
 
 CDM:
   # "path \key\device\aosp_7.1.2_12e5a_4410_l3.wvd"
