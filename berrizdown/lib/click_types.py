@@ -115,6 +115,9 @@ known_flags: list[str] = [
     "--v",
     "--version",
     "--save-dir",
+    "--subs-only",
+    "-ns",
+    "--no-subs"
 ]
 
 
@@ -360,6 +363,20 @@ def apply_no_info(ctx, param, value):
     help="No audio",
 )
 @click.option(
+    "-S",
+    "--subs-only",
+    "subs_only",
+    is_flag=True,
+    help="subs only",
+)
+@click.option(
+    "-ns",
+    "--no-subs",
+    "no_subs",
+    is_flag=True,
+    help="no subs",
+)
+@click.option(
     "--ss",
     "start_time",
     type=str,
@@ -478,6 +495,8 @@ def main(
     artisid: str|list,
     version: bool,
     savedir: str,
+    subs_only: bool,
+    no_subs: bool,
     unknown: tuple,
 ) -> None:
     """
@@ -533,6 +552,8 @@ def main(
         "artisid": artisid,
         "savedir": savedir,
         "version": version,
+        "subs_only": subs_only,
+        "no_subs": no_subs,
     }
     ctx.obj = args_dict
     _global_args = args_dict
@@ -668,6 +689,16 @@ def main(
 
     if savedir:
         paramstore._store["savedir"] = savedir
+        
+    if subs_only:
+        paramstore._store["subs_only"] = True
+        
+    if subs_only and no_subs:
+        logger.error("Cannot use --subs-only and --no-subs together.")
+        raise ValueError("Invalid args error exit")
+        
+    if no_subs:
+        paramstore._store["no_subs"] = True
 
 
 def had_key() -> bool:
@@ -873,6 +904,14 @@ def version() -> bool:
 
 def savedir() -> str|None:
     return _get_arg("savedir", None)
+
+
+def no_subs() -> bool|None:
+    return _get_arg("no_subs", False)
+
+
+def subs_only() -> bool|None:
+    return _get_arg("subs_only", None)
 
 
 if __name__ == "__main__":
