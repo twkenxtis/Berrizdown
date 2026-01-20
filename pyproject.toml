@@ -39,6 +39,7 @@ dependencies = [
     "validators>=0.35,<1",
     "email_validator>=2.3,<3",
     "Unidecode",
+    "m3u8>=5.0.0",
 
     "ffmpeg-python>=0.2,<1",
     "protobuf>=3.6.1,<7",
