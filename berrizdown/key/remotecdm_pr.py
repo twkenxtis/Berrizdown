@@ -29,7 +29,7 @@ class Remotecdm_Playready:
         return rcdm
 
     def get_pssh(self, pssh_input: str) -> PSSH:
-        if pssh_input is None or len(pssh_input) < 76:
+        if pssh_input is None or len(pssh_input) <= 300:
             raise ValueError("Invalid PSSH")
         else:
             pssh = PSSH(pssh_input)
