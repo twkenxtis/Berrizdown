@@ -485,7 +485,7 @@ class MediaDownloader:
             f"{Color.fg('pink')}{track_type} {Color.fg('light_gray')}(Avg: {progress.speed_mbps:.2f} MB/s)"
             f" finished in {Color.fg('blush')}{time.time() - start_time:.2f} {Color.fg('light_gray')}seconds{Color.reset()}"
             f"{Color.fg('flamingo_pink')} {total}/{Color.fg('magenta_pink')}{success_count} "
-            f"{Color.fg('light_gray')}segments successfully downloaded"
+            f"{Color.fg('light_gray')}segments successfully downloaded{Color.reset()}"
         )
         return success_count == total
 
@@ -642,19 +642,29 @@ class Start_Download_Queue:
         if playlist_content is None:
             logger.error("Failed to parse Playlist.")
             return
+        
         output_dir, custom_community_name, community_name = await self.get_output_dir()
+        
+        savejsondata = save_json_data(
+            output_dir,
+            custom_community_name,
+            community_name,
+            self.public_info,
+            self.playback_info,
+        )
+        savesub: SaveSub = SaveSub(output_dir, self.raw_hls, savejsondata.sub_meta())
+        
         if output_dir is not None and os.path.exists(output_dir) and not paramstore.get("subs_only") is True:
+            if not paramstore.get("no_subs") is True:
+                await savesub.start()
             await self.task_of_info(output_dir, custom_community_name, community_name, playlist_content)
             success = await self.start_request_download(output_dir, playlist_content, video_duration)
             # 處理成功後的混流、重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
-            if not paramstore.get("no_subs") is True:
-                await SaveSub(output_dir, self.raw_hls, video_file_name).start()
             await self.vv.re_name_folder(video_file_name, mux_bool_status)
         elif paramstore.get("subs_only") is True:
-            await SaveSub(
-                output_dir, self.raw_hls, FilenameSanitizer.sanitize_filename(self.public_info.title)
-            ).start()
+            logger.info(f"{Color.fg('tomato')}【Subs only mode】{Color.reset()}")
+            await savesub.start()
         else:
             logger.error("Failed to create output directory.")
             raise ValueError
@@ -678,21 +688,21 @@ class Start_Download_Queue:
             selector = PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time)
         else:
             selector = PlaylistSelector(hls_content, mpd_content, "mpd", start_time, end_time)
-
+            
         match paramstore.get("get_v_list"):
             case True:
                 PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time).print_parsed_content()
             case _:
-                playlist_content = await selector.select_tracks(v_resolution_choice, a_resolution_choice, video_codec)
+                if paramstore.get("subs_only") is True:
+                    playlist_content = await selector.select_tracks("None", "None", "H264")
+                else:
+                    playlist_content = await selector.select_tracks(v_resolution_choice, a_resolution_choice, video_codec)
 
                 if paramstore.get("nodl") is True:
                     logger.info(f"{Color.fg('light_gray')}Skip downloading{Color.reset()}")
                     return False
                 else:
                     await self.start_download_queue(playlist_content, self.playback_info.duration)
-
-        # except ValueError as e:
-        #     logger.error(f"{e}{Color.reset()}{Color.fg('orange')} Check your input parameters [--ss / --to]")
 
     def video_start2end_time(self, time: float | int | str) -> float:
         sort_time = video_start2end_time(time)

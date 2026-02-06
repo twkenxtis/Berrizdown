@@ -79,12 +79,8 @@ class Video_folder:
     async def video_folder_handle(self, custom_community_name: str, community_name: str) -> Path:
         """根據 community_name 和媒體資訊建立下載資料夾路徑"""
         base_dir: Path = self.get_base_dir(community_name, custom_community_name)
-        self.base_dir = base_dir
-        temp_folder_name: str = f"temp_{self.time_str}_{self.media_id}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
-        temp_name: str = self.FilenameSanitizer(temp_folder_name)
-        temp_dir: Path = Path.cwd() / base_dir / temp_name / f"temp_{self.time_str}_{self.media_id}"
-        temp_dir.mkdirp()
-        self.output_dir = Path(temp_dir.resolve())
+        self.base_dir: Path = base_dir
+        
         video_meta: dict[str, str] = meta_name(
             self.time_str,
             self.title,
@@ -93,7 +89,24 @@ class Video_folder:
         )
         folder_name: str = OutputFormatter(f"{CFG['donwload_dir_name']['dir_name']}").format(video_meta)
         self.folder_name: str = folder_name  # for final using folder name for self
-        return self.output_dir  # for Download reutrn temp folder name path
+        
+        match paramstore.get("subs_only"):
+            case True:
+                if paramstore.get("nosubfolder") is True:
+                    subs_only_dir: Path = Path.cwd() / base_dir.parent
+                    new_path: Path = Path(subs_only_dir.resolve())
+                else:
+                    subs_only_dir: Path = Path.cwd() / base_dir / Path(self.folder_name)
+                    new_path: Path = self.get_unique_folder_name(self.folder_name, subs_only_dir)
+                new_path.mkdirp()
+                return new_path
+            case _:
+                temp_folder_name: str = f"temp_{self.time_str}_{self.media_id}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+                temp_name: str = self.FilenameSanitizer(temp_folder_name)
+                temp_dir: Path = Path.cwd() / base_dir / temp_name / f"temp_{self.time_str}_{self.media_id}"
+                temp_dir.mkdirp()
+                self.output_dir: Path = Path(temp_dir.resolve())
+                return self.output_dir  # for Download reutrn temp folder name path
 
     def get_unique_folder_name(self, base_name: str, full_path: Path) -> Path:
         """確保資料夾名稱唯一性，避免衝突"""
@@ -126,10 +139,10 @@ class Video_folder:
         # 刪除暫存資料夾 merge mux false
         await self._delete_temp_if_needed(full_path, mux_bool_status)
         # 取得唯一新路徑並執行重命名
-        new_path = self.get_unique_folder_name(self.folder_name, new_path)
-        await self._rename_with_retries(full_path, new_path)
+        _new_path: Path = self.get_unique_folder_name(self.folder_name, new_path)
+        await self._rename_with_retries(full_path, _new_path)
         # 列印路徑資訊
-        self._print_path_info(skip_conditions, new_path, video_file_name)
+        self._print_path_info(skip_conditions, _new_path, video_file_name)
 
     def _should_flatten_subfolder(self, skip_conditions: list, mux_bool_status: bool) -> bool:
         return paramstore.get("nosubfolder") is True and not any(skip_conditions) and mux_bool_status is True
