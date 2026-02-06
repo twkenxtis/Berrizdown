@@ -144,6 +144,7 @@ class ConfigLoader:
             "html_file_name",
             "image_file_name",
             "playlist_file_name",
+            "subtitle_file_name",
         ]
         for key in required_title_fields:
             val = ot.get(key)

@@ -12,7 +12,7 @@ headers:
   # Enable fakeuseragent: false
   Fake-User-Agent: false
   # default user agent when fake-User-Agent is false
-  User-Agent: "Berrizdown / 0.2.0"
+  User-Agent: "Berrizdown / 0.2.1"
 
 output_template:
   video: '{date}.{title}.{quality}.{artis}.{source}.WEB-DL.{video}.{audio}-{tag}'
@@ -20,6 +20,7 @@ output_template:
   html_file_name: '{date}.{title}.{community_name}.{artis}.{source}-{tag}'
   image_file_name: '{date}.{title}.{raw_name}.{community_name}.{artis}.{source}-{tag}'
   playlist_file_name: '{date}.{title}.{community_name}.{artis}.{source}_manifest-{tag}'
+  subtitle_file_name: '{date}.{title}.{community_name}.{artis}.{source}'
   tag: ''
   # Default File datetime
   date_formact: "%y%m%d"
