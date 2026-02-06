@@ -1,6 +1,7 @@
 import asyncio
 import os
 import re
+from typing import Any
 from urllib.parse import urljoin
 
 import aiofiles
@@ -30,7 +31,7 @@ class SaveSub:
         self.video_file_name: str = video_file_name
         self._request_client: GetRequest = GetRequest()
         self.subs_info: list[tuple[str, str, str]] = []
-        self._semaphore: asyncio.Semaphore = asyncio.Semaphore(17)
+        self._semaphore: asyncio.Semaphore = asyncio.Semaphore(51)
 
     def parse_m3u8(self) -> list[tuple[str, str, str]]:
         try:
@@ -65,12 +66,17 @@ class SaveSub:
         try:
             playlist: m3u8.Playlist = m3u8.loads(content)
             
-            urls = [
+            urls: list[str] = [
                 urljoin(playlist_url, seg.uri) for seg in playlist.segments
             ]
             
-            results = await asyncio.gather(
-                *(self._fetch(u) for u in urls),
+            tasks = []
+            for url in urls:
+                task = asyncio.create_task(self._fetch(url))
+                tasks.append(task)
+            
+            results: list[str] = await asyncio.gather(
+                *tasks,
                 return_exceptions=True
             )
             
@@ -88,9 +94,7 @@ class SaveSub:
                     if r and r not in seen:
                         seen.add(r)
                         vtts.append(r)
-                        
             return vtts
-            
         except Exception as e:
             logger.error(f"Failed to download segments: {e}")
             return []
@@ -133,7 +137,7 @@ class SaveSub:
             if not content:
                 logger.warning(f"Failed to fetch playlist for {lang}")
                 return
-
+            
             # 下載所有片段
             vtts: list[str] = await self._download_segments(uri, content)
             if not vtts:
@@ -141,7 +145,7 @@ class SaveSub:
                 return
 
             # 轉換並儲存
-            srt = self._vtt_to_srt("\n\n".join(vtts))
+            srt: str = self._vtt_to_srt("\n\n".join(vtts))
             os.makedirs(os.path.dirname(srtfile), exist_ok=True)
             
             async with aiofiles.open(srtfile, "w", encoding="utf-8") as f:
@@ -162,7 +166,7 @@ class SaveSub:
             logger.info("No subtitles found in M3U8")
             return
         
-        results = await asyncio.gather(
+        results: list[Any] = await asyncio.gather(
             *(self._worker(*s) for s in subs),
             return_exceptions=True
         )
