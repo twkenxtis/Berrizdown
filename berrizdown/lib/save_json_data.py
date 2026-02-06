@@ -238,6 +238,18 @@ class save_json_data:
         playback_dict: dict[str] = orjson.loads(self.playback_info.to_json())
         json_data = public_dict | playback_dict
         return json_data
-
+    
+    def sub_meta(self) -> str:
+        sub_meta: dict[str, str] = {
+            "date": self.time_str,
+            "title": self.title,
+            "artis": self.artis_name,
+            "community_name": self.community_name,
+            "source": "Berriz",
+            "tag": CFG["output_template"]["tag"],
+        }
+        name: str = OutputFormatter(CFG["output_template"]["subtitle_file_name"]).format(sub_meta)
+        return name
+    
     def put_console_output(self, new_path: Path, file_name: str, TAG: str) -> None:
         printer_video_folder_path_info(new_path, file_name, f"{TAG} ")
