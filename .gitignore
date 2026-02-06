@@ -26,6 +26,7 @@ local_key_vault.db
 *local_key_vault.db
 key\key_store.db
 .env
+Berriz.downloads
 *.wvd
 *.prd
 # Byte-compiled / optimized / DLL files
