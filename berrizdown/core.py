@@ -1,4 +1,5 @@
 import sys
+import requests
 
 from berrizdown.lib.click_types import *
 from berrizdown.static.help import print_help
@@ -11,7 +12,8 @@ if show_help():
 if version():
     print(f"{Color.fg('yellow')}/" * 26)
     print(f"{Color.fg('aquamarine')}Berrizdown version: {Color.fg('gold')}{__version__}{Color.reset()}")
-    print(f"{Color.fg('yellow')}\{Color.reset()}" * 26)
+    print(f"{Color.fg('yellow')}\\" * 26)
+    print(Color.reset())
     sys.exit(0)
 
 import rich.traceback
@@ -30,12 +32,12 @@ paramstore._store["current_account_mail"] = 0
 from berrizdown.lib.account.change_pawword import Change_Password
 from berrizdown.lib.account.signup import run_signup
 from berrizdown.lib.interface.interface import Community_Uniqueness, StartProcess, URL_Parser
+from berrizdown.lib.load_yaml_config import CFG
 from berrizdown.mystate.parse_my import request_my
 from berrizdown.unit.community.community import get_community_print
 from berrizdown.unit.date.date import process_time_inputs
 from berrizdown.unit.handle.handle_choice import Handle_Choice
-from berrizdown.unit.http.request_berriz_api import BerrizAPIClient, WEBView
-
+from berrizdown.unit.http.request_berriz_api import BerrizAPIClient, GetRequest, WEBView
 BAPIClient: BerrizAPIClient = BerrizAPIClient()
 
 time1, time2 = time_date1(), time_date2()
@@ -62,6 +64,13 @@ async def click_urls() -> None:
         sys.exit(0)
 
 async def start():
+    bool_version, version_str = version_check()
+    if bool_version:
+        logger.info(
+            f"{Color.bold()}{Color.fg('gold')}[Berrizdown had new version unvailable]{Color.reset()} "
+            f"{Color.fg('blue')}{__version__}{Color.reset()}{Color.bold()} → {Color.fg('green')}{version_str}"
+            f"{Color.reset()}"
+        )
     if paramstore.get("no_cookie") is not True:
         await WEBView().allow_host()
     await init()
@@ -131,3 +140,21 @@ async def sign_up_main():
         logger.warning(f"Cancel signup, {Color.fg('lavender')}Not login{Color.reset()}")
         await BAPIClient.close_session()
         sys.exit(0)
+
+def version_check() -> bool:
+    url = 'https://raw.githubusercontent.com/twkenxtis/Berrizdown/refs/heads/main/berrizdown/static/version.py'
+    
+    try:
+        v = requests.get(url).text
+    except requests.exceptions.RequestException:
+        return False, ""
+    
+    for line in v.splitlines():
+        if line.strip().startswith("__version__"):
+            _, rhs = line.split("=", 1)
+            version: str = rhs.strip().strip('\'"')
+            version: str = version.strip()
+            if version != __version__:
+                return True, version
+            return False, ""
+    return False, ""
