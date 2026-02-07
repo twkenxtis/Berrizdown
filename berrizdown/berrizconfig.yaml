@@ -36,9 +36,9 @@ donwload_dir_name:
 Container:
   # ffmpeg, mkvtoolnix
   # [if choese mkvtoolnix enforce .mkv]
-  mux: ffmpeg
+  mux: mkvtoolnix
   # ts, mp4, mov, m4v, mkv, avi
-  video: mp4
+  video: mkv
   # mp4decrypt, shaka-packager
   decryption-engine: shaka-packager
   # lib\\tools\\<name> windows is .exe | Linux maybe different
