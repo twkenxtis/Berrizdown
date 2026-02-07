@@ -123,6 +123,8 @@ Setting:
   skip-html: false
   # no-subfolder
   no-subfolder: false
+  # When subtitle mux to MKV, keep sub file after done [default: false]
+  keep-subs: false
 
 BerrizAPIClient:
   show_log: false
