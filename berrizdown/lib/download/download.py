@@ -629,6 +629,7 @@ class Start_Download_Queue:
             self.playback_info,
             custom_community_name,
             community_name,
+            self.subs_successful,
         )
         try:
             video_file_name, mux_bool_status = await s.when_success(success, self.decryption_key)
@@ -656,9 +657,13 @@ class Start_Download_Queue:
         
         if output_dir is not None and os.path.exists(output_dir) and not paramstore.get("subs_only") is True:
             if not paramstore.get("no_subs") is True:
-                await savesub.start()
+                self.subs_successful: list[tuple[str, str, Path]]|list = await savesub.start()
+            else:
+                self.subs_successful: list[tuple[str, str, Path]]|list = []
+                
             await self.task_of_info(output_dir, custom_community_name, community_name, playlist_content)
-            success = await self.start_request_download(output_dir, playlist_content, video_duration)
+            success: bool = await self.start_request_download(output_dir, playlist_content, video_duration)
+            
             # 處理成功後的混流、重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
             await self.vv.re_name_folder(video_file_name, mux_bool_status)
