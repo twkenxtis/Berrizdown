@@ -34,6 +34,7 @@ class SUCCESS:
         playback_info: PlaybackInfo,
         custom_community_name: str,
         community_name: str,
+        subs_successful: list[tuple[str, str, Path]],
     ) -> None:
         self.base_dir: Path = output_dir
         self._public_info = public_info
@@ -47,6 +48,7 @@ class SUCCESS:
         self.tempname: str = f"temp_mux_{self.publicinfo.media_id}.{container}"
         self.path: Path = Path.cwd() / self.base_dir / self.tempname
         self.time_str: str = self.FDT.vod_live_time_str()
+        self.subs_successful: list[tuple[str, str, Path]]|list = subs_successful
 
         if self.get_artis == self.community_name or self.get_artis == self.custom_community_name:
             artis_name = self.get_artis.lower()
@@ -90,9 +92,9 @@ class SUCCESS:
         return outcome_label, mux_succeeded
 
     async def _run_mux(self, decryption_key: bytes | str | None) -> tuple[str, bool]:
-        muxer: FFmpegMuxer = FFmpegMuxer(self.base_dir, self.playbackinfo.is_drm, decryption_key)
-        outcome_label = ""
-        mux_succeeded = await muxer.mux_main(self.path)
+        muxer: FFmpegMuxer = FFmpegMuxer(self.base_dir, self.playbackinfo.is_drm, self.subs_successful, decryption_key)
+        outcome_label: str = ""
+        mux_succeeded: bool = await muxer.mux_main(self.path)
         return outcome_label, mux_succeeded
 
     async def _derive_outcome_label(self, outcome_label: str, mux_succeeded: bool) -> tuple[str, bool]:
