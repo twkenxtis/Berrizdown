@@ -179,7 +179,7 @@ class SaveSub:
                 f'{Color.fg("royal_blue")}Subtitle {Color.fg("light_slate_gray")}<{lang}>{Color.reset()} '
         )
 
-    async def start(self) -> None:
+    async def start(self) -> list[tuple[str, str, Path]]|list:
         subs: list[tuple[str, str, str]] = await self.parse_m3u8()
         if not subs:
             logger.info("No subtitles found in M3U8")
@@ -190,7 +190,11 @@ class SaveSub:
             return_exceptions=True
         )
         
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                lang = subs[i][0]
-                logger.error(f"Subtitle {lang} processing failed: {result}")
+        successful: list[tuple[str, str, Path]]|list = []
+        for s, r in zip(subs, results):
+            if isinstance(r, Exception):
+                logger.error(f"Subtitle {s[0]} processing failed: {r}")
+            else:
+                successful.append(s)  # only susscessful results
+        
+        return successful
