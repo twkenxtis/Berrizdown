@@ -172,6 +172,15 @@ class SUCCESS:
                     logger.info(f"Directory not found, skipping: {dir_path}")
                 except Exception as e:
                     logger.error(f"Error force-removing directory {dir_path}: {e}")
+                    
+        if CFG['Container']['mux'] == "mkvtoolnix" or CFG['Container']['video'] == "mkv" and self.subs_successful != []:
+            if paramstore.get("keep-subs") is not True:
+                try:
+                    for _, _, subtitle_path in self.subs_successful:
+                        await asyncio.to_thread(subtitle_path.unlink)
+                        logger.info(f"Removed subtitle file: {Color.fg('mist')}{subtitle_path}{Color.reset()}")
+                except Exception as e:
+                    logger.error(f"Error removing subtitle file: {e}")
 
     async def re_name(self) -> str:
         """根據影片元數據和命名規則重新命名最終的 MP4 檔案"""

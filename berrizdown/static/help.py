@@ -65,6 +65,7 @@ def print_help() -> None:
         "",
         "-S, --subs-only",
         "-ns, --no-subs",
+        "--keep-subs, --keepsubs",
         "",
         "--version, --v",
     ]
@@ -122,6 +123,7 @@ def print_help() -> None:
         "",
         "Only download subtitle tracks",
         "Do not download subtitle tracks",
+        "When subtitle mux to MKV, keep sub file after done (default: false)",
         "",
         "Show version",
     ]

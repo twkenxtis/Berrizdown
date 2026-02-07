@@ -161,6 +161,7 @@ uv run berrizdown -?
 | `--save-dir` | 指定下載的檔案夾路徑並覆蓋原始設定值 |
 | `-S`, `--subs-only` | 只下載字幕 |
 | `-ns`, `--no-subs` | 跳過下載字幕 |
+| `--keep-subs`, `--keepsubs` | 將字幕封裝到MKV容器時，完成後保留字幕檔（預設：false）|
 | `--version`, `--v` | 顯示版本 |
 
 

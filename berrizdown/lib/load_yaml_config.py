@@ -557,6 +557,7 @@ class ConfigLoader:
             "skip-playlist": "notplaylist",
             "skip-html": "nohtml",
             "no-subfolder": "nosubfolder",
+            "keep-subs": "keep-subs",
         }
         for setting_key, store_key in setting_map.items():
             value = setting.get(setting_key)

@@ -117,7 +117,9 @@ known_flags: list[str] = [
     "--save-dir",
     "--subs-only",
     "-ns",
-    "--no-subs"
+    "--no-subs",
+    "--keep-subs",
+    "--keepsubs",
 ]
 
 
@@ -447,6 +449,14 @@ def apply_no_info(ctx, param, value):
     multiple=False,
     help="Save directory path",
 )
+@click.option(
+    "--keep-subs",
+    "--keepsubs",
+    "keepsubs",
+    type=bool,
+    is_flag=True,
+    help="When subtitle mux to MKV, keep sub file after done [default: false]",
+)
 @click.argument("unknown", nargs=-1, type=click.UNPROCESSED)
 @click.pass_context
 def main(
@@ -497,13 +507,9 @@ def main(
     savedir: str,
     subs_only: bool,
     no_subs: bool,
+    keepsubs: bool,
     unknown: tuple,
 ) -> None:
-    """
-    Berriz DRM - Download and manage DRM content
-
-    A comprehensive CLI tool for managing content with various filtering options.
-    """
     global _global_args
 
     # 儲存所有參數
@@ -554,6 +560,7 @@ def main(
         "version": version,
         "subs_only": subs_only,
         "no_subs": no_subs,
+        "keep-subs": keepsubs,
     }
     ctx.obj = args_dict
     _global_args = args_dict
@@ -695,6 +702,9 @@ def main(
         
     if no_subs:
         paramstore._store["no_subs"] = True
+        
+    if keepsubs:
+        paramstore._store["keep-subs"] = True
 
 
 def had_key() -> bool:
@@ -909,6 +919,9 @@ def no_subs() -> bool|None:
 def subs_only() -> bool|None:
     return _get_arg("subs_only", None)
 
+
+def keepsubs() -> bool:
+    return _get_arg("keepsubs", False)
 
 if __name__ == "__main__":
     try:
