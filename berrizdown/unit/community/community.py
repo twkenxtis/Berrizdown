@@ -73,10 +73,8 @@ async def custom_dict(input_str: str | int | None) -> str | None:
                 return "Tempest"
             case "ke_actors_audition":
                 return "2025 Kakao Ent. Actors Audition"
-            case "theballadofus":
-                return "The Ballad of Us"
-            case "mma2025withberriz":
-                return "MMA2025 with Berriz"
+            case "ddeunddeun":
+                return "Pinggyego"
             case _:
                 global _cached_home_response
                 if _cached_home_response is None:
