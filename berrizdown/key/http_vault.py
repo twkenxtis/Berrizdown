@@ -29,19 +29,18 @@ class HTTP_API:
         pass
 
     def get_license_url(self, pssh: str) -> str | None:
-        match len(pssh):
-            case 76:
-                return "https://berriz.drmkeyserver.com/widevine_license"
-            case _:
-                return "https://berriz.drmkeyserver.com/playready_license"
+        if len(pssh) < 300:
+            return "https://berriz.drmkeyserver.com/widevine_license"
+        else:
+            return "https://berriz.drmkeyserver.com/playready_license"
 
     async def get_license_key(self, pssh: tuple[str, str], assertion: str) -> list[str] | None:
         wv_pssh: str = pssh[0]
         playready_pssh: str = pssh[1]
 
-        url = HTTP_API.URL or "None"
+        url: str = HTTP_API.URL or "None"
         license_url: str | None = self.get_license_url(wv_pssh or playready_pssh)
-        headers: dict[str, str] = {
+        json_data_headers: dict[str, str] = {
             "accept": "application/json, text/plain, */*",
             # acquirelicenseassertion is berriz private token required to get license key
             "acquirelicenseassertion": assertion,
@@ -49,7 +48,7 @@ class HTTP_API:
         json_data: dict[str, Any] = {
             "pssh": wv_pssh or playready_pssh,
             "licurl": license_url,
-            "headers": str(headers),
+            "headers": str(json_data_headers),
         }
         headers = {"content-type": "application/json"}
         if license_url is None:
@@ -82,7 +81,7 @@ class HTTP_API:
         if resp == "":
             logger.error(
                 f"Failed to parse response got empty! Use:{Color.reset()}"
-                f"{Color.fg('yellow')} response.json().get('message', '').strip(){Color.reset()}"
+                f"{Color.fg('yellow')} {response.json().get('message', '').strip()}{Color.reset()}"
                 f"{Color.fg('white')} Check HTTP API response for more information{Color.reset()}"
             )
             return []
