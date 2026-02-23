@@ -39,7 +39,7 @@ class Remotecdm_Widevine:
         return rcdm
 
     def get_pssh(self, pssh_input: str) -> PSSH:
-        if pssh_input is None or len(pssh_input) < 300:
+        if pssh_input is None or len(pssh_input) > 300:
             raise ValueError("Invalid PSSH")
         else:
             return PSSH(base64.b64decode(pssh_input))
