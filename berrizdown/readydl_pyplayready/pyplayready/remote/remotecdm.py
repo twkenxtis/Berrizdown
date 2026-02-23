@@ -42,9 +42,9 @@ class RemoteCdm(Cdm):
         if not isinstance(device_name, str):
             raise TypeError(f"Expected device_name to be a {str} not {device_name!r}")
 
-        self.security_level = security_level
-        self.host = host
-        self.device_name = device_name
+        self.security_level: int = security_level
+        self.host: str = host
+        self.device_name: str = device_name
 
         # spoof certificate_chain and ecc_key just so we can construct via super call
         super().__init__(security_level, None, None, None)
