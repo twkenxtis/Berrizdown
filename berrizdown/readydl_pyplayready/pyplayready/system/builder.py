@@ -71,7 +71,8 @@ class XmlBuilder:
             wrmserver_data: bytes,
             client_data: bytes,
             client_info: Optional[str] = None,
-            revocation_lists: Optional[List[UUID]] = None
+            revocation_lists: Optional[List[UUID]] = None,
+            custom_data: Optional[str] = None
     ) -> ET.Element:
         LA = ET.SubElement(parent, "LA", {
             "xmlns": "http://schemas.microsoft.com/DRM/2007/03/protocols",
@@ -90,6 +91,10 @@ class XmlBuilder:
 
         if revocation_lists is not None:
             XmlBuilder._RevocationLists(LA, revocation_lists)
+            
+        if custom_data is not None:
+            CustomData = ET.SubElement(LA, "CustomData")
+            CustomData.text = html.escape(custom_data)
 
         LicenseNonce = ET.SubElement(LA, "LicenseNonce")
         LicenseNonce.text = base64.b64encode(get_random_bytes(16)).decode()
@@ -161,7 +166,8 @@ class XmlBuilder:
             client_data: bytes,
             signing_key: ECCKey,
             client_info: Optional[str] = None,
-            revocation_lists: Optional[List[UUID]] = None
+            revocation_lists: Optional[List[UUID]] = None,
+            custom_data: Optional[str] = None
     ) -> ET.Element:
         AcquireLicense = ET.Element("AcquireLicense", {
             "xmlns": "http://schemas.microsoft.com/DRM/2007/03/protocols"
@@ -171,7 +177,7 @@ class XmlBuilder:
             "xmlns": "http://schemas.microsoft.com/DRM/2007/03/protocols/messages"
         })
 
-        LA = XmlBuilder._LicenseAcquisition(Challenge, wrmheader, protocol_version, wrmserver_data, client_data, client_info, revocation_lists)
+        LA = XmlBuilder._LicenseAcquisition(Challenge, wrmheader, protocol_version, wrmserver_data, client_data, client_info, revocation_lists, custom_data)
 
         Signature = ET.SubElement(Challenge, "Signature", {
             "xmlns": "http://www.w3.org/2000/09/xmldsig#"
