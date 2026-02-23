@@ -24,7 +24,7 @@ class FanClub:
     async def fanclub_main(self) -> str | None:
         if cookie_session == {}:
             return "COOKIE_NOT_FOUND"
-        data = await self.request_fanclub()
+        data: dict[str, Any] = await self.request_fanclub()
         code: str | None = data.get("code")
         message: str | None = data.get("message")
         fanclub_list: list[dict[str, Any]] | None = data.get("data", {}).get("fanclubs")
