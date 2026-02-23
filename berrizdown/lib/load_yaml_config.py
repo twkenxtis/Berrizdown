@@ -27,7 +27,7 @@ logger = setup_logging("load_yaml_config", "fresh_chartreuse")
 YAML_PATH: Path = Route().YAML_path
 
 
-DEFAULT_UA = f"Berrizdown/{__version__}"
+DEFAULT_UA = f"Berrizdown / {__version__}"
 
 
 def check_email(email_str: str) -> bool:
