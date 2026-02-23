@@ -210,7 +210,7 @@ class BerrizAPIClient:
                     sys.exit(0)
 
             if cookie_session in (None, {}):
-                BerrizAPIClient._re_request_cookie = False
+                BerrizAPIClient._re_request_cookie: bool = False
                 cookie: dict[str, str] = await self.ensure_cookie()
                 return cookie
             else:
@@ -639,8 +639,8 @@ class Community(BerrizAPIClient):
 
         # Use Pydantic for validation
         try:
-            payload = CreateCommunityModel(communityId=communityId, name=name, communityTermsIds=[])
-            json_data = payload.model_dump()
+            payload: CreateCommunityModel = CreateCommunityModel(communityId=communityId, name=name, communityTermsIds=[])
+            json_data: dict[str, Any] = payload.model_dump()
         except ValidationError as e:
             logger.error(f"Validation error in create_community: {e}")
             return None
@@ -1045,7 +1045,7 @@ class TPD_RemoteCDM_Request(BerrizAPIClient):
         
 class Community_id_checker:
     def __init__(self, community_id: int | str) -> None:
-        self.input = community_id
+        self.input:  int | str = community_id
         self.check_community_id()
 
     def check_community_id(self) -> None:
