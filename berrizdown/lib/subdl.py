@@ -14,7 +14,6 @@ from berrizdown.lib.__init__ import (
     printer_video_folder_path_info,
     use_proxy
 )
-from berrizdown.lib.load_yaml_config import CFG
 from berrizdown.lib.path import Path
 from berrizdown.unit.http.request_berriz_api import GetRequest
 from berrizdown.unit.handle.handle_log import setup_logging
@@ -27,12 +26,19 @@ VIDEO_EXTENSIONS: set[str] = {'ts', 'avi', 'mp4', 'mkv', 'm4v', 'mov'}
 
 class SaveSub:
     def __init__(self, output_dir: Path, m3u8_content: str, sub_file_name: str) -> None:
-        if paramstore.get("nosubfolder") is True and paramstore.get("subs_only") is None:
-            self.output_dir: Path = output_dir.parent.parent.parent
-        elif paramstore.get("subs_only") is True:
-            self.output_dir: Path = output_dir
-        else:
-            self.output_dir: Path = output_dir.parent
+        nosubfolder = paramstore.get("nosubfolder")
+        subs_only = paramstore.get("subs_only")
+
+        match (nosubfolder, subs_only):
+            case (True, None):
+                # nosubfolder=True 且 subs_only 沒有設定
+                self.output_dir = output_dir.parents[2]
+            case (_, True):
+                # subs_only=True 不管 nosubfolder
+                self.output_dir = output_dir
+            case _:
+                # 其他情況
+                self.output_dir = output_dir.parent
             
         self.m3u8_content: str = m3u8_content
         self.sub_file_name: str = sub_file_name
