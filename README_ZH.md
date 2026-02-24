@@ -93,6 +93,11 @@ uv run berrizdown -?
    uv run berrizdown
    ```
 
+---
+
+1. 使用 `--cookies` 選項來指定 cookie 檔案路徑並要求為Netscape格式
+
+
 
 
 ### 可選

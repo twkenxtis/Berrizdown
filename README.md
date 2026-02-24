@@ -85,6 +85,9 @@ Use your **Berriz account and password** (not Google/Apple login):
    uv run berrizdown
    ```
 
+---
+
+1. `--cookies` FILEPATH with Netscape formatted file
 
 
 ### Optional
