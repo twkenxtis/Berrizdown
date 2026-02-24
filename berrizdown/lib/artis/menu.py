@@ -345,7 +345,7 @@ class Notice(Board):
     async def get_all_notice_content_lists(self) -> list[dict[str, Any]]:
         params: dict[str, str | int] = {
             "languageCode": "en",
-            "pageSize": 999999999339134974,
+            "pageSize": 999999999,
         }
         all_contents: list[dict[str, Any]] = []
         hasNext: bool = True
@@ -372,7 +372,7 @@ class Notice(Board):
         # 單筆擴展，每次用回應的指針
         while hasNext and next_int is not None:
             params = {
-                "pageSize": 999999999339134974,
+                "pageSize": 999999999,
                 "languageCode": "en",
                 "next": next_int,
             }
