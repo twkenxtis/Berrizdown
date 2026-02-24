@@ -154,6 +154,7 @@ Use your **Berriz account and password** (not Google/Apple login):
 | `-S`, `--subs-only` | Only download subtitle tracks |
 | `-ns`, `--no-subs` | Do not download subtitle tracks |
 | `--keep-subs`, `--keepsubs` | When subtitle mux to MKV, keep sub file after done (default: false) |
+| `--cookies` | User specified cookie file path |
 | `--version`, `--v` | Show version |
 
 

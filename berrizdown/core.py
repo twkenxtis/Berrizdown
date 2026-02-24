@@ -24,13 +24,14 @@ from berrizdown.unit.handle.handle_log import setup_logging
 
 rich.traceback.install()
 
-logger = setup_logging("berriz", "orange")
+logger = setup_logging("core", "orange")
 from berrizdown.static.parameter import paramstore
 
 # set account to empty string for login.py
 paramstore._store["current_account_mail"] = 0
 from berrizdown.lib.account.change_pawword import Change_Password
 from berrizdown.lib.account.signup import run_signup
+from berrizdown.lib.path import Path
 from berrizdown.lib.interface.interface import Community_Uniqueness, StartProcess, URL_Parser
 from berrizdown.lib.load_yaml_config import CFG
 from berrizdown.mystate.parse_my import request_my
@@ -76,6 +77,10 @@ async def start():
     await init()
     await click_urls()
     GGP = group()
+    if Path(cookies_userinput()).exists() is False:
+        logger.error(f"{Color.fg('dark_blue')}--cookies {Color.fg('black')}must be a correct path to cookies file{Color.reset()}")
+        await BAPIClient.close_session()
+        sys.exit(0)
     if start_time() is not None and end_time() is not None and len(str(start_time())) == 0 or len(str(end_time())) == 0:
         await BAPIClient.close_session()
         logger.error(f"{Color.fg('black')}argument got unknown value{Color.reset()}")

@@ -5,12 +5,12 @@ from http.cookiejar import MozillaCookieJar
 
 from berrizdown.lib.path import Path
 from berrizdown.static.route import Route
+from berrizdown.static.parameter import paramstore
 from berrizdown.unit.handle.handle_log import setup_logging
 
-route = Route()
-DEFAULT_COOKIE: Path = route.default_cookie
+route: object = Route()
+DEFAULT_COOKIE: Path = route.default_cookie if paramstore.get("cookies_userinput_bool") is not True else Path(paramstore.get("cookies_userinput"))
 cj = http.cookiejar.MozillaCookieJar(DEFAULT_COOKIE)
-
 
 logger = setup_logging("loadcookie", "sunrise")
 
@@ -19,16 +19,22 @@ try:
     cj.load(ignore_discard=True, ignore_expires=True)
 except FileNotFoundError:
     pass
-except http.cookiejar.LoadError as e:
+except (http.cookiejar.LoadError) as e:
     if "does not look like a Netscape format cookies file" in str(e):
         logger.warning(f"Cookie file {DEFAULT_COOKIE} is not a Netscape format cookies file")
     else:
         raise http.cookiejar.LoadError(f"Error while loading cookie: {e}")
+except UnicodeDecodeError:
+    logger.warning(f"Cookie file {DEFAULT_COOKIE} is not a Netscape format cookies file")
+except PermissionError:
+    logger.error(f"Permission denied when trying to load cookie file {DEFAULT_COOKIE}")
+except OSError as e:
+    logger.error(f"OS error when trying to load cookie file {DEFAULT_COOKIE}: {e}")
 
 
 class LoadCookie:
     def __init__(self):
-        self.file_path = DEFAULT_COOKIE
+        self.file_path: Path = DEFAULT_COOKIE
         self.domain = ".berriz.in"
         self.path = "/"
         self.cj = http.cookiejar.MozillaCookieJar(str(self.file_path))
@@ -44,11 +50,14 @@ class LoadCookie:
 
     def _ensure_cookie_file(self):
         """確保 cookie 檔案與資料夾存在"""
-        self.file_path.parent.mkdir(parents=True, exist_ok=True)
-        if not self.file_path.exists():
-            self.file_path.touch()
-            self.cj.save()
-            self.cj.load(ignore_discard=True, ignore_expires=True)
+        try:
+            self.file_path.parent.mkdir(parents=True, exist_ok=True)
+            if not self.file_path.exists():
+                self.file_path.touch()
+                self.cj.save()
+                self.cj.load(ignore_discard=True, ignore_expires=True)
+        except OSError:
+            sys.exit(1)
 
     def _get_or_create_cookie(self, name, default_value):
         try:

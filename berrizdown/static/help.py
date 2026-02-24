@@ -67,6 +67,8 @@ def print_help() -> None:
         "-ns, --no-subs",
         "--keep-subs, --keepsubs",
         "",
+        "--cookies",
+        "",
         "--version, --v",
     ]
 
@@ -124,6 +126,8 @@ def print_help() -> None:
         "Only download subtitle tracks",
         "Do not download subtitle tracks",
         "When subtitle mux to MKV, keep sub file after done (default: false)",
+        "",
+        "User specified cookie file path",
         "",
         "Show version",
     ]

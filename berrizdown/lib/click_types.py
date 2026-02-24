@@ -120,6 +120,7 @@ known_flags: list[str] = [
     "--no-subs",
     "--keep-subs",
     "--keepsubs",
+    "--cookies",
 ]
 
 
@@ -180,6 +181,12 @@ def apply_no_info(ctx, param, value):
     "had_nocookie",
     is_flag=True,
     help="No cookie use",
+)
+@click.option(
+    "--cookies",
+    "cookies_userinput",
+    type=str,
+    help="User specified cookie file path",
 )
 @click.option(
     "--join",
@@ -508,6 +515,7 @@ def main(
     subs_only: bool,
     no_subs: bool,
     keepsubs: bool,
+    cookies_userinput: str,
     unknown: tuple,
 ) -> None:
     global _global_args
@@ -561,6 +569,7 @@ def main(
         "subs_only": subs_only,
         "no_subs": no_subs,
         "keep-subs": keepsubs,
+        "cookies_userinput": cookies_userinput,
     }
     ctx.obj = args_dict
     _global_args = args_dict
@@ -705,6 +714,12 @@ def main(
         
     if keepsubs:
         paramstore._store["keep-subs"] = True
+
+    if cookies_userinput and len(cookies_userinput) > 0:
+        paramstore._store["cookies_userinput"] = cookies_userinput
+        paramstore._store["cookies_userinput_bool"] = True
+    else:
+        paramstore._store["cookies_userinput_bool"] = False
 
 
 def had_key() -> bool:
@@ -922,6 +937,10 @@ def subs_only() -> bool|None:
 
 def keepsubs() -> bool:
     return _get_arg("keepsubs", False)
+
+
+def cookies_userinput() -> str:
+    return _get_arg("cookies_userinput", "%COOKIES%")
 
 if __name__ == "__main__":
     try:
