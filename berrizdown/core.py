@@ -77,12 +77,11 @@ async def start():
     await init()
     await click_urls()
     GGP = group()
-    if Path(cookies_userinput()).exists() is False and paramstore.get("cookies_userinput_bool") is True:
-        logger.error(f"{Color.fg('dark_blue')}--cookies {Color.fg('black')}must be a correct path to cookies file{Color.reset()}")
-        await BAPIClient.close_session()
-        sys.exit(0)
     if start_time() is not None and end_time() is not None and len(str(start_time())) == 0 or len(str(end_time())) == 0:
         await BAPIClient.close_session()
+        if Path(cookies_userinput()).exists() is False:
+            logger.error(f"{Color.fg('dark_blue')}--cookies {Color.fg('black')}must be a correct path to cookies file{Color.reset()}")
+            sys.exit(0)
         logger.error(f"{Color.fg('black')}argument got unknown value{Color.reset()}")
         sys.exit(0)
     if not community():
