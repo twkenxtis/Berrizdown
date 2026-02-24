@@ -162,7 +162,7 @@ uv run berrizdown -?
 | `-S`, `--subs-only` | 只下載字幕 |
 | `-ns`, `--no-subs` | 跳過下載字幕 |
 | `--keep-subs`, `--keepsubs` | 將字幕封裝到MKV容器時，完成後保留字幕檔（預設：false）|
-| `--cookies` | 使用者指定Cookie檔案路徑 |
+| `--cookies` FILE | Netscape格式化的檔案讀取cookie與轉儲cookie jar |
 | `--version`, `--v` | 顯示版本 |
 
 
