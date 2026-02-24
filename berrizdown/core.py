@@ -77,7 +77,7 @@ async def start():
     await init()
     await click_urls()
     GGP = group()
-    if Path(cookies_userinput()).exists() is False:
+    if Path(cookies_userinput()).exists() is False and paramstore.get("cookies_userinput_bool") is True:
         logger.error(f"{Color.fg('dark_blue')}--cookies {Color.fg('black')}must be a correct path to cookies file{Color.reset()}")
         await BAPIClient.close_session()
         sys.exit(0)

@@ -186,6 +186,7 @@ def apply_no_info(ctx, param, value):
     "--cookies",
     "cookies_userinput",
     type=str,
+    default="",
     help="User specified cookie file path",
 )
 @click.option(
