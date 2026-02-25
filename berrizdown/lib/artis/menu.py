@@ -307,14 +307,6 @@ class Board:
             count += 1
             if count in range(499, 501):
                 logger.warning("Over 500 pages, will take a long time to finish.")
-            elif count == 50:
-                logger.info(f"{Color.fg('light_gray')}Over{Color.fg('gold')} 50 {Color.reset()}{Color.fg('light_gray')}pages, will take a long time to finish.")
-                logger.info(
-                    f"{Color.fg('azure')} Try use command "
-                    f"{Color.fg('light_lemon')}--spider , --crawler{Color.fg('azure')}"
-                    f"{Color.fg('azure')} to unlock none max retries limit{Color.reset()}"
-                    f"{Color.fg('cyan')} for long time fetch data ...{Color.reset()}"
-                )
             elif count >= 100 and (count - 100) % 25 == 0:
                 logger.info(f"{Color.fg('light_gray')}Fetch {Color.fg('gold')}{count}{Color.fg('light_gray')} pages, please wait...{Color.reset()}")
         return self.deduplicate_contents(all_contents)
