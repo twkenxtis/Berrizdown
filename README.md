@@ -147,7 +147,7 @@ Use your **Berriz account and password** (not Google/Apple login):
 | `--skip-playlist`, `--skip-Playlist`, `--skip-pl`, `--skipplaylist` | Skip saving playlist locally |
 | `--skip-html`, `--skip-Html`, `--skip-HTML`, `--skiphtml` | Skip saving HTML format locally |
 | `--no-info`, `--noinfo` | No JSON / HTML / m3u8 / MPD / thumbnails |
-| `--nosubfolder`, `--no-subfolder`, `--no_subfolder` | No extra subfolders for each content |
+| `--nosubfolder`, `--no-subfolder`, `--no-sub-folder`, `--no_subfolder` | No extra subfolders for each content |
 | `--retitle` | Filter titles using regular expressions |
 | `--artisid` | Specify ArtistID (e.g., `--artisid 71,72,73`) — only works at 0. Artis archive |
 | `--cdm` | Override the CDM used for decryption |

@@ -84,6 +84,7 @@ known_flags: list[str] = [
     "--skipvideo",
     "--nosubfolder",
     "--no-subfolder",
+    "--no-sub-folder",
     "--no_subfolder",
     "--skip-images",
     "--skip-imgs",
@@ -333,6 +334,7 @@ def apply_no_info(ctx, param, value):
 @click.option(
     "--nosubfolder",
     "--no-subfolder",
+    "--no-sub-folder",
     "--no_subfolder",
     "nosubfolder",
     is_flag=True,

@@ -157,7 +157,7 @@ uv run berrizdown -?
 | `--skip-playlist`, `--skip-Playlist`, `--skip-pl`, `--skipplaylist` | 跳過下載播放列表到本地 |
 | `--skip-html`, `--skip-Html`, `--skip-HTML`, `--skiphtml` | 跳過保存HTML到本地 |
 | `--no-info`, `--noinfo` | 跳過Json, HTML, Thumbnails, Images, Playlist 的下載 |
-| `--nosubfolder`, `--no-subfolder`, `--no_subfolder` | 不要建立任何子資料夾 |
+| `--nosubfolder`, `--no-subfolder`, `--no-sub-folder`, `--no_subfolder` | 不要建立任何子資料夾 |
 | `--retitle` | 使用正則表達式篩選標題 |
 | `--artisid` | 指定Artisid (例如:, `--artisid 71,72,73`) — 只有在0. Artis archive 工作|
 | `--cdm` | 指定解密cdm路徑並覆蓋設定值 |

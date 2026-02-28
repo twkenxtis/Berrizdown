@@ -55,7 +55,7 @@ def print_help() -> None:
         "--skip-playlist, --skip-Playlist, --skip-pl --skipplaylist",
         "--skip-html, --skip-Html, --skip-HTML --skiphtml",
         "--no-info, --noinfo",
-        "--nosubfolder, --no-subfolder, --no_subfolder",
+        "--nosubfolder, --no-subfolder, , --no-sub-folder, --no_subfolder",
         "--retitle",
         "--artisid",
         "--cdm",
