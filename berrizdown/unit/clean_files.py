@@ -26,7 +26,7 @@ class CleanFiles:
         if base_dir.exists():
             file_paths: list[Path] = []
             if len(self.dl_obj.__dict__.get("subtitle")) != 0 and CFG['Container']['video'] == ("mkv" or "mp4"):
-                if paramstore.get("keep-subs") is not True:
+                if paramstore.get("keep-subs") is not True and paramstore.get("subs_only") is not True: 
                     try:
                         for lang in self.dl_obj.__dict__.get("subtitle"):
                             logger.info(f"Removed subtitle file: {Color.fg('mist')}{self.dl_obj.__dict__.get("subtitle").get(lang)}{Color.reset()}")
