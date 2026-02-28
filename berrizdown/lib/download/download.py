@@ -305,8 +305,6 @@ class MediaDownloader:
 
         init_files: list[Path] = list(track_dir.glob(f"init_{track_type}_.*"))
         
-        
-        
         if not init_files:
             if paramstore.get("mpd_audio") is True and track_type == "audio":
                 logger.warning(f"Could not find {track_type} initialization file")
@@ -340,7 +338,7 @@ class MediaDownloader:
             subtitle_path: Path = output_file.with_name(f"{track.language}{output_file.with_suffix('').suffix}.srt")
             result: bool = await MERGE.save_subtitle(track.language, subtitle_str, subtitle_path)
             if result:
-                self.dl_obj.subtitle = {track: output_file} if track_type == "subtitle" else self.dl_obj.subtitle
+                self.dl_obj.subtitle[track.language] = subtitle_path
             return result
 
     async def download_track_with_manager(
@@ -450,7 +448,7 @@ class MediaDownloader:
         # )
         return success_count == total
 
-    async def download_content(self, mpd_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack) -> bool:
+    async def download_content(self, mpd_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack) -> tuple[bool, DownloadObjection]:
         """下載所有軌道內容"""
         try:
             track_tasks: list[tuple[str, MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack]] = []
@@ -492,10 +490,12 @@ class MediaDownloader:
                 if mpd_content.sub_track:
                     for sub in mpd_content.sub_track:
                         merge_results.append(await self._merge_track("subtitle", sub))
-                return all(merge_results)
+                if all(merge_results):
+                    self.dl_obj.task_info = track_tasks
+                return all(merge_results), self.dl_obj
             else:
                 logger.info(f"{Color.fg('light_gray')}Skip merge because --skip-merge is {Color.fg('cyan')}True{Color.reset()}")
-                return False
+                return False, self.dl_obj
         finally:
             await self.close()
 
@@ -577,10 +577,10 @@ class Start_Download_Queue:
         output_dir: Path,
         playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack,
         video_duration: float,
-    ) -> bool:
+    ) -> tuple[bool, DownloadObjection]:
         self.downloader: MediaDownloader = MediaDownloader(self.public_info.media_id, output_dir, video_duration)
-        success: bool = await self.downloader.download_content(playlist_content)
-        return success
+        success, dl_obj = await self.downloader.download_content(playlist_content)
+        return success, dl_obj
 
     async def start_rename(
         self,
@@ -629,7 +629,7 @@ class Start_Download_Queue:
                 self.subs_successful: list[tuple[str, str, Path]]|list = []
                 
             await self.task_of_info(output_dir, custom_community_name, community_name, playlist_content)
-            success: bool = await self.start_request_download(output_dir, playlist_content, video_duration)
+            success, dl_obj = await self.start_request_download(output_dir, playlist_content, video_duration)
             # 處理成功後的混流 重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
             await self.vv.re_name_folder(video_file_name, mux_bool_status)
