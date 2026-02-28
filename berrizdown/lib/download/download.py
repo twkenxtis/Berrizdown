@@ -451,13 +451,20 @@ class MediaDownloader:
         """下載所有軌道內容"""
         try:
             track_tasks: list[tuple[str, MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack]] = []
-            if mpd_content.audio_track:
-                track_tasks.append(("audio", mpd_content.audio_track))
-            if mpd_content.video_track:
-                track_tasks.append(("video", mpd_content.video_track))
-            if mpd_content.sub_track:
-                for hlssubtrack in mpd_content.sub_track:
-                    track_tasks.append(("subtitle", hlssubtrack))
+            match paramstore.get("subs_only"):
+                case True:
+                    logger.info(f"{Color.fg('tomato')}【Subs only mode】{Color.reset()}")
+                    if mpd_content.sub_track:
+                        for hlssubtrack in mpd_content.sub_track:
+                           track_tasks.append(("subtitle", hlssubtrack))
+                case _:
+                    if mpd_content.audio_track:
+                        track_tasks.append(("audio", mpd_content.audio_track))
+                    if mpd_content.video_track:
+                        track_tasks.append(("video", mpd_content.video_track))
+                    if mpd_content.sub_track:
+                        for hlssubtrack in mpd_content.sub_track:
+                            track_tasks.append(("subtitle", hlssubtrack))
                 
             # 啟動進度條
             if len(track_tasks) > 0:
@@ -534,7 +541,7 @@ class Start_Download_Queue:
 
     @cached_property
     def vv(self):
-        return Video_folder(self.public_info, self.input_community_name)
+        return Video_folder(self.public_info, self.input_community_name, self.dl_obj, self.decryption_key)
 
     @cached_property
     async def community_name(self) -> str:
@@ -616,8 +623,6 @@ class Start_Download_Queue:
             # 處理成功後的混流 重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
             await self.vv.re_name_folder(video_file_name, mux_bool_status)
-        # elif paramstore.get("subs_only") is True:
-        #     logger.info(f"{Color.fg('tomato')}【Subs only mode】{Color.reset()}")
         else:
             logger.error("Failed to create output directory.")
             raise ValueError("No output directory")

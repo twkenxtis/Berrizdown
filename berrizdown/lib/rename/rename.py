@@ -1,5 +1,3 @@
-import asyncio
-import shutil
 from functools import cached_property
 
 import aiofiles.os as aios
@@ -89,6 +87,8 @@ class SUCCESS:
             return final_video_name_with_p2p, mux_succeeded
 
     async def run_mux(self) -> bool:
+        if paramstore.get("subs_only") is True:
+            return True
         muxer: FFmpegMuxer = FFmpegMuxer(self.path, self.playbackinfo.is_drm, self.dl_obj, self.decryption_key)
         return await muxer.mux_main()
 
@@ -98,6 +98,8 @@ class SUCCESS:
                 final_video_name_with_p2p: str = await self.re_name()
         elif paramstore.get("nodl") is True:
             final_video_name_with_p2p: str = "[ SKIP-DL ]"
+        elif paramstore.get("subs_only") is True:
+            final_video_name_with_p2p: str = "[ SUBS ONLY ]"
         elif paramstore.get("slice_path_fail") is True:
             final_video_name_with_p2p: str = "[ Fail to create folder for download slice ]"
         elif paramstore.get("skip_merge") is True and mux_succeeded is False:

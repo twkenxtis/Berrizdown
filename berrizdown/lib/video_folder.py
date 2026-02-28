@@ -15,19 +15,22 @@ from berrizdown.lib.path import Path
 from berrizdown.unit.__init__ import FilenameSanitizer
 from berrizdown.unit.community.community import custom_dict, get_community
 from berrizdown.unit.handle.handle_log import setup_logging
+from berrizdown.unit.clean_files import CleanFiles
 
 
 logger = setup_logging("video_folder", "chocolate")
 
 
 class Video_folder:
-    def __init__(self, public_info: PublicInfo, input_community_name: str) -> None:
+    def __init__(self, public_info: PublicInfo, input_community_name: str, dl_obj: object, decryption_key: list[str]) -> None:
         self.artis_list: list[dict[str, str | None]] = public_info.artists
         self.community_id: str | int | None = public_info.community_id
         self.FilenameSanitizer = FilenameSanitizer.sanitize_filename
         self.folder_name: str = ""
         self.input_community_name: str | int | None = input_community_name
         self.media_id: UUID | None = public_info.media_id
+        self.dl_obj: object = dl_obj
+        self.decryption_key: list[str] = decryption_key
 
         self._public_info = public_info
 
@@ -93,12 +96,13 @@ class Video_folder:
         match paramstore.get("subs_only"):
             case True:
                 if paramstore.get("nosubfolder") is True:
-                    subs_only_dir: Path = Path.cwd() / base_dir.parent
+                    subs_only_dir: Path = Path.cwd() / base_dir / "subtitle_subs_only"
                     new_path: Path = Path(subs_only_dir.resolve())
                 else:
                     subs_only_dir: Path = Path.cwd() / base_dir / Path(self.folder_name)
                     new_path: Path = self.get_unique_folder_name(self.folder_name, subs_only_dir)
                 new_path.mkdirp()
+                self.output_dir: Path = new_path
                 return new_path
             case _:
                 temp_folder_name: str = f"temp_{self.time_str}_{self.media_id}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
@@ -128,6 +132,8 @@ class Video_folder:
         # 是否扁平化子資料夾並執行
         if self._should_flatten_subfolder(skip_conditions, mux_bool_status):
             await self._flatten_to_parent(video_file_name)
+            if paramstore.get("subs_only") is True:
+                await self._maybe_cleanup_artifacts()
             return
         # 檢查 output_dir 是否設定
         if not self._validate_output_dir():
@@ -146,15 +152,30 @@ class Video_folder:
 
     def _should_flatten_subfolder(self, skip_conditions: list, mux_bool_status: bool) -> bool:
         return paramstore.get("nosubfolder") is True and not any(skip_conditions) and mux_bool_status is True
+    
+    async def _maybe_cleanup_artifacts(self) -> None:
+        if paramstore.get("clean_dl") is not False:
+            await CleanFiles(self.dl_obj, self.base_dir, self.decryption_key, True).clean_file()
+        else:
+            logger.info(f"{Color.fg('yellow')}Skipping file cleaning, keep segments after done{Color.reset()}")
 
     async def _flatten_to_parent(self, video_file_name: str) -> None:
         logger.info(f"{Color.fg('light_gray')}No subfolder for{Color.reset()} {Color.fg('light_gray')}Video")
-        if Path(self.output_dir).is_dir():
-            await move_contents_to_parent(
-                Path(self.output_dir).parent,
-                video_file_name,
-                f"{Color.fg('light_amber')}Video {Color.reset()}",
-            )
+        match paramstore.get("subs_only"):
+            case True:
+                if Path(self.output_dir).is_dir():
+                    await move_contents_to_parent(
+                        Path(self.output_dir),
+                        video_file_name,
+                        f"{Color.fg('fern')}Subtitle {Color.reset()}",
+                    )
+            case _:
+                if Path(self.output_dir).is_dir():
+                    await move_contents_to_parent(
+                        Path(self.output_dir).parent,
+                        video_file_name,
+                        f"{Color.fg('light_amber')}Video {Color.reset()}",
+                    )
 
     def _validate_output_dir(self) -> bool:
         if self.output_dir is None:
@@ -169,6 +190,9 @@ class Video_folder:
         return new_path, full_path, original_name
 
     def _ensure_uuid_in_original_name(self, original_name: str) -> bool:
+        if paramstore.get("subs_only"):
+            return False
+        
         if str(self.media_id) not in original_name:
             logger.warning(f"UUID '{self.media_id}' not found in folder name: {original_name}")
             return False
