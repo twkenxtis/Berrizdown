@@ -599,11 +599,7 @@ class Start_Download_Queue:
             community_name,
             self.subs_successful,
         )
-        try:
-            video_file_name, mux_bool_status = await s.when_success(success, self.decryption_key)
-        except TypeError:
-            logger.warning("Cancelled")
-            sys.exit(1)
+        video_file_name, mux_bool_status = await s.when_success(success, self.decryption_key)
         return video_file_name, mux_bool_status
 
     async def start_download_queue(self, playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack, video_duration: float) -> None:
