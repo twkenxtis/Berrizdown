@@ -39,7 +39,7 @@ class SubtitleProcessor:
     def merge_vtt_from_path_list(self) -> str:
         raw_parts: list[str] = []
         
-        for p in track(self.segments, description=f"　[cyan]{self.track.language}      [blue]subtitle[/blue]"):
+        for p in track(self.segments, description=f"　[cyan]{self.track.language} [blue]subtitle[/blue]"):
             if p.exists():
                 content = p.read_text(encoding="utf-8").strip()
                 if content:
@@ -76,9 +76,14 @@ class SubtitleProcessor:
         hours = total_s // 3600
         return f"{hours:02}:{mins:02}:{secs:02},{millis:03}"
 
-    def process_subtitle(self, init_path: Path | None) -> str:
+    def process_subtitle(self, init_path: list[Path] | None) -> str:
         """input subtitle track and segments, output processed subtitle content"""
         sub_type: str = self.check_sub_type()
+        
+        if isinstance(init_path, list):
+            if len(init_path) >= 1 :
+                init_path: Path = init_path[0]
+
         if sub_type == "webvtt":
             merged_vtt: str = self.merge_vtt_from_path_list()
             return self.webvtt2srt(merged_vtt)
@@ -108,7 +113,7 @@ class STPPSubtitleExtractor:
 
         with Progress() as progress:
             task: TaskID = progress.add_task(
-                description=f"　[cyan]{self.track.language}      [blue]subtitle[/blue]",
+                description=f"　[cyan]{self.track.language} [blue]subtitle[/blue]",
                 total=len(self.segments) + 1
             )
 
