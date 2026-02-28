@@ -529,8 +529,9 @@ class Start_Download_Queue:
         self.raw_mpd: ClientResponse = raw_mpd
         self.raw_hls: str = raw_hls
         self.input_community_name: str = input_community_name
-        self._community_name = None
-        self._custom_community_name = None
+        self._community_name: str = None
+        self._custom_community_name: str = None
+        self.dl_obj: DownloadObjection = None
 
     @cached_property
     def vv(self):
@@ -590,6 +591,7 @@ class Start_Download_Queue:
         output_dir: Path,
     ) -> tuple[str, bool]:
         s: SUCCESS = SUCCESS(
+            self.dl_obj,
             output_dir,
             self.public_info,
             self.playback_info,
@@ -630,6 +632,7 @@ class Start_Download_Queue:
                 
             await self.task_of_info(output_dir, custom_community_name, community_name, playlist_content)
             success, dl_obj = await self.start_request_download(output_dir, playlist_content, video_duration)
+            self.dl_obj: DownloadObjection = dl_obj 
             # 處理成功後的混流 重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
             await self.vv.re_name_folder(video_file_name, mux_bool_status)
