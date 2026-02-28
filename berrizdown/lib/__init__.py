@@ -208,8 +208,8 @@ async def move_contents_to_parent(path: Path, file_name: str, TAG: str) -> None:
     if not path.is_dir():
         raise ValueError(f"{path} is not a directory")
 
-    parent = path.parent.parent
-    tasks = []
+    parent: Path = path.parent
+    tasks: list = []
 
     for item in path.rglob("*"):
         if item.is_file():
@@ -237,8 +237,8 @@ async def move_folder_to_parent(path: Path, file_name: str, TAG: str) -> Path:
     if not path.is_dir():
         raise ValueError(f"{path} is not a directory")
 
-    grandparent = path.parent.parent
-    base_name = path.name
+    grandparent: Path = path.parent
+    base_name: str = path.name
     idx = 0
 
     while True:

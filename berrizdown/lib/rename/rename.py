@@ -150,5 +150,5 @@ class SUCCESS:
             
         filename = OutputFormatter(filename_formact).format(video_meta) + f".{container}"
         
-        await aios.rename(self.path, Path(self.base_dir).parent / filename)
+        await aios.rename(self.path, Path(self.base_dir) / filename)
         return filename

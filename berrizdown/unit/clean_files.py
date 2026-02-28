@@ -15,18 +15,18 @@ logger = setup_logging("clean_files", "daffodil")
 
 
 class CleanFiles:
-    def __init__(self, dl_obj: Any, base_dir: Path, decryption_key: str | None = None, sub_only_nosubfolder_flag: bool = False) -> None:
+    def __init__(self, dl_obj: Any, base_dir: Path, decryption_key: str | None = None, nosubfolder_flag: bool = False) -> None:
         self.dl_obj: object = dl_obj
         self.base_dir: Path = base_dir
         self.decryption_key: str | None = decryption_key
-        self.sub_only_nosubfolder_flag: bool = sub_only_nosubfolder_flag
+        self.nosubfolder_flag: bool = nosubfolder_flag
         
     async def clean_file(self) -> None:
         """清理下載過程中的暫存檔案、加密檔案和暫存目錄"""
         base_dir: Path = self.base_dir
         if base_dir.exists():
             file_paths: list[Path] = []
-            if self.sub_only_nosubfolder_flag is False:
+            if self.nosubfolder_flag is False:
                 if len(self.dl_obj.__dict__.get("subtitle")) != 0 and CFG['Container']['video'] == ("mkv" or "mp4") and\
                     paramstore.get("keep-subs") is not True and paramstore.get("subs_only") is not True:
                     try:
@@ -59,10 +59,11 @@ class CleanFiles:
                     logger.error(f"Error removing file {fp}: {e}")
                     
             for subfolder in ["audio", "video", "subtitle"]:
-                if self.sub_only_nosubfolder_flag is True and paramstore.get("nosubfolder") is True:
+                if self.nosubfolder_flag is True and paramstore.get("nosubfolder") is True:
                     shutil.rmtree(base_dir / Path(subfolder).parent, ignore_errors=True)
                 else:
-                    dir_path: Path = base_dir / subfolder
+                    dir_path: Path = base_dir / Path(subfolder)
+                        
                     try:
                         await asyncio.to_thread(shutil.rmtree, dir_path)
                         logger.info(f"Force-removed directory: {Color.fg('mist')}{dir_path}{Color.reset()}")

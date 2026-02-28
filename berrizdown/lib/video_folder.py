@@ -1,4 +1,4 @@
-import time
+import asyncio
 from datetime import datetime
 from functools import cached_property
 from uuid import UUID
@@ -26,7 +26,6 @@ class Video_folder:
         self.artis_list: list[dict[str, str | None]] = public_info.artists
         self.community_id: str | int | None = public_info.community_id
         self.FilenameSanitizer = FilenameSanitizer.sanitize_filename
-        self.folder_name: str = ""
         self.input_community_name: str | int | None = input_community_name
         self.media_id: UUID | None = public_info.media_id
         self.dl_obj: object = dl_obj
@@ -51,11 +50,11 @@ class Video_folder:
         return self.FDT.vod_live_time_str()
 
     async def get_custom_community_name(self) -> tuple[str | None, str | int | None]:
-        community_name_result = await self.get_community_name()
+        community_name_result: str = await self.get_community_name()
         if community_name_result is not None:
-            custom_community_name = await custom_dict(community_name_result)
+            custom_community_name: str = await custom_dict(community_name_result)
         else:
-            custom_community_name = None
+            custom_community_name: str = None
         community_name: str | int | None = await get_community(self.community_id) or self.input_community_name
         return custom_community_name, community_name
 
@@ -91,12 +90,12 @@ class Video_folder:
             self.get_artis,
         )
         folder_name: str = OutputFormatter(f"{CFG['donwload_dir_name']['dir_name']}").format(video_meta)
-        self.folder_name: str = folder_name  # for final using folder name for self
+        self.folder_name: str = folder_name or ""
         
         match paramstore.get("subs_only"):
             case True:
                 if paramstore.get("nosubfolder") is True:
-                    subs_only_dir: Path = Path.cwd() / base_dir / "subtitle_subs_only"
+                    subs_only_dir: Path = Path.cwd() / base_dir
                     new_path: Path = Path(subs_only_dir.resolve())
                 else:
                     subs_only_dir: Path = Path.cwd() / base_dir / Path(self.folder_name)
@@ -107,7 +106,7 @@ class Video_folder:
             case _:
                 temp_folder_name: str = f"temp_{self.time_str}_{self.media_id}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
                 temp_name: str = self.FilenameSanitizer(temp_folder_name)
-                temp_dir: Path = Path.cwd() / base_dir / temp_name / f"temp_{self.time_str}_{self.media_id}"
+                temp_dir: Path = Path.cwd() / base_dir / temp_name
                 temp_dir.mkdirp()
                 self.output_dir: Path = Path(temp_dir.resolve())
                 return self.output_dir  # for Download reutrn temp folder name path
@@ -132,21 +131,20 @@ class Video_folder:
         # 是否扁平化子資料夾並執行
         if self._should_flatten_subfolder(skip_conditions, mux_bool_status):
             await self._flatten_to_parent(video_file_name)
-            if paramstore.get("subs_only") is True:
-                await self._maybe_cleanup_artifacts()
+            await self._maybe_cleanup_artifacts()
             return
         # 檢查 output_dir 是否設定
         if not self._validate_output_dir():
             return
         # 準備路徑與前置檢查
         new_path, full_path, original_name = self._prepare_paths()
-        if not self._ensure_uuid_in_original_name(original_name):
+        if not self._ensure_uuid_in_original_name(full_path, original_name):
             return
         # 刪除暫存資料夾 merge mux false
         await self._delete_temp_if_needed(full_path, mux_bool_status)
         # 取得唯一新路徑並執行重命名
         _new_path: Path = self.get_unique_folder_name(self.folder_name, new_path)
-        await self._rename_with_retries(full_path, _new_path)
+        await self.rename_folder(full_path, _new_path)
         # 列印路徑資訊
         self._print_path_info(skip_conditions, _new_path, video_file_name)
 
@@ -189,11 +187,11 @@ class Video_folder:
         original_name: str = full_path.parent.name
         return new_path, full_path, original_name
 
-    def _ensure_uuid_in_original_name(self, original_name: str) -> bool:
+    def _ensure_uuid_in_original_name(self, full_path: Path, original_name: str) -> bool:
         if paramstore.get("subs_only"):
             return False
         
-        if str(self.media_id) not in original_name:
+        if str(self.media_id) not in str(full_path):
             logger.warning(f"UUID '{self.media_id}' not found in folder name: {original_name}")
             return False
         return True
@@ -202,21 +200,12 @@ class Video_folder:
         if mux_bool_status is True:
             await self.del_temp_folder(full_path)
 
-    async def _rename_with_retries(self, full_path: Path, new_path: Path) -> None:
-        max_retries: int = 3
-        delay_seconds: float = 0.25
-        for attempt in range(1, max_retries + 1):
-            try:
-                await aios.rename(full_path.parent, new_path)
-                logger.info(f"{Color.fg('light_blue')}Renamed folder From: {Color.reset()}{Color.fg('light_gray')}{full_path.parent} {Color.fg('dark_green')}{new_path}{Color.reset()}")
-                break
-            except Exception as e:
-                if attempt == max_retries:
-                    logger.error(f"All {max_retries} retries failed. Last error: {e}")
-                else:
-                    logger.warning(f"Attempt {attempt} failed: {e}.")
-                    logger.info(f"Retrying in {Color.fg('mist')}{delay_seconds}s {Color.reset()}")
-                    time.sleep(delay_seconds)
+    async def rename_folder(self, full_path: Path, new_path: Path) -> None:
+        try:
+            await aios.rename(full_path, new_path)
+            logger.info(f"Renamed From: {full_path} To: {new_path}")
+        except Exception as e:
+            logger.error(f"Rename failed: {e}")
 
     def _print_path_info(self, skip_conditions: list, new_path: Path, video_file_name: str) -> None:
         if not all(skip_conditions):
