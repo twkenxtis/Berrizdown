@@ -322,16 +322,10 @@ class MediaDownloader:
             logger.debug(f"{Color.fg('light_gray')}Merge {track_type} tracks: {len(segments)} segments{Color.reset()}")
             return result
         elif len(segments) >= 1 and track_type == "subtitle":
-            init_files: Path = init_files[0] or None
             subtitle_str: str = SubtitleProcessor(track, segments).process_subtitle(init_files)
-            subtitle_name: Path = output_file.with_name(f"{track.language}{output_file.with_suffix('').suffix}.srt")
-            try:
-                with open(subtitle_name, mode='w', encoding='utf-8') as f:
-                    f.write(subtitle_str)
-                return True
-            except Exception as e:
-                logger.error(f"Failed to write subtitle file: {e}")
-                return False
+            subtitle_path: Path = output_file.with_name(f"{track.language}{output_file.with_suffix('').suffix}.srt")
+            result: bool = await MERGE.save_subtitle(track.language, subtitle_str, subtitle_path)
+            return result
 
     async def download_track_with_manager(
         self,
@@ -620,8 +614,7 @@ class Start_Download_Queue:
                 
             await self.task_of_info(output_dir, custom_community_name, community_name, playlist_content)
             success: bool = await self.start_request_download(output_dir, playlist_content, video_duration)
-            
-            # 處理成功後的混流、重命名和清理
+            # 處理成功後的混流 重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
             await self.vv.re_name_folder(video_file_name, mux_bool_status)
         elif paramstore.get("subs_only") is True:
