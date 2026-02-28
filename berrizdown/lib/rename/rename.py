@@ -81,11 +81,11 @@ class SUCCESS:
         if success or paramstore.get("skip_merge") is True:
             mux_succeeded: bool = await self.run_mux()
             final_video_name_with_p2p, mux_succeeded = await self._derive_outcome_label(mux_succeeded)
-            await self._maybe_cleanup_artifacts(mux_succeeded)
             if final_video_name_with_p2p == "":
                 mux_succeeded: bool = True
                 if paramstore.get("skip_merge"):
                     final_video_name_with_p2p: str = "[ User choese SKIP MERGE ] " + f"{Color.bg('ruby')}Keep all segments in folder{Color.reset()}"
+            await self._maybe_cleanup_artifacts(mux_succeeded)
             return final_video_name_with_p2p, mux_succeeded
 
     async def run_mux(self) -> bool:
@@ -148,6 +148,5 @@ class SUCCESS:
             
         filename = OutputFormatter(filename_formact).format(video_meta) + f".{container}"
         
-        # 重新命名並移動到上級目錄
         await aios.rename(self.path, Path(self.base_dir).parent / filename)
         return filename
