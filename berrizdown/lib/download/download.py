@@ -6,10 +6,10 @@ import sys
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 from io import BytesIO
-from typing import Any, Never
+from typing import Any, Never, Optional, Union
 
 import aiohttp
 from aiohttp import ClientTimeout, ClientResponse
@@ -60,6 +60,14 @@ async def _get_random_proxy() -> str:
 
 
 @dataclass
+class DownloadObjection:
+    video: Path = Path("")
+    audio: Path = Path("")
+    subtitle: dict[Union["HLSSubTrack", "SubtitleTrack"], Path] = field(default_factory=dict)
+    task_info: Optional[object] = None
+
+
+@dataclass
 class DownloadProgress:
     """進度追蹤資料類別 / 與 ProgressBar 整合"""
 
@@ -88,6 +96,7 @@ class MediaDownloader:
         self.session: aiohttp.ClientSession | None = None
         self.video_duration: float = video_duration
         self._thread_pool: ThreadPoolExecutor | None = None
+        self.dl_obj: DownloadObjection = DownloadObjection()
 
     @property
     def thread_pool(self) -> ThreadPoolExecutor:
@@ -296,6 +305,8 @@ class MediaDownloader:
 
         init_files: list[Path] = list(track_dir.glob(f"init_{track_type}_.*"))
         
+        
+        
         if not init_files:
             if paramstore.get("mpd_audio") is True and track_type == "audio":
                 logger.warning(f"Could not find {track_type} initialization file")
@@ -320,11 +331,16 @@ class MediaDownloader:
         if len(segments) >= 1 and track_type != "subtitle":
             result: bool = await MERGE.binary_merge(output_file, init_files, segments, track_type)
             logger.debug(f"{Color.fg('light_gray')}Merge {track_type} tracks: {len(segments)} segments{Color.reset()}")
+            if result:
+                self.dl_obj.audio = output_file if track_type == "audio" else self.dl_obj.audio
+                self.dl_obj.video = output_file if track_type == "video" else self.dl_obj.video
             return result
         elif len(segments) >= 1 and track_type == "subtitle":
             subtitle_str: str = SubtitleProcessor(track, segments).process_subtitle(init_files)
             subtitle_path: Path = output_file.with_name(f"{track.language}{output_file.with_suffix('').suffix}.srt")
             result: bool = await MERGE.save_subtitle(track.language, subtitle_str, subtitle_path)
+            if result:
+                self.dl_obj.subtitle = {track: output_file} if track_type == "subtitle" else self.dl_obj.subtitle
             return result
 
     async def download_track_with_manager(
