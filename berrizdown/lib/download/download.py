@@ -26,7 +26,6 @@ from berrizdown.lib.path import Path
 from berrizdown.lib.processbar.processbar import MultiTrackProgressManager
 from berrizdown.lib.rename.rename import SUCCESS
 from berrizdown.lib.save_json_data import save_json_data
-from berrizdown.lib.subdl import SaveSub
 from berrizdown.lib.video_folder import Video_folder
 from berrizdown.static.color import Color
 from berrizdown.static.parameter import paramstore
@@ -597,9 +596,9 @@ class Start_Download_Queue:
             self.playback_info,
             custom_community_name,
             community_name,
-            self.subs_successful,
+            self.decryption_key,
         )
-        video_file_name, mux_bool_status = await s.when_success(success, self.decryption_key)
+        video_file_name, mux_bool_status = await s.when_success(success)
         return video_file_name, mux_bool_status
 
     async def start_download_queue(self, playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack, video_duration: float) -> None:
@@ -610,34 +609,18 @@ class Start_Download_Queue:
         
         output_dir, custom_community_name, community_name = await self.get_output_dir()
         
-        savejsondata = save_json_data(
-            output_dir,
-            custom_community_name,
-            community_name,
-            self.public_info,
-            self.playback_info,
-        )
-        
-        savesub: SaveSub = SaveSub(output_dir, self.raw_hls, savejsondata.sub_meta())
-        
-        if output_dir is not None and os.path.exists(output_dir) and not paramstore.get("subs_only") is True:
-            if not paramstore.get("no_subs") is True:
-                self.subs_successful: list[tuple[str, str, Path]]|list = await savesub.start()
-            else:
-                self.subs_successful: list[tuple[str, str, Path]]|list = []
-                
+        if output_dir is not None and output_dir.exists():
             await self.task_of_info(output_dir, custom_community_name, community_name, playlist_content)
             success, dl_obj = await self.start_request_download(output_dir, playlist_content, video_duration)
             self.dl_obj: DownloadObjection = dl_obj 
             # 處理成功後的混流 重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
             await self.vv.re_name_folder(video_file_name, mux_bool_status)
-        elif paramstore.get("subs_only") is True:
-            logger.info(f"{Color.fg('tomato')}【Subs only mode】{Color.reset()}")
-            await savesub.start()
+        # elif paramstore.get("subs_only") is True:
+        #     logger.info(f"{Color.fg('tomato')}【Subs only mode】{Color.reset()}")
         else:
             logger.error("Failed to create output directory.")
-            raise ValueError
+            raise ValueError("No output directory")
 
     async def run_dl(self) -> Never:
         start_time = None
