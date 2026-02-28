@@ -1,7 +1,11 @@
+import asyncio
 import ctypes
 import subprocess
 from typing import Any
 from pathlib import Path
+
+from rich.console import Console
+from rich.progress import SpinnerColumn, TextColumn, Progress
 
 from berrizdown.lib.__init__ import container
 from berrizdown.lib.load_yaml_config import CFG, ConfigLoader
@@ -203,15 +207,9 @@ class FFmpegMuxer:
         decrypted_file: Path = self.input_path.parent / f"{track_type}_decrypted.{container}"
 
         self.key: str | None = decryption_key
-        self.output_path: Path = decrypted_file
-
-        logger.info(
-            f"{Color.fg('blue')}Detected{Color.reset()} {Color.fg('cyan')}{track_type} {Color.reset()}{Color.fg('blue')}"
-            f"{Color.reset()}{Color.fg('blue')}decrypting...{Color.reset()}"
-            f"{Color.fg('cyan')} {self.key}{Color.reset()}"
-        )
+        self.output_path: Path = Path(get_short_path_name(decrypted_file))
         
-        if await self.decrypt():
+        if await self.decrypt(track_type):
             # 更新新的解密路徑到dataclass物件            
             self.dl_obj.audio = decrypted_file if track_type == "audio" else self.dl_obj.audio
             self.dl_obj.video = decrypted_file if track_type == "video" else self.dl_obj.video
@@ -226,7 +224,7 @@ class FFmpegMuxer:
             return self.decryption_key
         return ""
 
-    async def decrypt(self) -> bool:
+    async def decrypt(self, track_type: str) -> bool:
         try:
             decryptionengine: str = CFG["Container"]["decryption-engine"]
             decryptionengine: str = decryptionengine.upper()
@@ -236,18 +234,26 @@ class FFmpegMuxer:
             decryptionengine = "SHAKA_PACKAGER"
             
         input_short: str = get_short_path_name(self.input_path)
-        output_short: str = get_short_path_name(self.temp_mux_path)
 
+        console: Console = Console()
+        
+        progress: Progress = Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        )
+            
         match decryptionengine:
             case "MP4DECRYPT":
-                return await self._decrypt_file_mp4decrypt(input_short, output_short)
+                return await self._decrypt_file_mp4decrypt(input_short,progress, track_type)
             case "SHAKA_PACKAGER":
-                return await self._decrypt_file_packager(input_short, output_short)
+                return await self._decrypt_file_packager(input_short, progress, track_type)
             case _:
                 ConfigLoader.print_warning("decryptionengine", decryptionengine, "shaka-packager")
                 return await self._decrypt_file_packager()
 
-    async def _decrypt_file_mp4decrypt(self, input_short: str, output_short: str) -> bool:
+    async def _decrypt_file_mp4decrypt(
+        self, input_short: str, progress: Progress, track_type: str) -> bool:
         mp4decrypt_path: Path = Route().mp4decrypt_path
         if not mp4decrypt_path.exists():
             logger.error(f"mp4decrypt.exe not found at: {mp4decrypt_path}")
@@ -263,84 +269,111 @@ class FFmpegMuxer:
                 key_args.extend(["--key", k])
 
             # 建立完整的命令
-            command: list[str] = [mp4decrypt_short] + key_args + [input_short, output_short]
+            command: list[str] = [mp4decrypt_short] + key_args + [input_short, self.output_path]
+            loop = asyncio.get_running_loop()
+            
+            with progress:
+                task_id = progress.add_task(
+                        description=f"[cyan]　Packaging in progress: [/cyan][blue]{track_type}[/blue]\n[yellow]{self.key}[/yellow]", 
+                    total=None
+                )
+                
+                result: subprocess.CompletedProcess = await loop.run_in_executor(
+                    None, 
+                    lambda: subprocess.run(
+                        command,
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="replace",
+                    )
+                )
+                progress.update(task_id, description=f"[green]　Decryption complete: [/green][blue]{track_type}[/blue]\n[yellow]{self.key}[/yellow]")
 
-            subprocess.run(
-                command,
-                check=True,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
             return True
+
         except subprocess.CalledProcessError as e:
-            logger.error(f"Decryption failed for {self.input_path}: {e.stderr or e.stdout}")
+            logger.error(f"Decryption failed: {e.stderr}")
             return False
         except Exception as e:
-            logger.error(f"Unexpected error decrypting {self.input_path}: {str(e)}")
+            logger.error(f"Unexpected error: {str(e)}")
             return False
 
-    async def _decrypt_file_packager(self, input_short: str, output_short: str) -> bool:
-        packager_path: Path = Route().packager_path
-        packager_output_path: Path = Path(self.output_path).with_suffix(".m4v")
+    async def _decrypt_file_packager(
+        self, input_short: str, progress: Progress, track_type: str) -> bool:
+            packager_path: Path = Route().packager_path
+            packager_output_path: Path = Path(self.output_path).with_suffix(".m4v")
 
-        if not packager_path.exists():
-            if paramstore.get("packager_path_ok") is True:
-                packager_path_str = "packager"
+            # 檢查路徑邏輯
+            if not packager_path.exists():
+                if paramstore.get("packager_path_ok") is True:
+                    packager_path_str = "packager"
+                else:
+                    logger.error(f"shaka-packager.exe not found at: {packager_path}")
+                    return False
             else:
-                logger.error(f"shaka-packager.exe not found at: {packager_path}")
-                return False
-        else:
-            # 轉換 packager 路徑為短路徑
-            packager_path_str: str = get_short_path_name(packager_path)
+                packager_path_str: str = get_short_path_name(packager_path)
 
-        # 分割 key 字串並為每個 key 添加 --keys 參數
-        key_lines: list[str] = self.key.strip().splitlines()
-        key_args: list[str] = []
+            # 處理 Key 的邏輯
+            key_lines: list[str] = self.key.strip().splitlines()
+            key_args: list[str] = []
+            for k in key_lines:
+                try:
+                    kid, value = k.strip().split(":")
+                    key_args.extend(["--keys", f"key_id={kid}:key={value}"])
+                except ValueError:
+                    logger.error(f"Invalid key format: {k}")
+                    return False
 
-        for k in key_lines:
+            # 建立完整的命令
+            command: list[str] = [
+                packager_path_str,
+                f"input={input_short},stream_selector=0,output={packager_output_path}",
+                "--enable_raw_key_decryption",
+            ] + key_args
+
+            loop = asyncio.get_running_loop()
+            
             try:
-                kid, value = k.strip().split(":")
-                key_args.extend(["--keys", f"key_id={kid}:key={value}"])
-            except ValueError:
-                logger.error(f"Invalid key format: {k}")
+                logger.debug(f"Packager command: {' '.join(command)}")
+                
+                with progress:
+                    task_id = progress.add_task(
+                        description=f"[cyan]　Packaging in progress: [/cyan][blue]{track_type}[/blue]\n[yellow]{self.key}[/yellow]", 
+                        total=None
+                    )
+                    
+                    await loop.run_in_executor(
+                        None,
+                        lambda: subprocess.run(
+                            command,
+                            check=True,
+                            capture_output=True,
+                            text=True,
+                            encoding="utf-8",
+                            errors="replace",
+                        )
+                    )
+                    
+                    progress.update(task_id, description=f"[green]　Packaging complete: [/green][blue]{track_type}[/blue]\n[yellow]{self.key}[/yellow]")
+
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Packager failed: {e.stderr}")
                 return False
-
-        # 建立完整的命令
-        command: list[str] = [
-            packager_path_str,
-            f"input={input_short},stream_selector=0,output={output_short}",
-            "--enable_raw_key_decryption",
-        ] + key_args
-
-        try:
-            logger.debug(f"Packager command: {' '.join(command)}")
-            result: subprocess.CompletedProcess = subprocess.run(
-                command,
-                check=True,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
-            logger.debug(f"Packager output: {result.stdout}")
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Packager failed: {e.stderr}")
-            return False
-        except Exception as e:
-            logger.exception(f"Unexpected error running packager: {e}")
-            return False
-        
-        # 成功後.m4v 改回指定副檔名
-        final_output_path: Path = packager_output_path.with_suffix(f".{container}")
-        try:
-            packager_output_path.rename(final_output_path)
-        except Exception as e:
-            logger.error(f"Failed to rename {packager_output_path} to {final_output_path}: {e}")
-            return False
-        return True
-    
+            except Exception as e:
+                logger.exception(f"Unexpected error running packager: {e}")
+                return False
+            
+            # 成功後.m4v 改回指定副檔名
+            final_output_path: Path = packager_output_path.with_suffix(f".{container}")
+            try:
+                packager_output_path.rename(final_output_path)
+            except Exception as e:
+                logger.error(f"Failed to rename {packager_output_path} to {final_output_path}: {e}")
+                return False
+                
+            return True
 
     async def build_ffmpeg_command(self, FFMPEG_path: str) -> list[str]:
         
