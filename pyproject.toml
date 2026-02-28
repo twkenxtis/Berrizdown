@@ -17,11 +17,9 @@ dependencies = [
     "orjson>=3.11,<4",
     "cryptography~=45.0.6",
     "ECPy~=1.2.5",
-
     "python-dateutil>=2.9,<3",
     "pytz>=2025.2,<2026",
     "tzdata>=2025.2,<2026",
-
     "requests>=2.32,<3",
     "urllib3>=2.5,<3",
     "aiohttp>=3.12,<4",
@@ -33,18 +31,15 @@ dependencies = [
     "aiolimiter>=1.0.0,<2",
     "async-lru",
     "certifi>=2025.8,<2026",
-
     "lxml>=6.0,<7",
     "bs4>=0.0.2,<1",
     "validators>=0.35,<1",
     "email_validator>=2.3,<3",
     "Unidecode",
     "m3u8>=5.0.0",
-
     "ffmpeg-python>=0.2,<1",
     "protobuf>=3.6.1,<7",
     "pymp4>=1.4.0,<2",
-
     "click>=8.3,<9",
     "InquirerPy>=0.3,<1",
     "inputimeout>=1.0.4,<2",
@@ -54,6 +49,8 @@ dependencies = [
     "httpagentparser>=1.9.5,<2",
     "fake-useragent>=2.2,<3",
     "pip-system-certs>=5.2,<6",
+    "pycaption>=2.2.20",
+    "pysubs2>=1.8.0",
 ]
 
 [project.scripts]
