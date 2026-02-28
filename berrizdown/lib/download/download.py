@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import cached_property
 from io import BytesIO
-from typing import Any
+from typing import Any, Never
 
 import aiohttp
 from aiohttp import ClientTimeout, ClientResponse
@@ -19,8 +19,8 @@ from berrizdown.lib.__init__ import container
 from berrizdown.lib.Proxy import Proxy
 from berrizdown.lib.load_yaml_config import CFG, ConfigLoader
 from berrizdown.lib.mux.merge import MERGE
-from berrizdown.lib.mux.parse_hls import HLS_Paser, HLSContent
-from berrizdown.lib.mux.parse_mpd import MediaTrack, MPDContent, MPDParser
+from berrizdown.lib.mux.parse_hls import HLS_Paser, HLSContent, HLSSubTrack, HLSVariant
+from berrizdown.lib.mux.parse_mpd import MediaTrack, MPDContent, MPDParser, SubtitleTrack
 from berrizdown.lib.mux.playlist_selector import PlaylistSelector
 from berrizdown.lib.path import Path
 from berrizdown.lib.processbar.processbar import MultiTrackProgressManager
@@ -34,6 +34,7 @@ from berrizdown.static.PlaybackInfo import PlaybackInfo
 from berrizdown.static.PublicInfo import PublicInfo
 from berrizdown.unit.__init__ import USERAGENT, FilenameSanitizer
 from berrizdown.unit.date.date import video_start2end_time
+from berrizdown.unit.sub.subprocess import SubtitleProcessor
 from berrizdown.unit.handle.handle_log import setup_logging
 
 logger = setup_logging("download", "peach")
@@ -93,71 +94,6 @@ class MediaDownloader:
         if self._thread_pool is None:
             self._thread_pool = ThreadPoolExecutor(max_workers=4)
         return self._thread_pool
-
-    def _get_file_extension(self, mime_type: str) -> str:
-        """根據 MIME 類型確定檔案副檔名"""
-        mime_type = mime_type.lower()
-
-        # Manifest types
-        if "application/dash+xml" in mime_type:
-            return ".mpd"
-        if "application/x-mpegurl" in mime_type or "application/vnd.apple.mpegurl" in mime_type:
-            return ".m3u8"
-
-        # MP4 family
-        if "video/mp4" in mime_type:
-            return ".mp4"
-        if "audio/mp4" in mime_type:
-            return ".m4a"
-
-        # WebM family
-        if "video/webm" in mime_type:
-            return ".webm"
-        if "audio/webm" in mime_type:
-            return ".weba"
-
-        # MPEG transport stream
-        if "video/mp2t" in mime_type:
-            return ".ts"
-
-        # Raw segments
-        if "application/octet-stream" in mime_type:
-            return ".m4s"
-
-        # Subtitles
-        if "text/vtt" in mime_type:
-            return ".vtt"
-        if "text/ttml" in mime_type or "application/ttml+xml" in mime_type:
-            return ".ttml"
-        if "application/x-subrip" in mime_type:
-            return ".srt"
-
-        # Audio codecs
-        if "audio/aac" in mime_type:
-            return ".aac"
-        if "audio/ogg" in mime_type:
-            return ".ogg"
-        if "audio/opus" in mime_type:
-            return ".opus"
-        if "audio/flac" in mime_type:
-            return ".flac"
-        if "audio/wav" in mime_type or "audio/x-wav" in mime_type:
-            return ".wav"
-        if "audio/mpeg" in mime_type:
-            return ".mp3"
-
-        # Video codecs
-        if "video/h264" in mime_type or "video/avc" in mime_type:
-            return ".h264"
-        if "video/h265" in mime_type or "video/hevc" in mime_type:
-            return ".h265"
-        if "video/av1" in mime_type:
-            return ".av1"
-        if "video/x-matroska" in mime_type:
-            return ".mkv"
-
-        # Fallback
-        return ".bin"
 
     async def _ensure_session(self) -> None:
         """確保 session 存在"""
@@ -251,9 +187,9 @@ class MediaDownloader:
         file_info: dict | None = None,
     ) -> bool:
         """優化的下載方法：全部使用 BytesIO"""
-        retries = 0
+        retries: float = 0
         save_path.parent.mkdirp()
-
+        
         while retries <= max_retries:
             await self._ensure_session()
             try:
@@ -271,10 +207,10 @@ class MediaDownloader:
                         await asyncio.sleep(2**retries)
                         continue
 
-                    buffer = BytesIO()
+                    buffer: BytesIO = BytesIO()
                     try:
                         while True:
-                            chunk = await response.content.readany()
+                            chunk: bytes = await response.content.readany()
                             if not chunk:
                                 break
                             buffer.write(chunk)
@@ -282,8 +218,8 @@ class MediaDownloader:
                                 progress_callback(len(chunk))
 
                         # 一次性寫入磁碟
-                        loop = asyncio.get_event_loop()
-                        buffer_data = buffer.getvalue()
+                        loop: bool = asyncio.get_event_loop()
+                        buffer_data: bytes = buffer.getvalue()
                         await loop.run_in_executor(
                             self.thread_pool,
                             lambda: save_path.write_bytes(buffer_data),
@@ -339,18 +275,27 @@ class MediaDownloader:
             return False
         return True
 
+    def mada_track_dir_path(self, track_type: str, track: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack) -> Path:
+        """生成軌道的目錄路徑"""
+        if track_type == "subtitle":
+            return self.base_dir / track_type / track.language
+        else:
+            return self.base_dir / track_type
+
     def duration(self) -> str:
         """格式化影片時長"""
         minutes = int(self.video_duration / 60)
         seconds = int(self.video_duration % 60)
         return f"{minutes} min {seconds} sec"
 
-    async def _merge_track(self, track_type: str) -> bool:
+    async def _merge_track(self, track_type: str, track: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack) -> bool:
         """合併軌道片段"""
-        track_dir: Path = self.base_dir / track_type
+        track_dir: Path = self.mada_track_dir_path(track_type, track)
+        
         output_file: Path = self.base_dir / f"{track_type}.{container}"
 
         init_files: list[Path] = list(track_dir.glob(f"init_{track_type}_.*"))
+        
         if not init_files:
             if paramstore.get("mpd_audio") is True and track_type == "audio":
                 logger.warning(f"Could not find {track_type} initialization file")
@@ -363,7 +308,7 @@ class MediaDownloader:
             [p for p in track_dir.glob("seg_*.*") if len(p.stem.split("_")) == 3 and p.stem.split("_")[2].isdigit()],
             key=lambda x: int(x.stem.split("_")[2]),
         )
-
+        
         if not segments:
             if paramstore.get("mpd_audio") is True and track_type == "audio":
                 logger.warning(f"No {track_type} fragment files found")
@@ -372,19 +317,31 @@ class MediaDownloader:
                 logger.warning(f"No {track_type} fragment files found")
                 return False
 
-        if len(segments) >= 1:
+        if len(segments) >= 1 and track_type != "subtitle":
             result: bool = await MERGE.binary_merge(output_file, init_files, segments, track_type)
             logger.debug(f"{Color.fg('light_gray')}Merge {track_type} tracks: {len(segments)} segments{Color.reset()}")
             return result
+        elif len(segments) >= 1 and track_type == "subtitle":
+            init_files: Path = init_files[0] or None
+            subtitle_str: str = SubtitleProcessor(track, segments).process_subtitle(init_files)
+            subtitle_name: Path = output_file.with_name(f"{track.language}{output_file.with_suffix('').suffix}.srt")
+            try:
+                with open(subtitle_name, mode='w', encoding='utf-8') as f:
+                    f.write(subtitle_str)
+                return True
+            except Exception as e:
+                logger.error(f"Failed to write subtitle file: {e}")
+                return False
 
     async def download_track_with_manager(
         self,
-        track: MediaTrack,
+        track: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack,
         track_type: str,
         progress_manager: MultiTrackProgressManager,
     ) -> bool:
         """使用多軌管理器的下載方法"""
-        track_dir: Path = self.base_dir / track_type
+        
+        track_dir: Path = self.mada_track_dir_path(track_type, track)
 
         try:
             track_dir.mkdirp()
@@ -396,68 +353,62 @@ class MediaDownloader:
 
         if not self.check_download_dir(track_dir):
             return False
-
-        slice_parameters = track.segment_urls
-        file_ext = self._get_file_extension(track.mime_type)
-        track_id = track.id
-
-        init_path: Path = track_dir / f"init_{track_type}_{file_ext}"
-
-        if track.init_url.rstrip("/").split("/")[-1].split(".")[0] == "init" and track.mime_type in ("video/mp4", "audio/mp4"):
+        
+        track_id: str = track.id
+        init_path: Path = track_dir / f"init_{track_type}_{Path(track.init_url).suffix}"
+        if track.init_url.rstrip("/").split("/")[-1].split(".")[0] == "init" and track.mime_type in ("video/mp4", "audio/mp4", "application/mp4"):
             if not await self._download_file(track.init_url, init_path):
                 logger.error(f"{track_type} Initialization file download failed")
                 return False
 
         logger.info(f"{Color.fg('light_gray')}Start downloading{Color.reset()} {Color.bg('cyan')}{track_type}{Color.reset()} track: {Color.fg('cyan')}{track_id}{Color.reset()}")
 
-        if slice_parameters:
-            return await self.task_and_dl_with_manager(slice_parameters, track_dir, file_ext, track_type, progress_manager)
+        if track.segment_urls:
+            return await self.task_and_dl_with_manager(track, track_dir, track_type, progress_manager)
 
         return True
 
     async def task_and_dl_with_manager(
         self,
-        slice_parameters: list[str],
+        track: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack,
         track_dir: Path,
-        file_ext: str,
         track_type: str,
         progress_manager: MultiTrackProgressManager,
     ) -> bool:
         """使用多軌管理器的批次下載方法"""
-        total = len(slice_parameters)
-        success_count = 0
-        semaphore = asyncio.Semaphore(CFG["VideoDownload"]["semaphore"])
+        total: int = len(track.segment_urls)
+        success_count: int = 0
+        semaphore: asyncio.Semaphore = asyncio.Semaphore(CFG["VideoDownload"]["semaphore"])
 
-        progress = DownloadProgress(total_segments=total, completed_segments=0, current_bytes=0, total_bytes=0)
+        progress: DownloadProgress = DownloadProgress(total_segments=total, completed_segments=0, current_bytes=0, total_bytes=0)
 
         # 獲取所有檔案的 Range 和大小資訊
-        file_info_map = await self._preflight_requests(slice_parameters)
-
+        file_info_map: dict[str, dict] = await self._preflight_requests(track.segment_urls)
         progress.total_bytes = sum(info.get("size", 0) for info in file_info_map.values())
         progress.total_size_mb = progress.total_bytes / self.MB_IN_BYTES
 
         # 創建此軌道的進度條
         progress_bar = progress_manager.create_progress_bar(track_type, total, self.duration())
 
-        progress_lock = asyncio.Lock()
-        start_time = time.time()
+        progress_lock: asyncio.Lock = asyncio.Lock()
+        start_time: float = time.time()
 
         async def progress_callback(bytes_downloaded: int):
             async with progress_lock:
                 progress.current_bytes += bytes_downloaded
-                elapsed = time.time() - start_time
+                elapsed: float = time.time() - start_time
                 if elapsed > 0:
                     progress.speed_mbps = (progress.current_bytes / self.MB_IN_BYTES) / elapsed
-                    remaining_bytes = progress.total_bytes - progress.current_bytes
+                    remaining_bytes: int = progress.total_bytes - progress.current_bytes
                     if progress.speed_mbps > 0:
                         progress.eta_seconds = remaining_bytes / (progress.speed_mbps * self.MB_IN_BYTES)
-
+            
         async def bounded_download(i: int, url: str):
             async with semaphore:
-                seg_path = track_dir / f"seg_{track_type}_{i}{file_ext}"
-                file_info = file_info_map.get(url, {})
-
-                result = await self._download_file_optimized(
+                seg_path: Path = track_dir / f"seg_{track_type}_{i}{Path(url).suffix}"
+                file_info: dict = file_info_map.get(url, {})
+                
+                result: bool = await self._download_file_optimized(
                     url,
                     seg_path,
                     progress_callback=lambda b: asyncio.create_task(progress_callback(b)),
@@ -468,7 +419,7 @@ class MediaDownloader:
                     progress.completed_segments += 1
                 return result
 
-        tasks = [bounded_download(i, url) for i, url in enumerate(slice_parameters)]
+        tasks = [bounded_download(i, url) for i, url in enumerate(track.segment_urls)]
 
         try:
             for coro in asyncio.as_completed(tasks):
@@ -481,30 +432,33 @@ class MediaDownloader:
                 await self.session.close()
             logger.info("Download cancelled")
             return False
-        print(
-            f"{Color.fg('pink')}{track_type} {Color.fg('light_gray')}(Avg: {progress.speed_mbps:.2f} MB/s)"
-            f" finished in {Color.fg('blush')}{time.time() - start_time:.2f} {Color.fg('light_gray')}seconds{Color.reset()}"
-            f"{Color.fg('flamingo_pink')} {total}/{Color.fg('magenta_pink')}{success_count} "
-            f"{Color.fg('light_gray')}segments successfully downloaded{Color.reset()}"
-        )
+        # print(
+        #     f"{Color.fg('pink')}{track_type} {Color.fg('light_gray')}(Avg: {progress.speed_mbps:.2f} MB/s)"
+        #     f" finished in {Color.fg('blush')}{time.time() - start_time:.2f} {Color.fg('light_gray')}seconds{Color.reset()}"
+        #     f"{Color.fg('flamingo_pink')} {total}/{Color.fg('magenta_pink')}{success_count} "
+        #     f"{Color.fg('light_gray')}segments successfully downloaded{Color.reset()}"
+        # )
         return success_count == total
 
-    async def download_content(self, mpd_content: MPDContent | HLS_Paser) -> bool:
+    async def download_content(self, mpd_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack) -> bool:
         """下載所有軌道內容"""
         try:
-            track_tasks = []
+            track_tasks: list[tuple[str, MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack]] = []
             if mpd_content.audio_track:
                 track_tasks.append(("audio", mpd_content.audio_track))
             if mpd_content.video_track:
                 track_tasks.append(("video", mpd_content.video_track))
-
+            if mpd_content.sub_track:
+                for hlssubtrack in mpd_content.sub_track:
+                    track_tasks.append(("subtitle", hlssubtrack))
+                
             # 啟動進度條
             if len(track_tasks) > 0:
                 progress_manager.start()
-
-            tasks = []
+                
+            tasks: list[asyncio.Task] = []
             for track_type, track in track_tasks:
-                task = self.download_track_with_manager(track, track_type, progress_manager)
+                task: asyncio.Task = self.download_track_with_manager(track, track_type, progress_manager)
                 tasks.append(task)
 
             if tasks:
@@ -513,19 +467,21 @@ class MediaDownloader:
                 except asyncio.CancelledError:
                     await self.close()
                     sys.exit(1)
-
+                    
             # 關閉進度條
             if len(track_tasks) > 0:
                 progress_manager.stop()
 
             # 合併軌道
             if paramstore.get("skip_merge") is not True:
-                merge_results = []
+                merge_results: list[bool] = []
                 if mpd_content.video_track:
-                    merge_results.append(await self._merge_track("video"))
+                    merge_results.append(await self._merge_track("video", mpd_content.video_track))
                 if mpd_content.audio_track:
-                    merge_results.append(await self._merge_track("audio"))
-                # if mpd_content.video_track and mpd_content.audio_track:
+                    merge_results.append(await self._merge_track("audio", mpd_content.audio_track))
+                if mpd_content.sub_track:
+                    for sub in mpd_content.sub_track:
+                        merge_results.append(await self._merge_track("subtitle", sub))
                 return all(merge_results)
             else:
                 logger.info(f"{Color.fg('light_gray')}Skip merge because --skip-merge is {Color.fg('cyan')}True{Color.reset()}")
@@ -589,7 +545,7 @@ class Start_Download_Queue:
         output_dir: Path,
         custom_community_name: str,
         community_name: str,
-        playlist_content: MPDContent | HLSContent,
+        playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack,
     ) -> None:
         savejsondata = save_json_data(
             output_dir,
@@ -608,8 +564,8 @@ class Start_Download_Queue:
 
     async def start_request_download(
         self,
-        output_dir,
-        playlist_content: MPDContent | HLSContent,
+        output_dir: Path,
+        playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack,
         video_duration: float,
     ) -> bool:
         self.downloader: MediaDownloader = MediaDownloader(self.public_info.media_id, output_dir, video_duration)
@@ -638,7 +594,7 @@ class Start_Download_Queue:
             sys.exit(1)
         return video_file_name, mux_bool_status
 
-    async def start_download_queue(self, playlist_content: MPDContent | HLSContent, video_duration: float) -> None:
+    async def start_download_queue(self, playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack, video_duration: float) -> None:
         """協調資料夾創建、資訊儲存、下載和後續處理的整個流程"""
         if playlist_content is None:
             logger.error("Failed to parse Playlist.")
@@ -653,6 +609,7 @@ class Start_Download_Queue:
             self.public_info,
             self.playback_info,
         )
+        
         savesub: SaveSub = SaveSub(output_dir, self.raw_hls, savejsondata.sub_meta())
         
         if output_dir is not None and os.path.exists(output_dir) and not paramstore.get("subs_only") is True:
@@ -674,7 +631,7 @@ class Start_Download_Queue:
             logger.error("Failed to create output directory.")
             raise ValueError
 
-    async def run_dl(self) -> None:
+    async def run_dl(self) -> Never:
         start_time = None
         end_time = None
 
@@ -684,28 +641,27 @@ class Start_Download_Queue:
             start_time = self.video_start2end_time(paramstore.get("start_time"))
         if paramstore.get("end_time") is not None:
             end_time = self.video_start2end_time(paramstore.get("end_time"))
-        hls_parser = HLS_Paser()
-        hls_content = await hls_parser.parse_playlist(self.raw_hls, self.playback_info.hls_playback_url)
-        mpd_parser = MPDParser(self.raw_mpd, self.playback_info.dash_playback_url)
-        mpd_content = await mpd_parser.parse_all_tracks()
+            
+        hls_content: HLSContent = await HLS_Paser().parse_playlist(self.raw_hls, self.playback_info.hls_playback_url)
+        mpd_parser: MPDParser = MPDParser(self.raw_mpd, self.playback_info.dash_playback_url)
+        mpd_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack = await mpd_parser.parse_all_tracks()
 
         if self.playback_info.drm_info is None:
-            selector = PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time)
+            selector: PlaylistSelector = PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time)
         else:
-            selector = PlaylistSelector(hls_content, mpd_content, "mpd", start_time, end_time)
+            selector: PlaylistSelector = PlaylistSelector(hls_content, mpd_content, "mpd", start_time, end_time)
             
         match paramstore.get("get_v_list"):
             case True:
                 PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time).print_parsed_content()
             case _:
                 if paramstore.get("subs_only") is True:
-                    playlist_content = await selector.select_tracks("None", "None", "H264")
+                    playlist_content: HLSSubTrack | SubtitleTrack = await selector.select_tracks("None", "None", "H264")
                 else:
-                    playlist_content = await selector.select_tracks(v_resolution_choice, a_resolution_choice, video_codec)
+                    playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack = await selector.select_tracks(v_resolution_choice, a_resolution_choice, video_codec)
 
                 if paramstore.get("nodl") is True:
                     logger.info(f"{Color.fg('light_gray')}Skip downloading{Color.reset()}")
-                    return False
                 else:
                     await self.start_download_queue(playlist_content, self.playback_info.duration)
 
