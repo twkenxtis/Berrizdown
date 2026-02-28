@@ -1,6 +1,7 @@
 import asyncio
 import shutil
 
+import aiofiles
 from rich.progress import BarColumn, DownloadColumn, Progress, SpinnerColumn, TextColumn
 
 from berrizdown.lib.path import Path
@@ -13,6 +14,18 @@ logger = setup_logging("merge", "blush")
 class MERGE:
     MAX_CONCURRENCY: int = 4
     BUFFER_SIZE: int = 4 * 1024 * 1024
+    
+    @staticmethod
+    async def save_subtitle(track_language: str, subtitle_str: str, subtitle_path: Path) -> bool:
+        try:
+            async with aiofiles.open(subtitle_path, mode='w', encoding='utf-8') as f:
+                await f.write(subtitle_str)
+            
+            logger.info(f"{Color.fg('light_gray')}{track_language} {Color.fg('sienna')}save to: {Color.fg('ash_gray')}{subtitle_path}{Color.reset()}")
+            return True
+        except Exception as e:
+            logger.error(f"{track_language} failed: {str(e)}")
+            return False
 
     @staticmethod
     async def binary_merge(
