@@ -69,6 +69,15 @@ class FFmpegMuxer:
             logger.info(f"{Color.fg('light_gray')}Skip muxing{Color.reset()}")
             return False
         
+        console: Console = Console()
+        
+        progress: Progress = Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        )
+        loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
+        
         try:
             for track_type in ("video", "audio"):
                 self.input_path: Path | None = getattr(self.dl_obj, track_type, None)
@@ -79,7 +88,7 @@ class FFmpegMuxer:
                     return False
 
                 if self.isdrm:
-                    await self.decryption_track(track_type)
+                    await self.decryption_track(track_type, progress, loop)
         except Exception:
             logger.warning("Mux cancelled got cancelled signal")
             return False
@@ -106,9 +115,9 @@ class FFmpegMuxer:
                 "audio": audio_short,
                 "output": output_short,
             }
-            return await self.choese_mux_tool()
+            return await self.choese_mux_tool(progress, loop)
 
-    async def choese_mux_tool(self):
+    async def choese_mux_tool(self, progress: Progress, loop: asyncio.AbstractEventLoop):
         try:
             mux_tool: str = CFG["Container"]["mux"]
             mux_tool: str = mux_tool.upper()
@@ -133,18 +142,26 @@ class FFmpegMuxer:
 
                 try:
                     logger.info(f"{Color.fg('firebrick')}Start using FFmpeg to mux video and audio...{Color.reset()}")
-                    result: subprocess.CompletedProcess = subprocess.run(
-                        cmd,
-                        capture_output=True,
-                        text=True,
-                        encoding="utf-8",
-                        errors="replace",
-                    )
+                    
+                    with progress:
+                        task_id = progress.add_task(description="[cyan]Using FFmpeg mux...[/cyan]", total=None)
+                        
+                        result: subprocess.CompletedProcess = await loop.run_in_executor(
+                            None,
+                            lambda: subprocess.run(
+                                cmd,
+                                capture_output=True,
+                                text=True,
+                                encoding="utf-8",
+                                errors="replace",
+                            )
+                        )
+                        progress.update(task_id, description="[green]FFmpeg mux complete！[/green]")
 
-                    if result.returncode != 0:
-                        logger.error(f"FFmpeg multiplexing failed:\n{result.stderr}")
-                        return False
-                    return True
+                        if result.returncode != 0:
+                            logger.error(f"FFmpeg multiplexing failed:\n{result.stderr}")
+                            return False
+                        return True
                 except Exception as e:
                     logger.error(f"FFmpeg mixing error: {str(e)}")
                     return False
@@ -181,13 +198,21 @@ class FFmpegMuxer:
 
                 try:
                     logger.info(f"{Color.fg('light_gray')}Start using mkvmerge to mux video and audio...{Color.reset()}")
-                    result: subprocess.CompletedProcess = subprocess.run(
-                        cmd,
-                        capture_output=True,
-                        text=True,
-                        encoding="utf-8",
-                        errors="replace",
-                    )
+                    
+                    with progress:
+                        task_id = progress.add_task(description="[cyan]Using mkvmerge mux...[/cyan]", total=None)
+                        
+                        result: subprocess.CompletedProcess = await loop.run_in_executor(
+                            None,
+                            lambda: subprocess.run(
+                                cmd,
+                                capture_output=True,
+                                text=True,
+                                encoding="utf-8",
+                                errors="replace",
+                            )
+                        )
+                        progress.update(task_id, description="[green]mkvmerge mux complete！[/green]")
 
                     if result.returncode != 0:
                         logger.error(f"mkvmerge multiplexing failed:\n{result.stderr}")
@@ -201,7 +226,7 @@ class FFmpegMuxer:
                 logger.error(f"Unsupported mux tool: {mux_tool}")
                 return False
 
-    async def decryption_track(self, track_type: str) -> Path | None:
+    async def decryption_track(self, track_type: str, progress: Progress, loop: asyncio.AbstractEventLoop) -> Path | None:
         """Handle decryption if needed and return final file path"""
         decryption_key: str = await self.process_decryption_key()
         decrypted_file: Path = self.input_path.parent / f"{track_type}_decrypted.{container}"
@@ -209,7 +234,7 @@ class FFmpegMuxer:
         self.key: str | None = decryption_key
         self.output_path: Path = Path(get_short_path_name(decrypted_file))
         
-        if await self.decrypt(track_type):
+        if await self.decrypt(track_type, progress, loop):
             # 更新新的解密路徑到dataclass物件            
             self.dl_obj.audio = decrypted_file if track_type == "audio" else self.dl_obj.audio
             self.dl_obj.video = decrypted_file if track_type == "video" else self.dl_obj.video
@@ -224,7 +249,7 @@ class FFmpegMuxer:
             return self.decryption_key
         return ""
 
-    async def decrypt(self, track_type: str) -> bool:
+    async def decrypt(self, track_type: str, progress: Progress, loop: asyncio.AbstractEventLoop) -> bool:
         try:
             decryptionengine: str = CFG["Container"]["decryption-engine"]
             decryptionengine: str = decryptionengine.upper()
@@ -234,26 +259,18 @@ class FFmpegMuxer:
             decryptionengine = "SHAKA_PACKAGER"
             
         input_short: str = get_short_path_name(self.input_path)
-
-        console: Console = Console()
         
-        progress: Progress = Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console,
-        )
-            
         match decryptionengine:
             case "MP4DECRYPT":
-                return await self._decrypt_file_mp4decrypt(input_short,progress, track_type)
+                return await self._decrypt_file_mp4decrypt(input_short, progress, track_type, loop)
             case "SHAKA_PACKAGER":
-                return await self._decrypt_file_packager(input_short, progress, track_type)
+                return await self._decrypt_file_packager(input_short, progress, track_type, loop)
             case _:
                 ConfigLoader.print_warning("decryptionengine", decryptionengine, "shaka-packager")
-                return await self._decrypt_file_packager()
+                return await self._decrypt_file_packager(input_short, progress, track_type, loop)
 
     async def _decrypt_file_mp4decrypt(
-        self, input_short: str, progress: Progress, track_type: str) -> bool:
+        self, input_short: str, progress: Progress, track_type: str, loop: asyncio.AbstractEventLoop) -> bool:
         mp4decrypt_path: Path = Route().mp4decrypt_path
         if not mp4decrypt_path.exists():
             logger.error(f"mp4decrypt.exe not found at: {mp4decrypt_path}")
@@ -270,15 +287,14 @@ class FFmpegMuxer:
 
             # 建立完整的命令
             command: list[str] = [mp4decrypt_short] + key_args + [input_short, self.output_path]
-            loop = asyncio.get_running_loop()
             
             with progress:
                 task_id = progress.add_task(
-                        description=f"[cyan]　Packaging in progress: [/cyan][blue]{track_type}[/blue]\n[yellow]{self.key}[/yellow]", 
+                        description=f"[cyan] mp4decrypt in progress: [/cyan][blue]{track_type}[/blue]", 
                     total=None
                 )
                 
-                result: subprocess.CompletedProcess = await loop.run_in_executor(
+                await loop.run_in_executor(
                     None, 
                     lambda: subprocess.run(
                         command,
@@ -301,7 +317,7 @@ class FFmpegMuxer:
             return False
 
     async def _decrypt_file_packager(
-        self, input_short: str, progress: Progress, track_type: str) -> bool:
+        self, input_short: str, progress: Progress, track_type: str, loop: asyncio.AbstractEventLoop) -> bool:
             packager_path: Path = Route().packager_path
             packager_output_path: Path = Path(self.output_path).with_suffix(".m4v")
 
@@ -333,14 +349,12 @@ class FFmpegMuxer:
                 "--enable_raw_key_decryption",
             ] + key_args
 
-            loop = asyncio.get_running_loop()
-            
             try:
                 logger.debug(f"Packager command: {' '.join(command)}")
                 
                 with progress:
                     task_id = progress.add_task(
-                        description=f"[cyan]　Packaging in progress: [/cyan][blue]{track_type}[/blue]\n[yellow]{self.key}[/yellow]", 
+                        description=f"[cyan]　shaca-packager in progress: [/cyan][blue]{track_type}[/blue]", 
                         total=None
                     )
                     
@@ -356,7 +370,7 @@ class FFmpegMuxer:
                         )
                     )
                     
-                    progress.update(task_id, description=f"[green]　Packaging complete: [/green][blue]{track_type}[/blue]\n[yellow]{self.key}[/yellow]")
+                    progress.update(task_id, description=f"[green]　Decryption complete: [/green][blue]{track_type}[/blue]\n[yellow]{self.key}[/yellow]")
 
             except subprocess.CalledProcessError as e:
                 logger.error(f"Packager failed: {e.stderr}")
