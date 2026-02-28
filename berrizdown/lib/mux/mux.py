@@ -20,7 +20,10 @@ logger = setup_logging("mux", "lavender")
 
 def get_short_path_name(long_path: Path) -> str:
     """將 Windows 長路徑轉換為短路徑（8.3 格式），避免中文路徑問題"""
-    long_path_str = str(long_path.resolve())
+    if not isinstance(long_path, (str, Path)):
+        raise TypeError("long_path must be a Path object or a string")
+
+    long_path_str = str(Path(long_path).resolve())
     
     # 取得短路徑所需的緩衝區大小
     buffer_size = ctypes.windll.kernel32.GetShortPathNameW(long_path_str, None, 0)
@@ -42,22 +45,20 @@ class FFmpegMuxer:
 
     def __init__(
         self,
-        base_dir: Path,
         temp_mux_path: Path,
         isdrm: bool,
-        subs_successful: list[tuple[str, str, Path]]|list,
         dl_obj,
         decryption_key: list[str] | None = None,
         ):
         self.dl_obj :object = dl_obj
-        self.base_dir: Path = base_dir
+        self.base_dir: Path = temp_mux_path.parent
         self.decryption_key: list[str] | None = decryption_key
         self.key: str = None
         self.input_path: Path = None
         self.output_path: Path = None
         self.temp_mux_path: Path = temp_mux_path
         self.isdrm: bool = isdrm
-        self.subs_successful: list[tuple[str, str, Path]]|list = subs_successful
+        self.subs: dict[str, Path] = self.dl_obj.__dict__.get("subtitle") or {}
         self.short_input_output_path_dict: dict[str, str] = {}
 
     async def mux_main(self) -> bool:
@@ -141,8 +142,6 @@ class FFmpegMuxer:
                 cmd: list[str] = await self.build_ffmpeg_command(FFMPEG_path_str)
 
                 try:
-                    logger.info(f"{Color.fg('firebrick')}Start using FFmpeg to mux video and audio...{Color.reset()}")
-                    
                     with progress:
                         task_id = progress.add_task(description="[cyan]Using FFmpeg mux...[/cyan]", total=None)
                         
@@ -188,9 +187,9 @@ class FFmpegMuxer:
                 ]
 
                 # 如果有字幕，加入字幕混流參數
-                if self.subs_successful != []:  # subs_successful 是回傳subdl.py list[tuple[str, str, Path]]
-                    for lang, sub_m3u8_url, subtitle_path in self.subs_successful:
-                        subtitle_short: str = get_short_path_name(subtitle_path)
+                if len(self.subs) != 0:
+                    for lang in self.subs:
+                        subtitle_short: str = get_short_path_name(self.subs.get(lang))
                         cmd.extend([
                             "--language", f"0:{lang}",
                             subtitle_short
@@ -390,6 +389,12 @@ class FFmpegMuxer:
             return True
 
     async def build_ffmpeg_command(self, FFMPEG_path: str) -> list[str]:
+        lang_map = {
+            "en": "eng",
+            "ko": "kor",
+            "zh": "zho",
+            "ja": "jpn",
+        }
         
         command: list[str] = [
             FFMPEG_path,
@@ -404,34 +409,46 @@ class FFmpegMuxer:
             input_index += 1
 
         subtitle_start_index: int = input_index
+        
+        if len(self.subs) != 0 and container in ("mkv", "mp4"):
+            map_commands: list[str] = []
 
-        if self.subs_successful and CFG['Container']['video'].strip().lower() == "mkv":
-            # 先把每個字幕檔加入為 ffmpeg 的輸入 並同步遞增 input_index
-            for _, _, subtitle_path in self.subs_successful:
+            is_mp4: str = container== "mp4"
+
+            for idx, (lang, subtitle_path) in enumerate(self.subs.items()):
+                if not subtitle_path:
+                    continue
+
                 subtitle_short: str = get_short_path_name(subtitle_path)
                 command.extend(["-i", subtitle_short])
-                input_index += 1
 
-            # 再為每個已加入的字幕建立 -map 與語言 metadata
-            for idx, (lang, _, _) in enumerate(self.subs_successful):
-                # 取前兩個字元作為語言代碼 若不足或非字母則回退為 'und'
-                lang_code = (lang or "").strip().lower()[:2]
-                if not lang_code.isalpha():
-                    lang_code = "und"
+                lang_short: str = (lang or "").strip().lower()[:2]
+                lang_code: str = lang_map.get(lang_short, "und")
 
-                command.extend([
+                map_commands.extend([
                     "-map", f"{subtitle_start_index + idx}:s",
-                    "-c:s", "copy",
+                ])
+
+                if is_mp4:
+                    map_commands.extend([f"-c:s:{idx}", "mov_text"])
+                else:
+                    map_commands.extend(["-c:s", "copy"])
+
+                map_commands.extend([
                     f"-metadata:s:s:{idx}", f"language={lang_code}"
                 ])
 
+            command.extend(map_commands)
+            
         command.extend(["-map", "0:v"])
         
         if self.short_input_output_path_dict.get("audio") is not None:
-            command.extend(["-map", "1:a"])
+            command.extend([
+                "-map", "1:a",
+                "-c:a", "copy",
+                ])
 
         command.extend([
-            "-c", "copy",
             "-buffer_size", "32M",
             "-y",
             self.short_input_output_path_dict.get("output"),
