@@ -177,7 +177,6 @@ class FFmpegMuxer:
                 else:
                     MKVTOOLNIX_path_str: str = get_short_path_name(MKVTOOLNIX_path)
                 
-                # 建立基本命令
                 cmd = [
                     MKVTOOLNIX_path_str,
                     "-o",
@@ -196,8 +195,6 @@ class FFmpegMuxer:
                         ])
 
                 try:
-                    logger.info(f"{Color.fg('light_gray')}Start using mkvmerge to mux video and audio...{Color.reset()}")
-                    
                     with progress:
                         task_id = progress.add_task(description="[cyan]Using mkvmerge mux...[/cyan]", total=None)
                         
