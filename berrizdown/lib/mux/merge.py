@@ -11,8 +11,8 @@ logger = setup_logging("merge", "blush")
 
 
 class MERGE:
-    MAX_CONCURRENCY = 4
-    BUFFER_SIZE = 4 * 1024 * 1024
+    MAX_CONCURRENCY: int = 4
+    BUFFER_SIZE: int = 4 * 1024 * 1024
 
     @staticmethod
     async def binary_merge(
@@ -22,7 +22,7 @@ class MERGE:
         track_type: str,
     ) -> bool:
         temp_dir: Path = output_file.parent / f"temp_merging_{track_type}"
-        temp_dir.mkdir(exist_ok=True)
+        temp_dir.mkdirp()
 
         try:
             # MPD init file
@@ -32,7 +32,7 @@ class MERGE:
 
             # 預先收集 size 避免後續重複 stat()
             seg_info: list[tuple[Path, int]] = [(p, p.stat().st_size) for p in segments]
-            total_bytes = sum(size for _, size in seg_info)
+            total_bytes: float = sum(size for _, size in seg_info)
 
             progress = Progress(
                 SpinnerColumn(),
@@ -43,10 +43,10 @@ class MERGE:
             )
 
             # 分塊
-            chunk_size = 30
+            chunk_size: int = 50
             chunks: list[list[tuple[Path, int]]] = [seg_info[i : i + chunk_size] for i in range(0, len(seg_info), chunk_size)]
 
-            semaphore = asyncio.Semaphore(MERGE.MAX_CONCURRENCY)
+            semaphore: asyncio.Semaphore = asyncio.Semaphore(MERGE.MAX_CONCURRENCY)
 
             async def process_chunk(idx, chunk):
                 try:
@@ -58,7 +58,7 @@ class MERGE:
             with progress:
                 task_id = progress.add_task(f"[cyan]{track_type}[/] merging", total=total_bytes)
                 try:
-                    results = await asyncio.gather(
+                    results: asyncio.Task = await asyncio.gather(
                         *[process_chunk(idx, chunk) for idx, chunk in enumerate(chunks)],
                         return_exceptions=True,
                     )
