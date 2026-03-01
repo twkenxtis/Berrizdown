@@ -1,3 +1,7 @@
+# You are current using example config file
+# This is default config file, berrizdown will NOT load this file
+# Please rename it to berrizconfig.yaml and edit it with your own settings
+
 duplicate:
   # Allow repeated downloads
   default: true
