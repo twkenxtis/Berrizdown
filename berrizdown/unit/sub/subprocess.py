@@ -92,7 +92,7 @@ class STPPSubtitleExtractor:
         self.track: HLSSubTrack | SubtitleTrack = track
         self.segments: list[Path] = segments
         self.init_path: Path = init_path
-        self.subtitle_offset_start: bool = paramstore.get("subtitle_offset_start", False)
+        self.subtitle_offset_start: bool = paramstore.get("subtitle_offset_start")
 
     def _merge_to_buffer(self) -> io.BytesIO:
         if not self.segments:
