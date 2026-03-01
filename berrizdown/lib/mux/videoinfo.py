@@ -96,7 +96,11 @@ class VideoInfo:
             None,
         )
         if audio_stream:
-            return audio_stream.get("codec_name", "unknown").upper()
+            if audio_stream.get("channels", "") == 2:
+                suffix: str = "2.0"
+            elif audio_stream.get("channels", "") == 6:
+                suffix = "5.1"
+            return f"{audio_stream.get('codec_name', 'unknown').upper()}{suffix}"
         return "unknown"
 
     def as_dict(self) -> dict:
