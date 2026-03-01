@@ -39,9 +39,9 @@ class save_json_data:
         playback_info: PlaybackInfo | None = None,
     ) -> None:
         self.output_dir: Path = Path(output_dir).resolve()
-        self.info_path: Path = self.output_dir.parent
-        self.max_retries: int = 3
-        self.retry_delay: int = 2
+        self.info_path: Path = self.output_dir
+        self.max_retries: int = 4
+        self.retry_delay: int = 0.25
         self.executor = ThreadPoolExecutor()
 
         self.custom_community_name: str = custom_community_name or community_name
