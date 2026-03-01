@@ -34,7 +34,7 @@ async def start_download(
     elif paramstore.get("key") is True:
         pass
     else:
-        if (playback_info.dash_playback_url and playback_info.hls_playback_url.startswith("http")) or (playback_info.dash_playback_url and playback_info.hls_playback_url.startswith("http")):
+        if (playback_info.dash_playback_url and playback_info.hls_playback_url.startswith("http")) or (playback_info.dash_playback_url and playback_info.hls_playback_url.startswith("https")):
             await Start_Download_Queue(
                 decryption_key,
                 public_info,
