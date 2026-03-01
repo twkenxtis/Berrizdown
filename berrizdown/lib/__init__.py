@@ -200,6 +200,8 @@ async def move(src: Path, stem: str, suffix: str, dst: Path, parent: Path, TAG: 
         paramstore.get("skip_mux"),
     ]
     if not all(skip_conditions):
+        if Path(moved_name).suffix.lower() in {".srt", ".vtt", ".ass", ".ttml"}:
+            TAG: str = f"{Color.fg('light_amber')}Subtitle {Color.reset()}"
         printer_video_folder_path_info(parent, moved_name, TAG)
     return moved_name
 
