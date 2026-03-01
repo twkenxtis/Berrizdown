@@ -1,12 +1,11 @@
 import asyncio
-import os
 import socket
 import random
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from functools import cached_property
-from typing import Any, Never, Optional, Union
+from typing import Never, Optional, Union
 
 import aiohttp
 import aiofiles
@@ -18,7 +17,7 @@ from berrizdown.lib.Proxy import Proxy
 from berrizdown.lib.load_yaml_config import CFG, ConfigLoader
 from berrizdown.lib.mux.merge import MERGE
 from berrizdown.lib.mux.parse_hls import HLS_Paser, HLSContent, HLSSubTrack, HLSVariant
-from berrizdown.lib.mux.parse_mpd import MediaTrack, MPDContent, MPDParser, SubtitleTrack
+from berrizdown.lib.mux.parse_mpd import MediaTrack, MPDParser, SubtitleTrack
 from berrizdown.lib.mux.playlist_selector import PlaylistSelector
 from berrizdown.lib.path import Path
 from berrizdown.lib.processbar.processbar import MultiTrackProgressManager
@@ -29,7 +28,7 @@ from berrizdown.static.color import Color
 from berrizdown.static.parameter import paramstore
 from berrizdown.static.PlaybackInfo import PlaybackInfo
 from berrizdown.static.PublicInfo import PublicInfo
-from berrizdown.unit.__init__ import USERAGENT, FilenameSanitizer
+from berrizdown.unit.__init__ import USERAGENT
 from berrizdown.unit.date.date import video_start2end_time
 from berrizdown.unit.sub.subprocess import SubtitleProcessor
 from berrizdown.unit.handle.handle_log import setup_logging
