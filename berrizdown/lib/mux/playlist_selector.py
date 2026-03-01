@@ -782,11 +782,11 @@ class PlaylistSelector:
             (SourceType.MPD, self.mpd_content),
         ]:
             if content:
-                v = len(getattr(content, ("video_variants" if source == SourceType.HLS else "video_tracks"), []))
-                a = len(content.audio_tracks or [])
-                s = len(getattr(content, "subtitle_tracks", []) or [])
-                symbol = "├─" if source == SourceType.HLS else "└─"
-                color = "cyan" if source == SourceType.HLS else "blue"
+                v: int = len(getattr(content, ("video_variants" if source == SourceType.HLS else "video_tracks"), []))
+                a: int = len(content.audio_tracks or [])
+                s: int = len(getattr(content, "subtitle_tracks", []) or getattr(content, "sub_tracks", []))
+                symbol: str = "├─" if source == SourceType.HLS else "└─"
+                color: str = "cyan" if source == SourceType.HLS else "blue"
                 console.print(f"[{color}]{symbol} {source.value.upper()}[/{color}]: {v} video, {a} audio, {s} subtitle")
                 console.print(f"{'│' if source == SourceType.HLS else ' '}  [white]{content.base_url}[/white]")
 
