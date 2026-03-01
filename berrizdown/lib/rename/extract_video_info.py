@@ -21,15 +21,15 @@ async def extract_video_info(path: Path) -> tuple[str, str, str]:
     video_quality_label: str = quality_task.result()
     video_audio_codec: str = audio_task.result()
     if video_audio_codec == "unknown":
-        if paramstore.get("no_video_audio") is True:
+        if paramstore.get("noaudio") is True:
             video_audio_codec = "{audio}"
         else:
             logger.warning(f"Unknown audio codec: {video_audio_codec}")
-            video_audio_codec = "x"
+            video_audio_codec = None
     if video_codec == "unknown":
-        if paramstore.get("no_video_audio") is True:
+        if paramstore.get("novideo") is True:
             video_codec = "{video}"
         else:
             logger.warning(f"Unknown video codec: {video_codec}")
-            video_codec = "x"
+            video_codec = None
     return video_codec, video_quality_label, video_audio_codec
