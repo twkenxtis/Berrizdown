@@ -105,10 +105,10 @@ class PlaylistSelector:
         """"選擇視訊和音訊軌道"""
         selected_video, video_type = await self._select_single_track(v_resolution_choice, TrackType.VIDEO, video_codec)
         selected_audio, audio_type = await self._select_single_track(a_resolution_choice, TrackType.AUDIO)
-        if isinstance(s_lang_choice, list) and len(s_lang_choice) == 0:
-            s_lang_choice: str = "all"
         if isinstance(s_lang_choice, str):
             s_lang_choice: list[str] = [s_lang_choice]
+        elif isinstance(s_lang_choice, list) and len(s_lang_choice) == 0:
+            s_lang_choice: str = "all"
         if isinstance(s_lang_choice, tuple):
             s_lang_choice: list[str] = list(s_lang_choice)
         selected_sub, sub_type = await self._select_subtitle_tracks(s_lang_choice)

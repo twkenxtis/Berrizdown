@@ -698,7 +698,7 @@ def main(
     if slang:
         paramstore._store["slang"] = slang
     else:
-        paramstore._store["slang"] = [""]
+        paramstore._store["slang"] = []
 
     paramstore._store["mediaonly"] = mediaonly
     paramstore._store["liveonly"] = liveonly
