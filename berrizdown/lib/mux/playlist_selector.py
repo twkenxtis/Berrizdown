@@ -208,7 +208,7 @@ class PlaylistSelector:
         # 構造 choices 顯示字串（包含索引）與對應 map
         choices: list[str] = [f"{idx+1}. {it['label']}" for idx, it in enumerate(items)]
         value_map: dict[str, tuple] = {choices[idx]: (items[idx]["value"], items[idx]["label"]) for idx in range(len(items))}
-
+        
         try:
             # 如果是字幕使用複選
             if track_type is TrackType.SUB:
@@ -787,10 +787,15 @@ class PlaylistSelector:
             for i, a in enumerate(sorted_audios, 1):
                 self._print_track(console, i, a, False)
 
-        subtitle_tracks = getattr(content, "subtitle_tracks", []) or []
+        subtitle_tracks: list = getattr(content, "subtitle_tracks", []) or []
         if subtitle_tracks:
             console.print(f"[bold {color}]{source.value.upper()} Subtitle Tracks[/bold {color}]")
             for i, sub in enumerate(subtitle_tracks, 1):
+                self._print_subtitle_track(console, i, sub)
+        sub_tracks: list = getattr(content, "sub_tracks", []) or []
+        if sub_tracks:
+            console.print(f"[bold {color}]{source.value.upper()} Subtitle Tracks[/bold {color}]")
+            for i, sub in enumerate(sub_tracks, 1):
                 self._print_subtitle_track(console, i, sub)
 
     def _print_track(self, console: Console, idx: int, track: Any, is_video: bool):
@@ -798,10 +803,34 @@ class PlaylistSelector:
             res = (
                 f"{track.resolution[0]}x{track.resolution[1]}"
                 if hasattr(track, "resolution") and track.resolution
-                else f"{track.width}x{track.height}" if hasattr(track, "width") else "N/A"
+                else f"{track.width}x{track.height}" if hasattr(track, "width") else "Unknown"
             )
-            bw = f"{track.bandwidth / 1_000_000:.2f}Mbps ({track.bandwidth // 1000:,}kbps)"
-            console.print(f"  {idx}. [cyan]{res}[/cyan] [green]{bw}[/green]")
+            bw_val = getattr(track, "bandwidth", 0)
+            bw_str = f"[green]{bw_val / 1_000_000:.2f}Mbps[/green] ([dim]{bw_val // 1000:,}kbps[/dim])" if bw_val else "[dim]N/A[/dim]"
+            
+            console.print(f"  {idx}. [cyan]Video: {res}[/cyan] {bw_str}")
+
+            details = []
+            attrs = [
+                ("codecs", "Codec"), 
+                ("frame_rate", "FPS"), 
+                ("mime_type", "MIME")
+            ]
+            
+            for attr, label in attrs:
+                val = getattr(track, attr, None)
+                if val:
+                    val_str = f"[magenta]{val}[/magenta]" if label == "Codec" else str(val)
+                    details.append(f"{label}: {val_str}")
+
+            url = getattr(track, "playlist_url", getattr(track, "uri", getattr(track, "initialization_url", None)))
+            if url:
+                details.append(f"URI: [white]{url}[/white]")
+
+            for i, d in enumerate(details):
+                symbol = "└─" if i == len(details) - 1 else "├─"
+                console.print(f"     {symbol} {d}")
+
         else:
             name = getattr(track, "name", getattr(track, "id", "Unknown"))
             lang = getattr(track, "language", "N/A")
@@ -814,13 +843,15 @@ class PlaylistSelector:
                 if hasattr(track, attr) and getattr(track, attr):
                     val = getattr(track, attr)
                     details.append(f"{label}: [magenta]{val}[/magenta]" if label == "Codec" else f"{label}: {val}")
+            
             url = getattr(track, "playlist_url", getattr(track, "uri", getattr(track, "initialization_url", None)))
             if url:
                 details.append(f"URI: [white]{url}[/white]")
+                
             for i, d in enumerate(details):
                 symbol = "└─" if i == len(details) - 1 else "├─"
                 console.print(f"     {symbol} {d}")
-
+                
     def _print_subtitle_track(self, console: Console, idx: int, track: Any):
         """列印字幕軌道詳情"""
         lang = getattr(track, "language", None) or "N/A"
@@ -828,8 +859,15 @@ class PlaylistSelector:
         codecs = getattr(track, "codecs", None) or "N/A"
         seg_count = len(getattr(track, "segment_urls", []))
         track_id = getattr(track, "id", "Unknown")
-        console.print(f"  {idx}. [{lang}] {track_id} | {mime} | codec={codecs} | {seg_count} segs")
+        console.print(
+            f" [white]{idx:2}.[/white] "
+            f"[[orchid]{lang}[/orchid]] "
+            f"[cyan]{track_id}[/cyan] | "
+            f"[orange1]{mime}[/orange1] | "
+            f"codec=[green_yellow]{codecs}[/green_yellow] | "
+            f"[medium_spring_green]{seg_count} segs[/medium_spring_green]"
+        )
 
         uri = getattr(track, "init_url", getattr(track, "uri", None))
         if uri:
-            console.print(f"     └─ URI: [white]{uri}[/white]")
+            console.print(f"      [gray]└─ URI:[/gray][white]{uri}[/white]")
