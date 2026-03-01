@@ -73,15 +73,8 @@ class DownloadProgress:
     completed_segments: int = 0
     total_segments: int = 0
     current_bytes: int = 0
-    total_bytes: int = 0
     speed_mbps: float = 0.0
     eta_seconds: float = 0.0
-    # 可選的媒體資訊
-    fps: float = 0.0
-    codec: str = ""
-    ping_ms: float = 0.0
-    total_size_mb: float = 0.0
-    duration_seconds: float = 0.0
 
 
 class MediaDownloader:
@@ -92,20 +85,25 @@ class MediaDownloader:
     def __init__(self, media_id: str, output_dir: str, video_duration: float) -> None:
         self.media_id: str = media_id
         self.base_dir: Path = Path(output_dir)
-        self.session: aiohttp.ClientSession | None = None
         self.video_duration: float = video_duration
-        self._thread_pool: ThreadPoolExecutor | None = None
         self.dl_obj: DownloadObjection = DownloadObjection()
+
+        self._session: Optional[aiohttp.ClientSession] = None
+        self._session_lock: asyncio.Lock = asyncio.Lock()
+        self._thread_pool: Optional[ThreadPoolExecutor] = None
 
     @property
     def thread_pool(self) -> ThreadPoolExecutor:
         if self._thread_pool is None:
             self._thread_pool = ThreadPoolExecutor(max_workers=4)
         return self._thread_pool
-
+    
     async def _ensure_session(self) -> None:
-        """確保 session 存在"""
-        if self.session is None or self.session.closed:
+        """確保 aiohttp session 存在 使用 Lock 避免 race condition"""
+        async with self._session_lock:
+            if self._session is not None and not self._session.closed:
+                return
+
             connector = aiohttp.TCPConnector(
                 limit=CFG["VideoDownload"]["connector_limit"],
                 limit_per_host=CFG["VideoDownload"]["connector_limit_per_host"],
@@ -125,7 +123,7 @@ class MediaDownloader:
                 sock_connect=CFG["VideoDownload"]["timeout_sock_connect"],
             )
 
-            self.session = aiohttp.ClientSession(
+            self._session = aiohttp.ClientSession(
                 connector=connector,
                 timeout=timeout,
                 headers={
@@ -139,141 +137,98 @@ class MediaDownloader:
                 read_bufsize=256 * 1024,
             )
 
-    async def _preflight_requests(self, urls: list[str], batch_size: int = 16) -> dict[str, dict[str, any]]:
-        """批次預先處理 HEAD 請求，獲取 Range 和檔案資訊"""
-        await self._ensure_session()
-        results = {}
+    async def close(self) -> None:
+        """關閉 session 與 thread pool 釋放所有資源"""
+        if self._session and not self._session.closed:
+            await self._session.close()
+        if self._thread_pool is not None:
+            self._thread_pool.shutdown(wait=True)
+            self._thread_pool = None
 
-        async def fetch_head(url: str) -> tuple[str, dict]:
-            try:
-                async with self.session.head(
-                    url,
-                    allow_redirects=True,
-                    timeout=ClientTimeout(total=10),
-                    proxy=await _get_random_proxy() or "",
-                ) as resp:
-                    return url, {
-                        "size": int(resp.headers.get("Content-Length", 0)),
-                        "accept_ranges": resp.headers.get("Accept-Ranges") == "bytes",
-                        "etag": resp.headers.get("ETag", ""),
-                        "content_type": resp.headers.get("Content-Type", ""),
-                        "last_modified": resp.headers.get("Last-Modified", ""),
-                    }
-            except Exception as e:
-                logger.debug(f"HEAD request failed for {url}: {e}")
-                return url, {
-                    "size": 0,
-                    "accept_ranges": False,
-                    "etag": "",
-                    "content_type": "",
-                    "last_modified": "",
-                }
-
-        semaphore = asyncio.Semaphore(batch_size)
-
-        async def bounded_fetch(url):
-            async with semaphore:
-                return await fetch_head(url)
-
-        tasks = [bounded_fetch(url) for url in urls]
-        responses = await asyncio.gather(*tasks, return_exceptions=True)
-
-        for response in responses:
-            if isinstance(response, Exception):
-                continue
-            url, info = response
-            results[url] = info
-
-        return results
-
-    async def _download_file_optimized(
+    async def download_file(
         self,
         url: str,
         save_path: Path,
-        max_retries: int = CFG["VideoDownload"]["max_retries"],
-        progress_callback: Callable[[int], None] | None = None,
-        file_info: dict | None = None,
     ) -> bool:
-        """優化的下載方法：全部使用 BytesIO"""
-        retries: float = 0
-        save_path.parent.mkdirp()
-        
-        while retries <= max_retries:
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+
+        max_retries: int = int(CFG["VideoDownload"]["max_retries"])
+
+        for attempt in range(max_retries):
             await self._ensure_session()
+            assert self._session is not None
+
             try:
-                assert self.session is not None
-
-                async with self.session.get(
-                    url,
-                    proxy = await _get_random_proxy() or "",
-                    ) as response:
-                    logger.debug(f"Downloading {Color.fg('cyan')}{url}{Color.reset()} to {save_path}")
-
-                    if response.status not in (200, 206):
-                        logger.warning(f"Request failed with status {response.status}, retrying...")
-                        retries += 1
-                        await asyncio.sleep(2**retries)
-                        continue
-
-                    buffer: BytesIO = BytesIO()
-                    try:
-                        while True:
-                            chunk: bytes = await response.content.readany()
-                            if not chunk:
-                                break
-                            buffer.write(chunk)
-                            if progress_callback:
-                                progress_callback(len(chunk))
-
-                        # 一次性寫入磁碟
-                        loop: bool = asyncio.get_event_loop()
-                        buffer_data: bytes = buffer.getvalue()
-                        await loop.run_in_executor(
-                            self.thread_pool,
-                            lambda: save_path.write_bytes(buffer_data),
-                        )
-                    finally:
-                        buffer.close()
-
-                    return True
+                return await self.attempt_download(url, save_path, attempt)
 
             except asyncio.CancelledError:
-                progress_manager.remove_all_progress_bars()
-                if self.session:
-                    await self.session.close()
-                await self.force_remove_dir(save_path)
-                # await self.force_remove_dir(save_path.parents[2])
-                logger.info(f"Download cancelled: {url}")
+                await self.handle_cancellation(url, save_path)
                 return False
+
             except (TimeoutError, aiohttp.ClientError) as e:
-                logger.warning(f"Download attempt {retries + 1} failed: {str(e)}")
-                retries += 1
-                if retries <= max_retries:
-                    await asyncio.sleep(2**retries)
+                logger.warning(f"Download attempt {attempt + 1} failed: {e}")
+                if attempt + 1 < max_retries:
+                    await asyncio.sleep(2 ** (attempt + 1))
                 else:
                     logger.error(f"Download failed after {max_retries} retries: {url}")
                     return False
+
             except Exception as e:
                 if str(e) == "Connection closed.":
                     return False
                 logger.error(f"Unexpected error during download: {e}")
-                retries += 1
+
         return False
 
-    async def _download_file(
+    async def attempt_download(
         self,
         url: str,
         save_path: Path,
-        max_retries: int = 3,
-        progress_callback: Callable[[int], Any] | None = None,
+        attempt: int,
     ) -> bool:
-        """下載單個檔案的入口方法"""
-        return await self._download_file_optimized(
-            url=url,
-            save_path=save_path,
-            max_retries=max_retries,
-            progress_callback=progress_callback,
-        )
+        proxy: str = await _get_random_proxy() or ""
+
+        async with self._session.get(url, proxy=proxy) as response:
+            if response.status not in (200, 206):
+                logger.warning(
+                    f"Request failed with status {response.status}, "
+                    f"retrying (attempt {attempt + 1})..."
+                )
+                await asyncio.sleep(2 ** (attempt + 1))
+                return False
+
+            await self.stream_to_disk(response, save_path)
+            return True
+
+    async def stream_to_disk(
+        self,
+        response: aiohttp.ClientResponse,
+        save_path: Path,
+    ) -> None:
+        buffer = BytesIO()
+        try:
+            async for chunk in response.content.iter_any():
+                buffer.write(chunk)
+
+            buffer_data: bytes = buffer.getvalue()
+            loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                self.thread_pool,
+                lambda: save_path.write_bytes(buffer_data),
+            )
+        finally:
+            buffer.close()
+
+    async def handle_cancellation(
+        self,
+        url: str,
+        save_path: Path,
+    ) -> None:
+        progress_manager.remove_all_progress_bars()
+        if self._session:
+            await self._session.close()
+        await self.force_remove_dir(save_path)
+        logger.info(f"Download cancelled: {url}")
 
     def check_download_dir(self, folder_path: Path) -> bool:
         """檢查下載目錄是否存在"""
@@ -289,12 +244,6 @@ class MediaDownloader:
             return self.base_dir / track_type / track.language
         else:
             return self.base_dir / track_type
-
-    def duration(self) -> str:
-        """格式化影片時長"""
-        minutes = int(self.video_duration / 60)
-        seconds = int(self.video_duration % 60)
-        return f"{minutes} min {seconds} sec"
 
     async def _merge_track(self, track_type: str, track: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack) -> bool:
         """合併軌道片段"""
@@ -364,7 +313,7 @@ class MediaDownloader:
         track_id: str = track.id
         init_path: Path = track_dir / f"init_{track_type}_{Path(track.init_url).suffix}"
         if track.init_url.rstrip("/").split("/")[-1].split(".")[0] == "init" and track.mime_type in ("video/mp4", "audio/mp4", "application/mp4"):
-            if not await self._download_file(track.init_url, init_path):
+            if not await self.download_file(track.init_url, init_path):
                 logger.error(f"{track_type} Initialization file download failed")
                 return False
 
@@ -387,64 +336,35 @@ class MediaDownloader:
         success_count: int = 0
         semaphore: asyncio.Semaphore = asyncio.Semaphore(CFG["VideoDownload"]["semaphore"])
 
-        progress: DownloadProgress = DownloadProgress(total_segments=total, completed_segments=0, current_bytes=0, total_bytes=0)
+        progress: DownloadProgress = DownloadProgress(total_segments=total, completed_segments=0, current_bytes=0)
 
-        # 獲取所有檔案的 Range 和大小資訊
-        file_info_map: dict[str, dict] = await self._preflight_requests(track.segment_urls)
-        progress.total_bytes = sum(info.get("size", 0) for info in file_info_map.values())
-        progress.total_size_mb = progress.total_bytes / self.MB_IN_BYTES
-
-        # 創建此軌道的進度條
-        progress_bar = progress_manager.create_progress_bar(track_type, total, self.duration())
+        progress_bar = progress_manager.create_progress_bar(
+            track_type, total, f"{int(self.video_duration / 60)} min {int(self.video_duration % 60)} sec")
 
         progress_lock: asyncio.Lock = asyncio.Lock()
-        start_time: float = time.time()
-
-        async def progress_callback(bytes_downloaded: int):
-            async with progress_lock:
-                progress.current_bytes += bytes_downloaded
-                elapsed: float = time.time() - start_time
-                if elapsed > 0:
-                    progress.speed_mbps = (progress.current_bytes / self.MB_IN_BYTES) / elapsed
-                    remaining_bytes: int = progress.total_bytes - progress.current_bytes
-                    if progress.speed_mbps > 0:
-                        progress.eta_seconds = remaining_bytes / (progress.speed_mbps * self.MB_IN_BYTES)
             
         async def bounded_download(i: int, url: str):
             async with semaphore:
                 seg_path: Path = track_dir / f"seg_{track_type}_{i}{Path(url).suffix}"
-                file_info: dict = file_info_map.get(url, {})
-                
-                result: bool = await self._download_file_optimized(
-                    url,
-                    seg_path,
-                    progress_callback=lambda b: asyncio.create_task(progress_callback(b)),
-                    file_info=file_info,
-                )
-
+                susscess_bool: bool = await self.download_file(url, seg_path)
                 async with progress_lock:
                     progress.completed_segments += 1
-                return result
+                return susscess_bool
 
-        tasks = [bounded_download(i, url) for i, url in enumerate(track.segment_urls)]
+        tasks: asyncio.Task = [bounded_download(i, url) for i, url in enumerate(track.segment_urls)]
 
         try:
             for coro in asyncio.as_completed(tasks):
-                result = await coro
-                success_count += int(result)
+                susscess_bool: bool = await coro
+                success_count += int(susscess_bool)
                 progress_bar.update(download_progress=progress)
         except asyncio.CancelledError:
             progress_manager.remove_all_progress_bars()
-            if self.session:
-                await self.session.close()
+            if self._session:
+                await self._session.close()
             logger.info("Download cancelled")
             return False
-        # print(
-        #     f"{Color.fg('pink')}{track_type} {Color.fg('light_gray')}(Avg: {progress.speed_mbps:.2f} MB/s)"
-        #     f" finished in {Color.fg('blush')}{time.time() - start_time:.2f} {Color.fg('light_gray')}seconds{Color.reset()}"
-        #     f"{Color.fg('flamingo_pink')} {total}/{Color.fg('magenta_pink')}{success_count} "
-        #     f"{Color.fg('light_gray')}segments successfully downloaded{Color.reset()}"
-        # )
+        
         return success_count == total
 
     async def download_content(self, mpd_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack) -> tuple[bool, DownloadObjection]:
@@ -510,13 +430,6 @@ class MediaDownloader:
             path.unlink()
             # shutil.rmtree(path, ignore_errors=False)
             logger.info(f"{Color.fg('yellow_ochre')}Successfully removed {Color.fg('denim')}{path}{Color.reset()}")
-
-    async def close(self) -> None:
-        """關閉 session 和線程池"""
-        if self.session and not self.session.closed:
-            await self.session.close()
-        if self._thread_pool is not None:
-            self._thread_pool.shutdown(wait=True)
 
 
 class Start_Download_Queue:
@@ -652,9 +565,10 @@ class Start_Download_Queue:
                 PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time).print_parsed_content()
             case _:
                 if paramstore.get("subs_only") is True:
-                    playlist_content: HLSSubTrack | SubtitleTrack = await selector.select_tracks("None", "None", "H264")
+                    playlist_content: HLSSubTrack | SubtitleTrack = await selector.select_tracks("None", "None", "H264", paramstore.get("slang"))
                 else:
-                    playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack = await selector.select_tracks(v_resolution_choice, a_resolution_choice, video_codec)
+                    playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack = await selector.select_tracks(
+                        v_resolution_choice, a_resolution_choice, video_codec, paramstore.get("slang"))
 
                 if paramstore.get("nodl") is True:
                     logger.info(f"{Color.fg('light_gray')}Skip downloading{Color.reset()}")
