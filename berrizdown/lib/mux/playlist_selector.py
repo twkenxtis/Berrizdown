@@ -300,18 +300,31 @@ class PlaylistSelector:
             c: str | list[str] | None = choice.lower()
         except AttributeError:
             c: str | list[str] | None = choice
-        
+
         if c == "none":
             return None, None
         
         subs, types = self._gather_all()
         # types只會同時有一種hls or mpd
         
-        if isinstance(c, str) and c in {"ask", "as"}:
+        if isinstance(c, str) and c in {"ask", "as"} or choice == ["ask"]:
+            print(f"{Color.fg("light_gray")}Space: select/deselect; ↑↓: move{Color.reset()}")
             track, src = await self._ask_track(TrackType.SUB)
             return track, src
 
-        if isinstance(choice, list):
+        if isinstance(c, str) and c == "all" or choice == ["all"]:
+            print("run heere")
+            if not subs:
+                logger.warning("No subtitle tracks found")
+                return None, None
+            
+            logger.info(
+                f"{Color.fg('sea_green')}subtitle: {Color.reset()}"
+                f"{Color.fg('light_gray')}all ({len(subs)} tracks){Color.reset()}"
+            )
+            return subs, types
+
+        if isinstance(choice, list) and choice not in {"all", "ask"}:
             LANG_MAP: dict[str, str] = {
                 "zh-tw": "zh-Hans",
                 "zh-cn": "zh-Hans",
@@ -333,18 +346,6 @@ class PlaylistSelector:
             # 就地更新 subs 只保留 language 在 s_lang_choice 裡的物件
             subs[:] = [sub for sub in subs if sub.__dict__.get("language") in c]
             return subs, types
-
-        if isinstance(c, str) and c == "all":
-            if not subs:
-                logger.warning("No subtitle tracks found")
-                return None, None
-            
-            logger.info(
-                f"{Color.fg('sea_green')}subtitle: {Color.reset()}"
-                f"{Color.fg('light_gray')}all ({len(subs)} tracks){Color.reset()}"
-            )
-            return subs, types
-
     
     def _collect_all_track_items(self, track_type: TrackType) -> list[tuple]:
         """收集所有軌道項目 並在字幕類型下防止重複取得"""
