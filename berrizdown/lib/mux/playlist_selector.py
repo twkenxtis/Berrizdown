@@ -101,7 +101,7 @@ class PlaylistSelector:
         v_resolution_choice: str,
         a_resolution_choice: str,
         video_codec: str | None = None,
-        s_lang_choice: str = "ask",
+        s_lang_choice: str = "all",
     ) -> SelectedContent:
         """"選擇視訊和音訊軌道"""
         selected_video, video_type = await self._select_single_track(v_resolution_choice, TrackType.VIDEO, video_codec)
@@ -270,21 +270,29 @@ class PlaylistSelector:
     async def _select_subtitle_tracks(
         self,
         choice: str,
-    ) -> tuple[list | Any | None, list[str] | str | None]:
-        """字幕軌道選擇，支援 all / none / ask / 單一 1-based 索引"""
-        c: str | Any = choice.lower()
+        ) -> tuple[list[Any] | None, list[str] | None]:
+        c = choice.lower()
 
         if c == "none":
             return None, None
 
-        # 收集所有字幕
-        def _gather_all() -> tuple[list, list[str]]:
-            subs, types = [], []
+        def _gather_all() -> tuple[list[Any], list[str]]:
+            subs: list[Any] = []
+            types: list[str] = []
+            seen_languages: set[str | None] = set()
+            
             for source in [SourceType.HLS, SourceType.MPD]:
                 if self.select_mode in {source.value, "all"}:
                     for t in self._get_tracks(source, TrackType.SUB):
-                        subs.append(t)
-                        types.append(source.value)
+                        lang: str = t.__dict__.get("language")
+                        
+                        if lang not in seen_languages:
+                            logger.debug(f"Adding language: {lang}")
+                            subs.append(t)
+                            types.append(source.value)
+                            seen_languages.add(lang)
+                        else:
+                            logger.debug(f"Skipping duplicate language: {lang}")
             return subs, types
 
         if c == "all":
@@ -292,34 +300,17 @@ class PlaylistSelector:
             if not subs:
                 logger.warning("No subtitle tracks found")
                 return None, None
-            logger.info(f"{Color.fg('sea_green')}subtitle: {Color.reset()}{Color.fg('light_gray')}all ({len(subs)} tracks){Color.reset()}")
+            
+            logger.info(
+                f"{Color.fg('sea_green')}subtitle: {Color.reset()}"
+                f"{Color.fg('light_gray')}all ({len(subs)} tracks){Color.reset()}"
+            )
             return subs, types
 
         if c in {"ask", "as"}:
             track, src = await self._ask_track(TrackType.SUB)
             return track, src
-
-        # 單一 1-based 數值索引
-        try:
-            idx: int = int(choice)
-        except ValueError:
-            logger.warning(f"Invalid subtitle choice '{choice}', skipping")
-            return None, None
-
-        subs, types = _gather_all()
-        if not subs:
-            logger.warning("No subtitle tracks found")
-            return None, None
-
-        target: int = idx - 1
-        if 0 <= target < len(subs):
-            lang: str | None = getattr(subs[target], "language", "N/A")
-            logger.info(f"{Color.fg('sea_green')}subtitle: {Color.reset()}{Color.fg('light_gray')}[{types[target].upper()}] #{idx} [{lang}]{Color.reset()}")
-            return subs[target], types[target]
-
-        logger.warning(f"Subtitle index {idx} out of range (1~{len(subs)})")
-        return None, None
-
+    
     def _collect_all_track_items(self, track_type: TrackType) -> list[tuple]:
         """收集所有軌道項目 並在字幕類型下防止重複取得"""
         items: list[tuple] = []
