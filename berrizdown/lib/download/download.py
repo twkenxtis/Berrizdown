@@ -615,8 +615,6 @@ class Start_Download_Queue:
             self.dl_obj: DownloadObjection = dl_obj 
             # 處理成功後的混流 重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
-            if paramstore.get("keep-subs") is True:
-                SubtitleProcessor.print_subtitle_info(self.dl_obj)
             if paramstore.get("subs_only") is True:
                 SubtitleProcessor.print_subtitle_info(self.dl_obj)
             elif not paramstore.get("subs_only"):
