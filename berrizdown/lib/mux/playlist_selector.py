@@ -1,4 +1,3 @@
-import sys
 from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any, Optional, Union
@@ -105,13 +104,19 @@ class PlaylistSelector:
         """"選擇視訊和音訊軌道"""
         selected_video, video_type = await self._select_single_track(v_resolution_choice, TrackType.VIDEO, video_codec)
         selected_audio, audio_type = await self._select_single_track(a_resolution_choice, TrackType.AUDIO)
+        
         if isinstance(s_lang_choice, str):
             s_lang_choice: list[str] = [s_lang_choice]
         elif isinstance(s_lang_choice, list) and len(s_lang_choice) == 0:
             s_lang_choice: str = "all"
         if isinstance(s_lang_choice, tuple):
             s_lang_choice: list[str] = list(s_lang_choice)
-        selected_sub, sub_type = await self._select_subtitle_tracks(s_lang_choice)
+        if paramstore.get("no_subs"):
+            s_lang_choice: None = None
+            selected_sub, sub_type = None, None
+            logger.info(f"{Color.fg('tomato')}【No subs mode】{Color.reset()}")
+        else:
+            selected_sub, sub_type = await self._select_subtitle_tracks(s_lang_choice)
 
         # 更新 paramstore
         self._update_paramstore(video_type, audio_type)
@@ -299,15 +304,12 @@ class PlaylistSelector:
 
     async def _select_subtitle_tracks(
         self,
-        choice: str | list[str] | None,
+        choice: str | list[str],
         ) -> tuple[list[Any] | None, list[str] | None]:
         try:
-            c: str | list[str] | None = choice.lower()
+            c: str | list[str] = choice.lower()
         except AttributeError:
-            c: str | list[str] | None = choice
-
-        if c == "none":
-            return None, None
+            c: str | list[str] = choice
         
         subs, types = self._gather_all()
         # types只會同時有一種hls or mpd
@@ -328,15 +330,29 @@ class PlaylistSelector:
             )
             return subs, types
 
-        if isinstance(choice, list) and choice not in {"all", "ask"}:
+        if isinstance(choice, list) and len(choice) > 0:
             LANG_MAP: dict[str, str] = {
                 "zh-tw": "zh-Hans",
                 "zh-cn": "zh-Hans",
+                "zh-hk": "zh-Hans",
                 "zh-hant": "zh-Hans",
                 "zh-hans": "zh-Hans",
                 "zho": "zh-Hans",
+                "zha": "zh-Hans",
+                "zhs": "zh-Hans",
+                "zcn": "zh-Hans",
+                "cht": "zh-Hant",
+                "chs": "zh-Hant",
+                "cht-tw": "zh-Hant",
+                "chs-tw": "zh-Hant",
+                "cht-cn": "zh-Hant",
+                "chs-cn": "zh-Hant",
+                "ja-jp": "ja",
+                "jp": "ja",
+                "chinese": "zh-Hans",
                 "eng": "en",
                 "kor": "ko",
+                "korea": "ko",
                 "japan": "ja",
                 "jpn": "ja"
             }
