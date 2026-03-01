@@ -644,7 +644,7 @@ class Start_Download_Queue:
         mpd_parser: MPDParser = MPDParser(self.raw_mpd, self.playback_info.dash_playback_url)
         mpd_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack = await mpd_parser.parse_all_tracks()
 
-        if self.playback_info.drm_info is None:
+        if self.playback_info.drm_info is None or self.playback_info.drm_info == {}:
             selector: PlaylistSelector = PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time)
         else:
             selector: PlaylistSelector = PlaylistSelector(hls_content, mpd_content, "mpd", start_time, end_time)
