@@ -5,6 +5,7 @@ import aiofiles
 from rich.progress import BarColumn, DownloadColumn, Progress, SpinnerColumn, TextColumn
 
 from berrizdown.lib.path import Path
+from berrizdown.lib.load_yaml_config import CFG
 from berrizdown.static.color import Color
 from berrizdown.unit.handle.handle_log import setup_logging
 

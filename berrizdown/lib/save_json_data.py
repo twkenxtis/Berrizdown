@@ -239,13 +239,14 @@ class save_json_data:
         json_data = public_dict | playback_dict
         return json_data
     
-    def sub_meta(self) -> str:
+    def sub_meta(self, lang: str) -> str:
         sub_meta: dict[str, str] = {
             "date": self.time_str,
             "title": self.title,
             "artis": self.artis_name,
             "community_name": self.community_name,
             "source": "Berriz",
+            "lang": lang or "und",
             "tag": CFG["output_template"]["tag"],
         }
         name: str = OutputFormatter(CFG["output_template"]["subtitle_file_name"]).format(sub_meta)

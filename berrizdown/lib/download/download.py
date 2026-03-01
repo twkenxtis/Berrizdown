@@ -80,11 +80,12 @@ class MediaDownloader:
 
     MB_IN_BYTES = 1024 * 1024
 
-    def __init__(self, media_id: str, output_dir: str, video_duration: float) -> None:
+    def __init__(self, media_id: str, output_dir: str, video_duration: float, savejsondata: save_json_data,) -> None:
         self.media_id: str = media_id
         self.base_dir: Path = Path(output_dir)
         self.video_duration: float = video_duration
         self.dl_obj: DownloadObjection = DownloadObjection()
+        self.savejsondata: save_json_data = savejsondata
 
         self._session: Optional[aiohttp.ClientSession] = None
         self._session_lock: asyncio.Lock = asyncio.Lock()
@@ -270,11 +271,11 @@ class MediaDownloader:
                 return False
 
         if track_type == "subtitle":
-            return await self._merge_subtitle_track(track, output_file, init_files, segments)
+            return await self.merge_subtitle_track(track, output_file, init_files, segments)
 
-        return await self._merge_media_track(track_type, output_file, init_files, segments)
+        return await self.merge_media_track(track_type, output_file, init_files, segments)
 
-    async def _merge_media_track(
+    async def merge_media_track(
         self,
         track_type: str,
         output_file: Path,
@@ -296,7 +297,7 @@ class MediaDownloader:
 
         return result
 
-    async def _merge_subtitle_track(
+    async def merge_subtitle_track(
         self,
         track: Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack],
         output_file: Path,
@@ -306,7 +307,8 @@ class MediaDownloader:
         """處理字幕軌道並輸出 .srt 檔案"""
         subtitle_str: str = SubtitleProcessor(track, segments).process_subtitle(init_files)
         subtitle_path: Path = output_file.with_name(
-            f"{track.language}{output_file.with_suffix('').suffix}.srt"
+            f"{self.savejsondata.sub_meta(track.language)}"
+            f"{output_file.with_suffix('').suffix}.srt"
         )
         result: bool = await MERGE.save_subtitle(track.language, subtitle_str, subtitle_path)
 
@@ -554,8 +556,8 @@ class Start_Download_Queue:
         custom_community_name: str,
         community_name: str,
         playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack,
-    ) -> None:
-        savejsondata = save_json_data(
+    ) -> "save_json_data":
+        savejsondata: save_json_data = save_json_data(
             output_dir,
             custom_community_name,
             community_name,
@@ -569,14 +571,16 @@ class Start_Download_Queue:
             savejsondata.play_list_to_folder(playlist_content),
             savejsondata.dl_thumbnail(),
         )
+        return savejsondata
 
     async def start_request_download(
         self,
         output_dir: Path,
         playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack,
         video_duration: float,
+        savejsondata: save_json_data,
     ) -> tuple[bool, DownloadObjection]:
-        self.downloader: MediaDownloader = MediaDownloader(self.public_info.media_id, output_dir, video_duration)
+        self.downloader: MediaDownloader = MediaDownloader(self.public_info.media_id, output_dir, video_duration, savejsondata)
         success, dl_obj = await self.downloader.download_content(playlist_content)
         return success, dl_obj
 
@@ -608,8 +612,8 @@ class Start_Download_Queue:
         output_dir, custom_community_name, community_name = await self.get_output_dir()
         
         if output_dir is not None and output_dir.exists():
-            await self.task_of_info(output_dir, custom_community_name, community_name, playlist_content)
-            success, dl_obj = await self.start_request_download(output_dir, playlist_content, video_duration)
+            savejsondata: save_json_data = await self.task_of_info(output_dir, custom_community_name, community_name, playlist_content)
+            success, dl_obj = await self.start_request_download(output_dir, playlist_content, video_duration, savejsondata)
             self.dl_obj: DownloadObjection = dl_obj 
             # 處理成功後的混流 重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
