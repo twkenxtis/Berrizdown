@@ -6,6 +6,7 @@ from collections.abc import Iterable
 import pysubs2
 
 from berrizdown.static.color import Color
+from berrizdown.static.parameter import paramstore
 from berrizdown.lib.path import Path
 from berrizdown.unit.sub.webvtt import merge_segmented_webvtt
 from berrizdown.lib.mux.parse_hls import HLSSubTrack
@@ -20,11 +21,13 @@ logger = setup_logging("subprocess", "periwinkle")
 
 class SubtitleProcessor:
     def __init__(
-        self, track: HLSSubTrack | SubtitleTrack,
+        self,
+        track: HLSSubTrack | SubtitleTrack,
         segments: list[Path],
-        ) -> None:
+    ) -> None:
         self.track: HLSSubTrack | SubtitleTrack = track
         self.segments: list[Path] = segments
+        self.subtitle_offset_start: bool = paramstore.get("subtitle_offset_start")
 
     def check_sub_type(self) -> str:
         match self.track.mime_type:
@@ -32,13 +35,10 @@ class SubtitleProcessor:
                 return "webvtt"
             case "application/mp4":
                 return "ttml"
-    
-    def webvtt2srt(self, vtt_content: str) -> str:
-        return self.webvtt2srt(vtt_content)
 
     def merge_vtt_from_path_list(self) -> str:
         raw_parts: list[str] = []
-        
+
         for p in track(self.segments, description=f"　[cyan]{self.track.language} [blue]subtitle[/blue]"):
             if p.exists():
                 content = p.read_text(encoding="utf-8").strip()
@@ -47,48 +47,38 @@ class SubtitleProcessor:
             else:
                 logger.error(f"{Color.fg('red')}Warning: Segment file {p} does not exist.{Color.reset()}")
                 raise FileNotFoundError(f"Segment file {p} does not exist.")
-                
+
         full_vtt_raw: str = "\n\n".join(raw_parts)
         merged_vtt_string: str = merge_segmented_webvtt(full_vtt_raw)
-
         return merged_vtt_string
-    
+
     def webvtt2srt(self, vtt_content: str) -> str:
-        # pysubs2 會自動處理 VTT 的 Header 和時間戳格式
         subs: pysubs2.SSAFile = pysubs2.SSAFile.from_string(vtt_content)
-        srt_content: str = subs.to_string("srt")
-        return srt_content
 
-    @staticmethod
-    def ttml_time_to_seconds(time_str: str) -> float:
-        """將 TTML 時間格式 (HH:MM:SS.mmm) 轉為秒數"""
-        h, m, s = time_str.split(":")
-        return float(h) * 3600 + float(m) * 60 + float(s)
+        if self.subtitle_offset_start and len(subs) > 0:
+            # 偏移量 取第一條字幕的起始時間（ms)
+            offset_ms: int = subs[0].start
+            if offset_ms > 0:
+                for line in subs:
+                    line.start = max(0, line.start - offset_ms)
+                    line.end = max(0, line.end - offset_ms)
+                logger.debug(f"WebVTT subtitle offset applied: -{offset_ms}ms")
 
-    @staticmethod
-    def seconds_to_srt_time(seconds: float) -> str:
-        """將秒數轉為 SRT 時間格式 (HH:MM:SS,mmm)"""
-        total_ms: float = round(seconds * 1000)
-        millis = total_ms % 1000
-        total_s = total_ms // 1000
-        secs = total_s % 60
-        mins = (total_s // 60) % 60
-        hours = total_s // 3600
-        return f"{hours:02}:{mins:02}:{secs:02},{millis:03}"
+        return subs.to_string("srt")
 
     def process_subtitle(self, init_path: list[Path] | None) -> str:
         """input subtitle track and segments, output processed subtitle content"""
         sub_type: str = self.check_sub_type()
-        
-        if isinstance(init_path, list):
-            if len(init_path) >= 1 :
-                init_path: Path = init_path[0]
+
+        resolved_init: Path | None = init_path[0] if isinstance(init_path, list) and init_path else None
 
         if sub_type == "webvtt":
             merged_vtt: str = self.merge_vtt_from_path_list()
             return self.webvtt2srt(merged_vtt)
         elif sub_type == "ttml":
-            merge_srt: str = STPPSubtitleExtractor(self.track, self.segments, init_path).to_srt_string()
+            merge_srt: str = STPPSubtitleExtractor(
+                self.track, self.segments, resolved_init
+            ).to_srt_string()
             return merge_srt
         else:
             raise ValueError(f"Unsupported subtitle type: {sub_type}")
@@ -102,6 +92,7 @@ class STPPSubtitleExtractor:
         self.track: HLSSubTrack | SubtitleTrack = track
         self.segments: list[Path] = segments
         self.init_path: Path = init_path
+        self.subtitle_offset_start: bool = paramstore.get("subtitle_offset_start", False)
 
     def _merge_to_buffer(self) -> io.BytesIO:
         if not self.segments:
@@ -238,13 +229,51 @@ class STPPSubtitleExtractor:
         return buffer.getvalue()
 
     @staticmethod
-    def _ttml_tree_to_srt_string(tree: ET.ElementTree) -> str:
+    def _parse_ttml_time_to_ms(t: str) -> int:
+        """將 TTML 時間字串解析為毫秒整數，供偏移計算使用"""
+        if t.count(":") == 1:
+            t = "00:" + t
+        parts = t.split(":")
+        h, m = int(parts[0]), int(parts[1])
+        rest = parts[2] if len(parts) > 2 else "0"
+        s_str, _, ms_str = rest.partition(".")
+        ms = int((ms_str + "000")[:3])
+        return h * 3600_000 + m * 60_000 + int(s_str) * 1000 + ms
+
+    @staticmethod
+    def _ms_to_srt_time(ms: int) -> str:
+        """將毫秒整數轉為 SRT 時間格式 HH:MM:SS,mmm"""
+        ms = max(0, ms)
+        millis = ms % 1000
+        total_s = ms // 1000
+        secs = total_s % 60
+        mins = (total_s // 60) % 60
+        hours = total_s // 3600
+        return f"{hours:02d}:{mins:02d}:{secs:02d},{millis:03d}"
+
+    def _ttml_tree_to_srt_string(
+        self,
+        tree: ET.ElementTree,
+    ) -> str:
         root: ET.Element = tree.getroot()
         ns: dict[str, str] = {"tt": "http://www.w3.org/ns/ttml"}
 
+        all_p: list[ET.Element] = root.findall(".//tt:p", ns)
+        if not all_p:
+            return ""
+
+        # 計算偏移量 取第一條字幕的起始時間 ms
+        offset_ms: int = 0
+        if self.subtitle_offset_start:
+            first_begin: str = all_p[0].get("begin", "")
+            if first_begin:
+                offset_ms = STPPSubtitleExtractor._parse_ttml_time_to_ms(first_begin)
+                if offset_ms > 0:
+                    logger.debug(f"TTML subtitle offset applied: -{offset_ms}ms")
+
         cues: list[str] = []
 
-        for i, p in enumerate(root.findall(".//tt:p", ns), 1):
+        for i, p in enumerate(all_p, 1):
             begin: str = p.get("begin", "")
             end: str = p.get("end", "")
             if not begin or not end:
@@ -261,21 +290,11 @@ class STPPSubtitleExtractor:
             if not text:
                 continue
 
-            def fmt_time(t: str) -> str:
-                if t.count(":") == 1:
-                    t = "00:" + t
-                if "." not in t:
-                    t += ".000"
-                # 簡單清理多餘小數點或格式錯誤
-                t = t.replace(".", " ").split()[0] + "." + t.split(".")[-1]
-                h, m, rest = t.split(":", 2)
-                s, ms = rest.split(".")
-                ms = (ms + "000")[:3]
-                return f"{int(h):02d}:{int(m):02d}:{int(s):02d},{ms}"
-
             try:
-                begin_fmt: str = fmt_time(begin)
-                end_fmt: str = fmt_time(end)
+                begin_ms: int = STPPSubtitleExtractor._parse_ttml_time_to_ms(begin) - offset_ms
+                end_ms: int = STPPSubtitleExtractor._parse_ttml_time_to_ms(end) - offset_ms
+                begin_fmt: str = STPPSubtitleExtractor._ms_to_srt_time(begin_ms)
+                end_fmt: str = STPPSubtitleExtractor._ms_to_srt_time(end_ms)
                 cues.append(f"{i}\n{begin_fmt} --> {end_fmt}\n{text}\n")
             except Exception as e:
                 logger.warning(f"cue {i} time format error, skipped: {begin} → {end} ({e})")
