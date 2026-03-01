@@ -438,9 +438,9 @@ class FFmpegMuxer:
         subtitle_start_index = input_index
 
         # 加入字幕
-        if len(self.subs) != 0 and container in ("mkv", "mp4"):
+        if len(self.subs) != 0 and container in ("mkv", "mp4", "m4v", "mov"):
             map_commands: list[str] = []
-            is_mp4 = container == "mp4"
+            is_mp4 = container != "mkv"
 
             for idx, (lang, subtitle_path) in enumerate(self.subs.items()):
                 if not subtitle_path:
