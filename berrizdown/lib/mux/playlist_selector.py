@@ -313,7 +313,6 @@ class PlaylistSelector:
             return track, src
 
         if isinstance(c, str) and c == "all" or choice == ["all"]:
-            print("run heere")
             if not subs:
                 logger.warning("No subtitle tracks found")
                 return None, None
