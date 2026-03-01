@@ -726,6 +726,11 @@ class PlaylistSelector:
             logger.error("Must be choese at least one source type, video and audio all None")
             raise KeyboardInterrupt
         
+        if video_type is None:
+            paramstore._store["novideo"] = True
+        if audio_type is None:
+            paramstore._store["noaudio"] = True
+
         paramstore._store.update(
             {
                 "hls_video": video_type == "hls",
