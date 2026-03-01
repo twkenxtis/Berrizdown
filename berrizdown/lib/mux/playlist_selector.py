@@ -81,8 +81,7 @@ class PlaylistSelector:
             start_str: str = f"{self.start_time:.2f}s" if self.start_time is not None else "START"
             end_str: str = f"{self.end_time:.2f}s" if self.end_time is not None else "END"
             logger.info(
-                f"{Color.fg('cyan')}Time range filter enabled: {start_str} → {end_str}.\
-                    Minor segment count differences between tracks are expected due to codec alignment.{Color.reset()}"
+                f"{Color.fg('cyan')}Time range filter enabled: {start_str} → {end_str}. Minor segment count differences between tracks are expected due to codec alignment.{Color.reset()}"
             )
 
     def _validate_time(self, time_val: float | None, name: str) -> float | None:
@@ -101,11 +100,17 @@ class PlaylistSelector:
         v_resolution_choice: str,
         a_resolution_choice: str,
         video_codec: str | None = None,
-        s_lang_choice: str = "all",
+        s_lang_choice: str | list[str] | None = "all",
     ) -> SelectedContent:
         """"選擇視訊和音訊軌道"""
         selected_video, video_type = await self._select_single_track(v_resolution_choice, TrackType.VIDEO, video_codec)
         selected_audio, audio_type = await self._select_single_track(a_resolution_choice, TrackType.AUDIO)
+        if isinstance(s_lang_choice, list) and len(s_lang_choice) == 0:
+            s_lang_choice: str = "all"
+        if isinstance(s_lang_choice, str):
+            s_lang_choice: list[str] = [s_lang_choice]
+        if isinstance(s_lang_choice, tuple):
+            s_lang_choice: list[str] = list(s_lang_choice)
         selected_sub, sub_type = await self._select_subtitle_tracks(s_lang_choice)
 
         # 更新 paramstore
@@ -116,6 +121,7 @@ class PlaylistSelector:
         # 應用時間過濾
         actual_start, actual_end = None, None
         if self.start_time is not None or self.end_time is not None:
+            paramstore._store["subtitle_offset_start"] = True
             logger.info(f"Applying time filter: {self.start_time} → {self.end_time}")
 
             # 分別過濾並獲取實際時間範圍
@@ -267,36 +273,68 @@ class PlaylistSelector:
         #logger.info(f"Auto-select {Color.fg('sea_green')}{track_type.value}: {Color.reset()}{Color.fg('light_gray')}[{best[1].upper()}] @ {best[2] // 1000:,} kbps{Color.reset()}")
         return best[0], best[1]
 
+    def _gather_all(self) -> tuple[list[Any], list[str]]:
+        subs: list[Any] = []
+        types: list[str] = []
+        seen_languages: set[str | None] = set()
+        
+        for source in [SourceType.HLS, SourceType.MPD]:
+            if self.select_mode in {source.value, "all"}:
+                for t in self._get_tracks(source, TrackType.SUB):
+                    lang: str = t.__dict__.get("language")
+                    
+                    if lang not in seen_languages:
+                        logger.debug(f"Adding language: {lang}")
+                        subs.append(t)
+                        types.append(source.value)
+                        seen_languages.add(lang)
+                    else:
+                        logger.debug(f"Skipping duplicate language: {lang}")
+        return subs, types
+
     async def _select_subtitle_tracks(
         self,
-        choice: str,
+        choice: str | list[str] | None,
         ) -> tuple[list[Any] | None, list[str] | None]:
-        c = choice.lower()
-
+        try:
+            c: str | list[str] | None = choice.lower()
+        except AttributeError:
+            c: str | list[str] | None = choice
+        
         if c == "none":
             return None, None
+        
+        subs, types = self._gather_all()
+        # types只會同時有一種hls or mpd
+        
+        if isinstance(c, str) and c in {"ask", "as"}:
+            track, src = await self._ask_track(TrackType.SUB)
+            return track, src
 
-        def _gather_all() -> tuple[list[Any], list[str]]:
-            subs: list[Any] = []
-            types: list[str] = []
-            seen_languages: set[str | None] = set()
-            
-            for source in [SourceType.HLS, SourceType.MPD]:
-                if self.select_mode in {source.value, "all"}:
-                    for t in self._get_tracks(source, TrackType.SUB):
-                        lang: str = t.__dict__.get("language")
-                        
-                        if lang not in seen_languages:
-                            logger.debug(f"Adding language: {lang}")
-                            subs.append(t)
-                            types.append(source.value)
-                            seen_languages.add(lang)
-                        else:
-                            logger.debug(f"Skipping duplicate language: {lang}")
+        if isinstance(choice, list):
+            LANG_MAP: dict[str, str] = {
+                "zh-tw": "zh-Hans",
+                "zh-cn": "zh-Hans",
+                "zh-hant": "zh-Hans",
+                "zh-hans": "zh-Hans",
+                "zho": "zh-Hans",
+                "eng": "en",
+                "kor": "ko",
+                "japan": "ja",
+                "jpn": "ja"
+            }
+            VALID_LANGS = {"ko", "ja", "zh-Hans", "en"}
+            c: list[str] = [
+                n
+                for x in choice
+                for s in x.split(',')
+                if (n := LANG_MAP.get(s.strip().lower(), s.strip().lower())) in VALID_LANGS
+            ]
+            # 就地更新 subs 只保留 language 在 s_lang_choice 裡的物件
+            subs[:] = [sub for sub in subs if sub.__dict__.get("language") in c]
             return subs, types
 
-        if c == "all":
-            subs, types = _gather_all()
+        if isinstance(c, str) and c == "all":
             if not subs:
                 logger.warning("No subtitle tracks found")
                 return None, None
@@ -307,9 +345,6 @@ class PlaylistSelector:
             )
             return subs, types
 
-        if c in {"ask", "as"}:
-            track, src = await self._ask_track(TrackType.SUB)
-            return track, src
     
     def _collect_all_track_items(self, track_type: TrackType) -> list[tuple]:
         """收集所有軌道項目 並在字幕類型下防止重複取得"""
