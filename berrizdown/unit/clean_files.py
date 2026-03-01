@@ -27,7 +27,7 @@ class CleanFiles:
         if base_dir.exists():
             file_paths: list[Path] = []
             if self.nosubfolder_flag is False:
-                if len(self.dl_obj.__dict__.get("subtitle")) != 0 and CFG['Container']['video'] == ("mkv" or "mp4") and\
+                if len(self.dl_obj.__dict__.get("subtitle")) != 0 and CFG['Container']['video'] in {"mkv", "mp4"} and\
                     paramstore.get("keep-subs") is not True and paramstore.get("subs_only") is not True:
                     try:
                         for lang in self.dl_obj.__dict__.get("subtitle"):
