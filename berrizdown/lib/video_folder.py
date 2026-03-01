@@ -31,7 +31,7 @@ class Video_folder:
         self.dl_obj: object = dl_obj
         self.decryption_key: list[str] = decryption_key
 
-        self._public_info = public_info
+        self._public_info: PublicInfo = public_info
 
     @cached_property
     def FDT(self) -> File_date_time_formact:
@@ -72,7 +72,7 @@ class Video_folder:
         else:
             logger.warning("Community name not found, using 'Unknown Artis' instead.")
             cm_folder_name: str = "Unknown Artis"
-        cm_folder_name = self.FilenameSanitizer(cm_folder_name)
+        cm_folder_name: str = self.FilenameSanitizer(cm_folder_name)
         if paramstore.get("savedir") is not None:
             return Path(paramstore.get("savedir")).parent / self.FilenameSanitizer(Path(paramstore.get("savedir")).name) / cm_folder_name / "Videos"
         else:
@@ -80,8 +80,7 @@ class Video_folder:
 
     async def video_folder_handle(self, custom_community_name: str, community_name: str) -> Path:
         """根據 community_name 和媒體資訊建立下載資料夾路徑"""
-        base_dir: Path = self.get_base_dir(community_name, custom_community_name)
-        self.base_dir: Path = base_dir
+        self.base_dir: Path = self.get_base_dir(community_name, custom_community_name)
         
         video_meta: dict[str, str] = meta_name(
             self.time_str,
@@ -95,10 +94,10 @@ class Video_folder:
         match paramstore.get("subs_only"):
             case True:
                 if paramstore.get("nosubfolder") is True:
-                    subs_only_dir: Path = Path.cwd() / base_dir
+                    subs_only_dir: Path = Path.cwd() / self.base_dir
                     new_path: Path = Path(subs_only_dir.resolve())
                 else:
-                    subs_only_dir: Path = Path.cwd() / base_dir / Path(self.folder_name)
+                    subs_only_dir: Path = Path.cwd() / self.base_dir / Path(self.folder_name)
                     new_path: Path = self.get_unique_folder_name(self.folder_name, subs_only_dir)
                 new_path.mkdirp()
                 self.output_dir: Path = new_path
@@ -106,14 +105,14 @@ class Video_folder:
             case _:
                 temp_folder_name: str = f"temp_{self.time_str}_{self.media_id}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
                 temp_name: str = self.FilenameSanitizer(temp_folder_name)
-                temp_dir: Path = Path.cwd() / base_dir / temp_name
+                temp_dir: Path = Path.cwd() / self.base_dir / temp_name
                 temp_dir.mkdirp()
                 self.output_dir: Path = Path(temp_dir.resolve())
                 return self.output_dir  # for Download reutrn temp folder name path
 
     def get_unique_folder_name(self, base_name: str, full_path: Path) -> Path:
         """確保資料夾名稱唯一性，避免衝突"""
-        base_name = self.FilenameSanitizer(base_name)
+        base_name: str = self.FilenameSanitizer(base_name)
         new_path: Path = Path(full_path).parent / base_name
         counter: int = 1
         while new_path.exists():
@@ -123,7 +122,7 @@ class Video_folder:
 
     async def re_name_folder(self, video_file_name: str, mux_bool_status: bool) -> None:
         """將下載完成後的暫存資料夾名稱重新命名為最終標題"""
-        skip_conditions = [
+        skip_conditions: list = [
             paramstore.get("video_dl_cancelled"),
             paramstore.get("skip_merge"),
             paramstore.get("skip_mux"),
