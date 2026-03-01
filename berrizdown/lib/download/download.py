@@ -308,8 +308,12 @@ class MediaDownloader:
             f"{self.savejsondata.sub_meta(track.language)}"
             f"{output_file.with_suffix('').suffix}.srt"
         )
+
+        if paramstore.get("nosubfolder") is True:
+            subtitle_path = subtitle_path.parent.parent / subtitle_path.name
+
         result: bool = await MERGE.save_subtitle(track.language, subtitle_str, subtitle_path)
-        self.dl_obj.subtitle[track.language] = subtitle_path
+
         if result:
             self.dl_obj.subtitle[track.language] = subtitle_path
 
