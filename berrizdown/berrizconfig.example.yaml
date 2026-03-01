@@ -15,7 +15,7 @@ headers:
   User-Agent: "Berrizdown / 0.2.2"
 
 output_template:
-  video: '{date}.{title}.{quality}.{artis}.{source}.WEB-DL.{video}.{audio}-{tag}'
+  video: '{date}.{title}.{community_name}.{quality}.{artis}.{source}.WEB-DL.{audio}.{video}-{tag}'
   json_file_name: '{date}.{title}.{community_name}.{artis}.{source}-{tag}'
   html_file_name: '{date}.{title}.{community_name}.{artis}.{source}-{tag}'
   image_file_name: '{date}.{title}.{raw_name}.{community_name}.{artis}.{source}-{tag}'
