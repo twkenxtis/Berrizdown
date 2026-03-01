@@ -65,6 +65,7 @@ class Board:
         return CMT(self.communityid, self.communityname)
 
     async def match_noticeonly(self, choices: list[dict[str, Any]]) -> list[dict[str, Any] | None]:
+        
         match choices:
             case []:
                 return {
@@ -154,9 +155,12 @@ class Board:
 
     async def get_artis_board_list(self) -> tuple[Any, str] | None:
         community_menu: dict[str, Any] | None = await self.Community.community_menus(self.communityid, use_proxy)
-
         if community_menu is None:
             return None
+        community_menu["data"]["menus"] = [
+            m for m in community_menu["data"].get("menus", [])
+            if m.get("type") not in {"calendar", "shop", "event"}
+        ]
         selected, selected_list = await self.match_noticeonly(self.make_choice(community_menu))
         if selected is None:
             return None
