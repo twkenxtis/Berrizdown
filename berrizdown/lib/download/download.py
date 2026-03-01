@@ -11,8 +11,7 @@ import aiohttp
 import aiofiles
 from aiohttp import ClientTimeout, ClientResponse
 
-from berrizdown.lib.__init__ import use_proxy
-from berrizdown.lib.__init__ import container
+from berrizdown.lib.__init__ import use_proxy, container
 from berrizdown.lib.Proxy import Proxy
 from berrizdown.lib.load_yaml_config import CFG, ConfigLoader
 from berrizdown.lib.mux.merge import MERGE
@@ -310,7 +309,7 @@ class MediaDownloader:
             f"{output_file.with_suffix('').suffix}.srt"
         )
         result: bool = await MERGE.save_subtitle(track.language, subtitle_str, subtitle_path)
-
+        self.dl_obj.subtitle[track.language] = subtitle_path
         if result:
             self.dl_obj.subtitle[track.language] = subtitle_path
 
@@ -616,7 +615,14 @@ class Start_Download_Queue:
             self.dl_obj: DownloadObjection = dl_obj 
             # 處理成功後的混流 重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
-            await self.vv.re_name_folder(video_file_name, mux_bool_status)
+            if paramstore.get("keep-subs") is True:
+                SubtitleProcessor.print_subtitle_info(self.dl_obj)
+            if paramstore.get("subs_only") is True:
+                SubtitleProcessor.print_subtitle_info(self.dl_obj)
+            elif not paramstore.get("subs_only"):
+                await self.vv.re_name_folder(video_file_name, mux_bool_status)
+            else:
+                raise RuntimeError("Unexpected error")
         else:
             logger.error("Failed to create output directory.")
             raise ValueError("No output directory")
