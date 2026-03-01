@@ -180,38 +180,41 @@ class PlaylistSelector:
         return await self._auto_select_track(int(choice), track_type)
 
     async def _ask_track(
-        self, track_type: TrackType
+        self,
+        track_type: TrackType,
     ) -> tuple[
         Optional[Union["MediaTrack", list["MediaTrack"]]],
         Optional[Union[str, list[str]]],
     ]:
-        """交互式選擇軌道 單選回傳 (track, label) track_type 是 SUB 改為複選並回傳 ( [tracks], [labels] )"""
         raw_items: list[tuple] = self._collect_all_track_items(track_type)
-
         if not raw_items:
             logger.warning("No %s tracks available", track_type.value)
             return None, None
 
-        # 收集並標準化項目
-        items: list[dict] = []
-        for it in raw_items:
-            # 2025.12.29 Berriz AI subtitle track HLS+MPD so is 6
-            if not isinstance(it, (list, tuple)) or len(it) < 6:
+        # 過濾 + 轉換成結構化資料
+        items: list[dict[str, Any]] = []
+        for raw in raw_items:
+            if not isinstance(raw, (list, tuple)) or len(raw) < 6:
                 continue
 
-            def norm_key(v: Any) -> float:
+            def safe_sort_key(v: Any) -> Any:
                 if v is None:
-                    return float("inf")
-                try:
-                    return float(v)
-                except Exception:
-                    return float("inf")
+                    return (2, "")
+                if isinstance(v, (int, float)):
+                    return (0, v)
+                return (1, str(v))
+
+            sort_tuple = (
+                safe_sort_key(raw[0]),
+                safe_sort_key(raw[1]),
+                safe_sort_key(raw[2]),
+            )
 
             items.append({
-                "sort_key": (norm_key(it[0]), norm_key(it[1]), norm_key(it[2])),
-                "label": str(it[3]),
-                "value": it[4],
-                "payload": it[5],
+                "sort_key": sort_tuple,
+                "label": str(raw[3]),
+                "value": raw[4],
+                "display_label": str(raw[5]),
             })
 
         if not items:
@@ -221,54 +224,59 @@ class PlaylistSelector:
         # 排序
         items.sort(key=lambda d: d["sort_key"])
 
-        # 構造 choices 顯示字串（包含索引）與對應 map
-        choices: list[str] = [f"{idx+1}. {it['label']}" for idx, it in enumerate(items)]
-        value_map: dict[str, tuple] = {choices[idx]: (items[idx]["value"], items[idx]["label"]) for idx in range(len(items))}
-        
+        # 產生顯示用的選項
+        choices = [f"{i+1:2d}. {it['label']}" for i, it in enumerate(items)]
+        value_map = {choice: (it["value"], it["label"]) for choice, it in zip(choices, items)}
+
+        is_subtitle = track_type is TrackType.SUB
+        prompt_msg = f"Choose {'one or more' if is_subtitle else 'a'} {track_type.value} track [{self.select_mode.upper()}]:"
+
         try:
-            # 如果是字幕使用複選
-            if track_type is TrackType.SUB:
-                selected: inquirer = await inquirer.checkbox(
-                    message=f"Choose one or more {track_type.value} tracks [{self.select_mode.upper()}]:",
+            if is_subtitle:
+                selected = await inquirer.checkbox(
+                    message=prompt_msg,
                     choices=choices,
-                    default=[choices[-1]],
+                    default=choices[-1:] if choices else [],
                 ).execute_async()
-                
+
                 if not selected:
-                    logger.info("No subtitle tracks selected or user cancelled")
+                    logger.info("No subtitle tracks selected or cancelled")
                     return None, None
 
-                selected_values: list["MediaTrack"] = []
-                selected_labels: list[str] = []
-                for sel in selected:
-                    val_label: tuple | None = value_map.get(sel)
-                    if val_label:
-                        val, lbl = val_label
-                        selected_values.append(val)
-                        selected_labels.append(lbl)
+                selected_tracks = []
+                selected_labels = []
+                for choice in selected:
+                    track, label = value_map.get(choice, (None, None))
+                    if track is not None:
+                        selected_tracks.append(track)
+                        selected_labels.append(label)
 
-                if not selected_values:
-                    return None, None
+                return (
+                    selected_tracks if selected_tracks else None,
+                    selected_labels if selected_labels else None,
+                )
 
-                return selected_values, selected_labels
-
-            # 否則維持單選行為
-            answer: inquirer = await inquirer.select(
-                message=f"Choose {track_type.value} track [{self.select_mode.upper()}]:",
+            # 單選
+            default_choice = choices[-1] if choices else None
+            answer = await inquirer.select(
+                message=prompt_msg,
                 choices=choices,
-                default=choices[-1],
+                default=default_choice,
             ).execute_async()
+
+            if answer not in value_map:
+                return None, None
+
+            track, label = value_map[answer]
+            return track, label
 
         except KeyboardInterrupt:
             logger.info("User cancelled track selection")
             return None, None
         except Exception as e:
-            logger.exception("Failed to prompt for track selection: %s", e)
+            logger.exception("Track selection prompt failed: %s", e)
             return None, None
-
-        # 單選回傳
-        return value_map.get(answer, (None, None))
-
+    
     async def _auto_select_track(
         self, target: int, track_type: TrackType
     ) -> tuple[HLSVariant | HLSAudioTrack | HLSSubTrack | MediaTrack | SubtitleTrack | None, str | None]:
@@ -280,7 +288,7 @@ class PlaylistSelector:
             raise ValueError(f"{track_type.value} track not found for target {target}")
 
         best: tuple = max(candidates, key=lambda x: x[2])
-        #logger.info(f"Auto-select {Color.fg('sea_green')}{track_type.value}: {Color.reset()}{Color.fg('light_gray')}[{best[1].upper()}] @ {best[2] // 1000:,} kbps{Color.reset()}")
+        logger.info(f"Auto-select {Color.fg('sea_green')}{track_type.value}: {Color.reset()}{Color.fg('light_gray')}[{best[1].upper()}] @ {best[2] // 1000:,} kbps{Color.reset()}")
         return best[0], best[1]
 
     def _gather_all(self) -> tuple[list[Any], list[str]]:
