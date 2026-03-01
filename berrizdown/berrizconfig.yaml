@@ -62,7 +62,7 @@ TimeZone:
 
 KeyService:
   # None, playready, widevine, remote_widevine, remote_playready | watora, http_api
-  source: None
+  source: remote_widevine
 
 remote_cdm:
   - name: "playready"
