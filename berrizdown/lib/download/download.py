@@ -3,15 +3,13 @@ import os
 import socket
 import random
 import sys
-import time
-from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from functools import cached_property
-from io import BytesIO
 from typing import Any, Never, Optional, Union
 
 import aiohttp
+import aiofiles
 from aiohttp import ClientTimeout, ClientResponse
 
 from berrizdown.lib.__init__ import use_proxy
@@ -145,13 +143,9 @@ class MediaDownloader:
             self._thread_pool.shutdown(wait=True)
             self._thread_pool = None
 
-    async def download_file(
-        self,
-        url: str,
-        save_path: Path,
-    ) -> bool:
+    async def download_file(self, url: str, save_path: Path) -> bool:
+        """下載單一檔案 失敗時使用指數退避重試"""
         save_path.parent.mkdir(parents=True, exist_ok=True)
-
         max_retries: int = int(CFG["VideoDownload"]["max_retries"])
 
         for attempt in range(max_retries):
@@ -162,30 +156,26 @@ class MediaDownloader:
                 return await self.attempt_download(url, save_path, attempt)
 
             except asyncio.CancelledError:
-                await self.handle_cancellation(url, save_path)
+                await self._cancel_cleanup(url, save_path)
                 return False
 
-            except (TimeoutError, aiohttp.ClientError) as e:
-                logger.warning(f"Download attempt {attempt + 1} failed: {e}")
+            except (TimeoutError, aiohttp.ClientError) as exc:
+                logger.warning(f"Download attempt {attempt + 1} failed: {exc}")
                 if attempt + 1 < max_retries:
                     await asyncio.sleep(2 ** (attempt + 1))
                 else:
                     logger.error(f"Download failed after {max_retries} retries: {url}")
                     return False
 
-            except Exception as e:
-                if str(e) == "Connection closed.":
+            except Exception as exc:
+                if str(exc) == "Connection closed.":
                     return False
-                logger.error(f"Unexpected error during download: {e}")
+                logger.error(f"Unexpected error during download: {exc}")
 
         return False
 
-    async def attempt_download(
-        self,
-        url: str,
-        save_path: Path,
-        attempt: int,
-    ) -> bool:
+    async def attempt_download(self, url: str, save_path: Path, attempt: int) -> bool:
+        """發出單次 GET 請求並串流寫入磁碟"""
         proxy: str = await _get_random_proxy() or ""
 
         async with self._session.get(url, proxy=proxy) as response:
@@ -199,36 +189,32 @@ class MediaDownloader:
 
             await self.stream_to_disk(response, save_path)
             return True
-
+    
     async def stream_to_disk(
         self,
         response: aiohttp.ClientResponse,
         save_path: Path,
     ) -> None:
-        buffer = BytesIO()
-        try:
-            async for chunk in response.content.iter_any():
-                buffer.write(chunk)
+        async with aiofiles.open(save_path, "wb") as fh:
+            async for chunk in response.content.iter_chunked(64 * 1024):
+                await fh.write(chunk)
 
-            buffer_data: bytes = buffer.getvalue()
-            loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
-            await loop.run_in_executor(
-                self.thread_pool,
-                lambda: save_path.write_bytes(buffer_data),
-            )
-        finally:
-            buffer.close()
-
-    async def handle_cancellation(
-        self,
-        url: str,
-        save_path: Path,
-    ) -> None:
+    async def _cancel_cleanup(self, url: str, save_path: Path) -> None:
         progress_manager.remove_all_progress_bars()
-        if self._session:
-            await self._session.close()
-        await self.force_remove_dir(save_path)
+        await self.close()
+        await self.force_remove_file(save_path)
         logger.info(f"Download cancelled: {url}")
+        
+    async def force_remove_file(self, path: Path) -> None:
+        try:
+            if path.exists():
+                path.unlink()
+                logger.info(
+                    f"{Color.fg('yellow_ochre')}Successfully removed "
+                    f"{Color.fg('denim')}{path}{Color.reset()}"
+                )
+        except OSError as exc:
+            logger.warning(f"Failed to remove file {path}: {exc}")
 
     def check_download_dir(self, folder_path: Path) -> bool:
         """檢查下載目錄是否存在"""
