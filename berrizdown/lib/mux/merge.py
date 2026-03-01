@@ -16,7 +16,9 @@ class MERGE:
     BUFFER_SIZE: int = 4 * 1024 * 1024
     
     @staticmethod
-    async def save_subtitle(track_language: str, subtitle_str: str, subtitle_path: Path) -> bool:
+    async def save_subtitle(
+        track_language: str, subtitle_str: str, subtitle_path: Path
+        ) -> bool:
         subtitle_path.parent.mkdirp()
         try:
             async with aiofiles.open(subtitle_path, mode='w', encoding='utf-8') as f:
