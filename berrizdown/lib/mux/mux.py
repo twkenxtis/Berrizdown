@@ -80,7 +80,14 @@ class FFmpegMuxer:
         loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         
         try:
-            for track_type in ("video", "audio"):
+            if paramstore.get("noaudio") is True:
+                track_tuple_type: tuple[str] = ("video",)
+            elif paramstore.get("novideo") is True:
+                track_tuple_type: tuple[str] = ("audio",)
+            else:
+                track_tuple_type: tuple[str, str] = ("video", "audio")
+
+            for track_type in track_tuple_type:
                 self.input_path: Path | None = getattr(self.dl_obj, track_type, None)
                 if self.input_path is None:
                     continue
@@ -246,7 +253,7 @@ class FFmpegMuxer:
         self.output_path: Path = Path(get_short_path_name(decrypted_file))
         
         if await self.decrypt(track_type, progress, loop):
-            # 更新新的解密路徑到dataclass物件            
+            # 更新新的解密路徑到dataclass物件   
             self.dl_obj.audio = decrypted_file if track_type == "audio" else self.dl_obj.audio
             self.dl_obj.video = decrypted_file if track_type == "video" else self.dl_obj.video
             return decrypted_file
