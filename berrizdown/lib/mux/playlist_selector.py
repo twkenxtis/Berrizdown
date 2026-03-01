@@ -122,8 +122,13 @@ class PlaylistSelector:
         actual_start, actual_end = None, None
         if self.start_time is not None or self.end_time is not None:
             paramstore._store["subtitle_offset_start"] = True
+            if self.start_time is None:
+                actual_start = 0.0
+                self.start_time = 0.0
+            else:
+                actual_start = self.start_time
             logger.info(f"Applying time filter: {self.start_time} → {self.end_time}")
-
+            
             # 分別過濾並獲取實際時間範圍
             selected_video, v_start, v_end = await self._apply_filters(selected_video, video_type)
             selected_audio, a_start, a_end = await self._apply_filters(selected_audio, audio_type)
