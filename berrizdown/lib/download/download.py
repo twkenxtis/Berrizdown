@@ -145,7 +145,7 @@ class MediaDownloader:
 
     async def download_file(self, url: str, save_path: Path) -> bool:
         """下載單一檔案 失敗時使用指數退避重試"""
-        save_path.parent.mkdir(parents=True, exist_ok=True)
+        save_path.parent.mkdirp()
         max_retries: int = int(CFG["VideoDownload"]["max_retries"])
 
         for attempt in range(max_retries):
@@ -156,7 +156,7 @@ class MediaDownloader:
                 return await self.attempt_download(url, save_path, attempt)
 
             except asyncio.CancelledError:
-                await self._cancel_cleanup(url, save_path)
+                await self.cancel_cleanup(url, save_path)
                 return False
 
             except (TimeoutError, aiohttp.ClientError) as exc:
@@ -196,49 +196,55 @@ class MediaDownloader:
         save_path: Path,
     ) -> None:
         async with aiofiles.open(save_path, "wb") as fh:
-            async for chunk in response.content.iter_chunked(64 * 1024):
+            async for chunk in response.content.iter_chunked(32 * 1024):
                 await fh.write(chunk)
 
-    async def _cancel_cleanup(self, url: str, save_path: Path) -> None:
+    async def cancel_cleanup(self, url: str, save_path: Path) -> None:
         progress_manager.remove_all_progress_bars()
         await self.close()
-        await self.force_remove_file(save_path)
-        logger.info(f"Download cancelled: {url}")
-        
-    async def force_remove_file(self, path: Path) -> None:
         try:
-            if path.exists():
-                path.unlink()
+            if save_path.exists():
+                save_path.unlink()
                 logger.info(
                     f"{Color.fg('yellow_ochre')}Successfully removed "
-                    f"{Color.fg('denim')}{path}{Color.reset()}"
+                    f"{Color.fg('denim')}{save_path}{Color.reset()}"
                 )
         except OSError as exc:
-            logger.warning(f"Failed to remove file {path}: {exc}")
-
+            logger.warning(f"Failed to remove file {save_path}: {exc}")
+        logger.info(f"Download cancelled: {url}")
+        
     def check_download_dir(self, folder_path: Path) -> bool:
         """檢查下載目錄是否存在"""
-        if not os.path.exists(folder_path):
-            paramstore._store["slice_path_fail"] = True
-            logger.warning(f"{Color.fg('light_gray')}Fail to create directory{Color.reset()}: {folder_path}")
+        if not folder_path.exists():
+            paramstore.set("slice_path_fail", True)
+            logger.warning(
+                f"{Color.fg('light_gray')}Fail to create directory"
+                f"{Color.reset()}: {folder_path}"
+            )
             return False
         return True
 
-    def mada_track_dir_path(self, track_type: str, track: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack) -> Path:
+    def mada_track_dir_path(
+        self,
+        track_type: str,
+        track: Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack],
+        ) -> Path:
         """生成軌道的目錄路徑"""
         if track_type == "subtitle":
             return self.base_dir / track_type / track.language
-        else:
-            return self.base_dir / track_type
+        return self.base_dir / track_type
 
-    async def _merge_track(self, track_type: str, track: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack) -> bool:
-        """合併軌道片段"""
+    async def merge_track(
+        self,
+        track_type: str,
+        track: Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack],
+    ) -> bool:
+        """合併初始化檔與所有分段 依軌道類型分派至對應合併方法"""
         track_dir: Path = self.mada_track_dir_path(track_type, track)
-        
         output_file: Path = self.base_dir / f"{track_type}.{container}"
 
-        init_files: list[Path] = list(track_dir.glob(f"init_{track_type}_.*"))
-        
+        init_files: list[Path] = list(track_dir.glob(f"init_{track_type}.*"))
+
         if not init_files:
             if paramstore.get("mpd_audio") is True and track_type == "audio":
                 logger.warning(f"Could not find {track_type} initialization file")
@@ -248,10 +254,13 @@ class MediaDownloader:
                 return False
 
         segments: list[Path] = sorted(
-            [p for p in track_dir.glob("seg_*.*") if len(p.stem.split("_")) == 3 and p.stem.split("_")[2].isdigit()],
+            [
+                p for p in track_dir.glob("seg_*.*")
+                if len(p.stem.split("_")) == 3 and p.stem.split("_")[2].isdigit()
+            ],
             key=lambda x: int(x.stem.split("_")[2]),
         )
-        
+
         if not segments:
             if paramstore.get("mpd_audio") is True and track_type == "audio":
                 logger.warning(f"No {track_type} fragment files found")
@@ -260,162 +269,245 @@ class MediaDownloader:
                 logger.warning(f"No {track_type} fragment files found")
                 return False
 
-        if len(segments) >= 1 and track_type != "subtitle":
-            result: bool = await MERGE.binary_merge(output_file, init_files, segments, track_type)
-            logger.debug(f"{Color.fg('light_gray')}Merge {track_type} tracks: {len(segments)} segments{Color.reset()}")
-            if result:
-                self.dl_obj.audio = output_file if track_type == "audio" else self.dl_obj.audio
-                self.dl_obj.video = output_file if track_type == "video" else self.dl_obj.video
-            return result
-        elif len(segments) >= 1 and track_type == "subtitle":
-            subtitle_str: str = SubtitleProcessor(track, segments).process_subtitle(init_files)
-            subtitle_path: Path = output_file.with_name(f"{track.language}{output_file.with_suffix('').suffix}.srt")
-            result: bool = await MERGE.save_subtitle(track.language, subtitle_str, subtitle_path)
-            if result:
-                self.dl_obj.subtitle[track.language] = subtitle_path
-            return result
+        if track_type == "subtitle":
+            return await self._merge_subtitle_track(track, output_file, init_files, segments)
 
-    async def download_track_with_manager(
+        return await self._merge_media_track(track_type, output_file, init_files, segments)
+
+    async def _merge_media_track(
         self,
-        track: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack,
+        track_type: str,
+        output_file: Path,
+        init_files: list[Path],
+        segments: list[Path],
+    ) -> bool:
+        """二進位合併 video / audio 分段"""
+        result: bool = await MERGE.binary_merge(output_file, init_files, segments, track_type)
+        logger.debug(
+            f"{Color.fg('light_gray')}Merge {track_type} tracks: "
+            f"{len(segments)} segments{Color.reset()}"
+        )
+
+        if result:
+            if track_type == "audio":
+                self.dl_obj.audio = output_file
+            elif track_type == "video":
+                self.dl_obj.video = output_file
+
+        return result
+
+    async def _merge_subtitle_track(
+        self,
+        track: Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack],
+        output_file: Path,
+        init_files: list[Path],
+        segments: list[Path],
+    ) -> bool:
+        """處理字幕軌道並輸出 .srt 檔案"""
+        subtitle_str: str = SubtitleProcessor(track, segments).process_subtitle(init_files)
+        subtitle_path: Path = output_file.with_name(
+            f"{track.language}{output_file.with_suffix('').suffix}.srt"
+        )
+        result: bool = await MERGE.save_subtitle(track.language, subtitle_str, subtitle_path)
+
+        if result:
+            self.dl_obj.subtitle[track.language] = subtitle_path
+
+        return result
+
+    async def download_track(
+        self,
+        track: Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack],
         track_type: str,
         progress_manager: MultiTrackProgressManager,
     ) -> bool:
-        """使用多軌管理器的下載方法"""
-        
+        """建立軌道目錄 先下載 init 再啟動分段下載"""
         track_dir: Path = self.mada_track_dir_path(track_type, track)
 
         try:
-            track_dir.mkdirp()
-        except FileNotFoundError as e:
-            logger.info(f"{Color.bg('firebrick')}The folder name may contain spaces, illegal characters, and cannot meet the specifications.{Color.reset()}")
-            paramstore._store["slice_path_fail"] = True
-            logger.error(e)
+            track_dir.mkdir(parents=True, exist_ok=True)
+        except (FileNotFoundError, OSError) as exc:
+            logger.info(
+                f"{Color.bg('firebrick')}The folder name may contain spaces or "
+                f"illegal characters and cannot meet the specifications.{Color.reset()}"
+            )
+            paramstore.set("slice_path_fail", True)
+            logger.error(exc)
             return False
 
         if not self.check_download_dir(track_dir):
             return False
-        
-        track_id: str = track.id
-        init_path: Path = track_dir / f"init_{track_type}_{Path(track.init_url).suffix}"
-        if track.init_url.rstrip("/").split("/")[-1].split(".")[0] == "init" and track.mime_type in ("video/mp4", "audio/mp4", "application/mp4"):
+
+        # 下載初始化片段（init segment）
+        init_path: Path = track_dir / f"init_{track_type}{Path(track.init_url).suffix}"
+        is_init_url: bool = track.init_url.rstrip("/").split("/")[-1].split(".")[0] == "init"
+        is_mp4: bool = track.mime_type in ("video/mp4", "audio/mp4", "application/mp4")
+
+        if is_init_url and is_mp4:
             if not await self.download_file(track.init_url, init_path):
-                logger.error(f"{track_type} Initialization file download failed")
+                logger.error(f"{track_type} initialization file download failed")
                 return False
 
-        logger.info(f"{Color.fg('light_gray')}Start downloading{Color.reset()} {Color.bg('cyan')}{track_type}{Color.reset()} track: {Color.fg('cyan')}{track_id}{Color.reset()}")
+        logger.info(
+            f"{Color.fg('light_gray')}Start downloading{Color.reset()} "
+            f"{Color.bg('cyan')}{track_type}{Color.reset()} track: "
+            f"{Color.fg('cyan')}{track.id}{Color.reset()}"
+        )
 
         if track.segment_urls:
-            return await self.task_and_dl_with_manager(track, track_dir, track_type, progress_manager)
+            return await self.batch_download_segments(
+                track, track_dir, track_type, progress_manager
+            )
 
         return True
 
-    async def task_and_dl_with_manager(
+    async def batch_download_segments(
         self,
-        track: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack,
+        track: Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack],
         track_dir: Path,
         track_type: str,
         progress_manager: MultiTrackProgressManager,
     ) -> bool:
-        """使用多軌管理器的批次下載方法"""
+        """並行下載所有分段 透過 semaphore 控制併發數 並即時更新進度條"""
         total: int = len(track.segment_urls)
         success_count: int = 0
         semaphore: asyncio.Semaphore = asyncio.Semaphore(CFG["VideoDownload"]["semaphore"])
-
-        progress: DownloadProgress = DownloadProgress(total_segments=total, completed_segments=0, current_bytes=0)
-
-        progress_bar = progress_manager.create_progress_bar(
-            track_type, total, f"{int(self.video_duration / 60)} min {int(self.video_duration % 60)} sec")
-
         progress_lock: asyncio.Lock = asyncio.Lock()
-            
-        async def bounded_download(i: int, url: str):
+
+        progress: DownloadProgress = DownloadProgress(
+            total_segments=total,
+            completed_segments=0,
+            current_bytes=0,
+        )
+
+        duration_label: str = (
+            f"{int(self.video_duration / 60)} min "
+            f"{int(self.video_duration % 60)} sec"
+        )
+        progress_bar = progress_manager.create_progress_bar(
+            track_type, total, duration_label
+        )
+
+        async def _download_segment(index: int, url: str) -> bool:
             async with semaphore:
-                seg_path: Path = track_dir / f"seg_{track_type}_{i}{Path(url).suffix}"
-                susscess_bool: bool = await self.download_file(url, seg_path)
+                seg_path: Path = track_dir / f"seg_{track_type}_{index}{Path(url).suffix}"
+                success: bool = await self.download_file(url, seg_path)
                 async with progress_lock:
                     progress.completed_segments += 1
-                return susscess_bool
+                return success
 
-        tasks: asyncio.Task = [bounded_download(i, url) for i, url in enumerate(track.segment_urls)]
+        coros = [
+            _download_segment(i, url)
+            for i, url in enumerate(track.segment_urls)
+        ]
 
         try:
-            for coro in asyncio.as_completed(tasks):
-                susscess_bool: bool = await coro
-                success_count += int(susscess_bool)
+            for fut in asyncio.as_completed(coros):
+                success: bool = await fut
+                success_count += int(success)
                 progress_bar.update(download_progress=progress)
         except asyncio.CancelledError:
             progress_manager.remove_all_progress_bars()
-            if self._session:
-                await self._session.close()
+            await self.close()
             logger.info("Download cancelled")
             return False
-        
+
         return success_count == total
 
-    async def download_content(self, mpd_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack) -> tuple[bool, DownloadObjection]:
-        """下載所有軌道內容"""
+    async def download_content(
+        self,
+        mpd_content: Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack],
+    ) -> tuple[bool, DownloadObjection]:
+        """下載所有軌道內容 完成後自動合併並清理資源"""
         try:
-            track_tasks: list[tuple[str, MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack]] = []
-            match paramstore.get("subs_only"):
-                case True:
-                    logger.info(f"{Color.fg('tomato')}【Subs only mode】{Color.reset()}")
-                    if mpd_content.sub_track:
-                        for hlssubtrack in mpd_content.sub_track:
-                           track_tasks.append(("subtitle", hlssubtrack))
-                case _:
-                    if mpd_content.audio_track:
-                        track_tasks.append(("audio", mpd_content.audio_track))
-                    if mpd_content.video_track:
-                        track_tasks.append(("video", mpd_content.video_track))
-                    if mpd_content.sub_track:
-                        for hlssubtrack in mpd_content.sub_track:
-                            track_tasks.append(("subtitle", hlssubtrack))
-                
-            # 啟動進度條
-            if len(track_tasks) > 0:
-                progress_manager.start()
-                
-            tasks: list[asyncio.Task] = []
-            for track_type, track in track_tasks:
-                task: asyncio.Task = self.download_track_with_manager(track, track_type, progress_manager)
-                tasks.append(task)
+            track_tasks: list[tuple[str, Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack]]] = (
+                self.build_track_tasks(mpd_content)
+            )
 
-            if tasks:
-                try:
-                    await asyncio.gather(*tasks, return_exceptions=True)
-                except asyncio.CancelledError:
-                    await self.close()
-                    sys.exit(1)
-                    
-            # 關閉進度條
-            if len(track_tasks) > 0:
+            if track_tasks:
+                progress_manager.start()
+
+            dl_tasks = [
+                self.download_track(track, track_type, progress_manager)
+                for track_type, track in track_tasks
+            ]
+
+            if dl_tasks:
+                results = await asyncio.gather(*dl_tasks, return_exceptions=True)
+                for res in results:
+                    if isinstance(res, asyncio.CancelledError):
+                        await self.close()
+                        sys.exit(1)
+                    if isinstance(res, Exception):
+                        logger.error(f"Track download error: {res}")
+
+            if track_tasks:
                 progress_manager.stop()
 
-            # 合併軌道
-            if paramstore.get("skip_merge") is not True:
-                merge_results: list[bool] = []
-                if mpd_content.video_track:
-                    merge_results.append(await self._merge_track("video", mpd_content.video_track))
-                if mpd_content.audio_track:
-                    merge_results.append(await self._merge_track("audio", mpd_content.audio_track))
-                if mpd_content.sub_track:
-                    for sub in mpd_content.sub_track:
-                        merge_results.append(await self._merge_track("subtitle", sub))
-                if all(merge_results):
-                    self.dl_obj.task_info = track_tasks
-                return all(merge_results), self.dl_obj
-            else:
-                logger.info(f"{Color.fg('light_gray')}Skip merge because --skip-merge is {Color.fg('cyan')}True{Color.reset()}")
+            if paramstore.get("skip_merge") is True:
+                logger.info(
+                    f"{Color.fg('light_gray')}Skip merge because --skip-merge is "
+                    f"{Color.fg('cyan')}True{Color.reset()}"
+                )
                 return False, self.dl_obj
+
+            return await self.merge_all_tracks(mpd_content, track_tasks)
+
         finally:
             await self.close()
 
-    async def force_remove_dir(self, path: Path) -> bool:
-        if path.exists():
-            path.unlink()
-            # shutil.rmtree(path, ignore_errors=False)
-            logger.info(f"{Color.fg('yellow_ochre')}Successfully removed {Color.fg('denim')}{path}{Color.reset()}")
+    def build_track_tasks(
+        self,
+        mpd_content: Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack],
+    ) -> list[tuple[str, Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack]]]:
+        """依下載模式建立軌道任務清單"""
+        track_tasks: list[tuple[str, Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack]]] = []
+
+        if paramstore.get("subs_only") is True:
+            logger.info(f"{Color.fg('tomato')}【Subs only mode】{Color.reset()}")
+            if mpd_content.sub_track:
+                for sub in mpd_content.sub_track:
+                    track_tasks.append(("subtitle", sub))
+        else:
+            if mpd_content.audio_track:
+                track_tasks.append(("audio", mpd_content.audio_track))
+            if mpd_content.video_track:
+                track_tasks.append(("video", mpd_content.video_track))
+            if mpd_content.sub_track:
+                for sub in mpd_content.sub_track:
+                    track_tasks.append(("subtitle", sub))
+
+        return track_tasks
+
+    async def merge_all_tracks(
+        self,
+        mpd_content: Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack],
+        track_tasks: list[tuple[str, Union[MediaTrack, HLSVariant, HLSSubTrack, SubtitleTrack]]],
+    ) -> tuple[bool, DownloadObjection]:
+        """依序合併 video audio，subtitle軌道併發合併"""
+        merge_results: list[bool] = []
+
+        if mpd_content.video_track:
+            merge_results.append(await self.merge_track("video", mpd_content.video_track))
+        if mpd_content.audio_track:
+            merge_results.append(await self.merge_track("audio", mpd_content.audio_track))
+
+        if mpd_content.sub_track:
+            sub_results = await asyncio.gather(
+                *[self.merge_track("subtitle", sub) for sub in mpd_content.sub_track],
+                return_exceptions=True,
+            )
+            for res in sub_results:
+                if isinstance(res, Exception):
+                    logger.error(f"Subtitle merge error: {res}")
+                    merge_results.append(False)
+                else:
+                    merge_results.append(res)
+
+        if all(merge_results):
+            self.dl_obj.task_info = track_tasks
+
+        return all(merge_results), self.dl_obj
 
 
 class Start_Download_Queue:
