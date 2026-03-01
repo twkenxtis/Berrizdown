@@ -5,6 +5,7 @@ from collections.abc import Iterable
 
 import pysubs2
 
+from berrizdown.lib.__init__ import printer_video_folder_path_info
 from berrizdown.static.color import Color
 from berrizdown.static.parameter import paramstore
 from berrizdown.lib.path import Path
@@ -17,7 +18,6 @@ from rich.progress import TaskID, track, Progress
 
 
 logger = setup_logging("subprocess", "periwinkle")
-
 
 class SubtitleProcessor:
     def __init__(
@@ -82,7 +82,15 @@ class SubtitleProcessor:
             return merge_srt
         else:
             raise ValueError(f"Unsupported subtitle type: {sub_type}")
-
+    
+    @staticmethod
+    def print_subtitle_info(subtitle_content: object) -> None:
+        for lang in subtitle_content.subtitle:
+            printer_video_folder_path_info(
+                subtitle_content.subtitle.get(lang),
+                subtitle_content.subtitle.get(lang).name,
+                f"{Color.fg('light_amber')}Subtitle {Color.reset()}"
+            )
 
 class STPPSubtitleExtractor:
     """
