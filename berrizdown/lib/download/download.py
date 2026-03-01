@@ -628,9 +628,9 @@ class Start_Download_Queue:
         v_resolution_choice, a_resolution_choice, video_codec = ConfigLoader._check_hls_dash(CFG)
 
         if paramstore.get("start_time") is not None:
-            start_time = self.video_start2end_time(paramstore.get("start_time"))
+            start_time: float = self.video_start2end_time(paramstore.get("start_time"))
         if paramstore.get("end_time") is not None:
-            end_time = self.video_start2end_time(paramstore.get("end_time"))
+            end_time: float = self.video_start2end_time(paramstore.get("end_time"))
             
         hls_content: HLSContent = await HLS_Paser().parse_playlist(self.raw_hls, self.playback_info.hls_playback_url)
         mpd_parser: MPDParser = MPDParser(self.raw_mpd, self.playback_info.dash_playback_url)
@@ -657,5 +657,5 @@ class Start_Download_Queue:
                     await self.start_download_queue(playlist_content, self.playback_info.duration)
 
     def video_start2end_time(self, time: float | int | str) -> float:
-        sort_time = video_start2end_time(time)
+        sort_time: float = video_start2end_time(time)
         return sort_time
