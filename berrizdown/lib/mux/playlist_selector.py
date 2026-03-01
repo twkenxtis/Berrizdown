@@ -721,6 +721,11 @@ class PlaylistSelector:
 
     def _update_paramstore(self, video_type: str | None, audio_type: str | None):
         """獲取 base URL"""
+
+        if {video_type, audio_type} == {None} and paramstore.get("subs_only") is not True:
+            logger.error("Must be choese at least one source type, video and audio all None")
+            raise KeyboardInterrupt
+        
         paramstore._store.update(
             {
                 "hls_video": video_type == "hls",
