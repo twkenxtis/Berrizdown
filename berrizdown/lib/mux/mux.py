@@ -177,13 +177,28 @@ class FFmpegMuxer:
                 else:
                     MKVTOOLNIX_path_str: str = get_short_path_name(MKVTOOLNIX_path)
                 
-                cmd = [
-                    MKVTOOLNIX_path_str,
-                    "-o",
-                    self.short_input_output_path_dict.get("output"),
-                    self.short_input_output_path_dict.get("video"),
-                    self.short_input_output_path_dict.get("audio"),
-                ]
+                if paramstore.get("novideo"):
+                    cmd: list[str] = [
+                        MKVTOOLNIX_path_str,
+                        "-o",
+                        self.short_input_output_path_dict.get("output"),
+                        self.short_input_output_path_dict.get("audio"),
+                    ]
+                elif paramstore.get("noaudio"):
+                    cmd: list[str] = [
+                        MKVTOOLNIX_path_str,
+                        "-o",
+                        self.short_input_output_path_dict.get("output"),
+                        self.short_input_output_path_dict.get("video"),
+                    ]
+                else:
+                    cmd: list[str] = [
+                        MKVTOOLNIX_path_str,
+                        "-o",
+                        self.short_input_output_path_dict.get("output"),
+                        self.short_input_output_path_dict.get("video"),
+                        self.short_input_output_path_dict.get("audio"),
+                    ]
 
                 # 如果有字幕，加入字幕混流參數
                 if len(self.subs) != 0:
@@ -193,7 +208,7 @@ class FFmpegMuxer:
                             "--language", f"0:{lang}",
                             subtitle_short
                         ])
-
+                        
                 try:
                     with progress:
                         task_id = progress.add_task(description="[cyan]Using mkvmerge mux...[/cyan]", total=None)
@@ -211,7 +226,7 @@ class FFmpegMuxer:
                         progress.update(task_id, description="[green]mkvmerge mux complete！[/green]")
 
                     if result.returncode != 0:
-                        logger.error(f"mkvmerge multiplexing failed:\n{result.stderr}")
+                        logger.error(f"mkvmerge multiplexing failed:\n{result}")
                         return False
                     logger.info(f"{Color.fg('gray')}Mixed flow completed: {self.temp_mux_path}{Color.reset()}")
                     return True
@@ -392,63 +407,69 @@ class FFmpegMuxer:
             "zh": "zho",
             "ja": "jpn",
         }
-        
-        command: list[str] = [
-            FFMPEG_path,
-            "-i",
-            self.short_input_output_path_dict.get("video"),
-        ]
 
-        input_index: int = 1
-        
-        if self.short_input_output_path_dict.get("audio") is not None:
-            command.extend(["-i", self.short_input_output_path_dict.get("audio")])
+        command: list[str] = [FFMPEG_path]
+
+        # 記錄輸入檔案順序
+        input_index = 0
+        has_video = False
+        has_audio = False
+
+        # 加入 video
+        if self.short_input_output_path_dict.get("video") and not paramstore.get("novideo"):
+            command.extend(["-i", self.short_input_output_path_dict["video"]])
+            has_video = True
             input_index += 1
 
-        subtitle_start_index: int = input_index
-        
+        # 加入 audio
+        if self.short_input_output_path_dict.get("audio") and not paramstore.get("noaudio"):
+            command.extend(["-i", self.short_input_output_path_dict["audio"]])
+            has_audio = True
+            input_index += 1
+
+        # 字幕起始 index
+        subtitle_start_index = input_index
+
+        # 加入字幕
         if len(self.subs) != 0 and container in ("mkv", "mp4"):
             map_commands: list[str] = []
-
-            is_mp4: str = container== "mp4"
+            is_mp4 = container == "mp4"
 
             for idx, (lang, subtitle_path) in enumerate(self.subs.items()):
                 if not subtitle_path:
                     continue
 
-                subtitle_short: str = get_short_path_name(subtitle_path)
+                subtitle_short = get_short_path_name(subtitle_path)
                 command.extend(["-i", subtitle_short])
 
-                lang_short: str = (lang or "").strip().lower()[:2]
-                lang_code: str = lang_map.get(lang_short, "und")
+                lang_short = (lang or "").strip().lower()[:2]
+                lang_code = lang_map.get(lang_short, "und")
 
-                map_commands.extend([
-                    "-map", f"{subtitle_start_index + idx}:s",
-                ])
+                map_commands.extend(["-map", f"{subtitle_start_index + idx}:s"])
 
                 if is_mp4:
                     map_commands.extend([f"-c:s:{idx}", "mov_text"])
                 else:
                     map_commands.extend(["-c:s", "copy"])
 
-                map_commands.extend([
-                    f"-metadata:s:s:{idx}", f"language={lang_code}"
-                ])
+                map_commands.extend([f"-metadata:s:s:{idx}", f"language={lang_code}"])
 
             command.extend(map_commands)
-            
-        command.extend(["-map", "0:v"])
-        
-        if self.short_input_output_path_dict.get("audio") is not None:
-            command.extend([
-                "-map", "1:a",
-                "-c:a", "copy",
-                ])
 
+        # 動態 map video/audio
+        if has_video:
+            command.extend(["-map", "0:v", "-c:v", "copy"])
+
+        if has_audio:
+            # 如果 video 存在，audio index 是 1；否則是 0
+            audio_index = 1 if has_video else 0
+            command.extend(["-map", f"{audio_index}:a", "-c:a", "copy"])
+
+        # 通用參數
         command.extend([
             "-buffer_size", "32M",
             "-y",
-            self.short_input_output_path_dict.get("output"),
+            self.short_input_output_path_dict["output"],
         ])
 
         return command
