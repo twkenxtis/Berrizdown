@@ -731,15 +731,6 @@ class PlaylistSelector:
         if audio_type is None:
             paramstore._store["noaudio"] = True
 
-        paramstore._store.update(
-            {
-                "hls_video": video_type == "hls",
-                "mpd_video": video_type == "mpd",
-                "hls_audio": audio_type == "hls",
-                "mpd_audio": audio_type == "mpd",
-            }
-        )
-
     def _get_base_url(self, video_type: str | None, audio_type: str | None) -> str:
         if video_type == "hls" or audio_type == "hls":
             return self.hls_content.base_url if self.hls_content else ""
