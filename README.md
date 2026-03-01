@@ -156,6 +156,7 @@ Use your **Berriz account and password** (not Google/Apple login):
 | `--save-dir` | Set output directory, and overwire berrizconfig.yaml |
 | `-S`, `--subs-only` | Only download subtitle tracks |
 | `-ns`, `--no-subs` | Do not download subtitle tracks |
+| `-sl`, `--slang` | Specify subtitle language `ask` `en,zh,ko,ja` `all` (ISO 639-1 or all or ask) |
 | `--keep-subs`, `--keepsubs` | When subtitle mux to MKV, keep sub file after done (default: false) |
 | `--cookies` FILE | Netscape formatted file to read cookies from and dump cookie jar in |
 | `--version`, `--v` | Show version |

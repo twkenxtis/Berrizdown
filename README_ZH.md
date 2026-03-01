@@ -166,6 +166,7 @@ uv run berrizdown -?
 | `--save-dir` | 指定下載的檔案夾路徑並覆蓋原始設定值 |
 | `-S`, `--subs-only` | 只下載字幕 |
 | `-ns`, `--no-subs` | 跳過下載字幕 |
+| `-sl`, `--slang` | 指定字幕語言 `ask` `en,zh,ko,ja` `all` (ISO 639-1 或 all 或 ask) |
 | `--keep-subs`, `--keepsubs` | 將字幕封裝到MKV容器時，完成後保留字幕檔（預設：false）|
 | `--cookies` FILE | Netscape格式化的檔案讀取cookie與轉儲cookie jar |
 | `--version`, `--v` | 顯示版本 |

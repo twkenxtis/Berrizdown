@@ -122,6 +122,8 @@ known_flags: list[str] = [
     "--keep-subs",
     "--keepsubs",
     "--cookies",
+    "--sl",
+    "--slang",
 ]
 
 
@@ -453,6 +455,14 @@ def apply_no_info(ctx, param, value):
     help="Filter by artis id",
 )
 @click.option(
+    "--sl",
+    "--slang",
+    "slang",
+    type=str,
+    multiple=True,
+    help="Language wanted for subtitles",
+)
+@click.option(
     "--save-dir",
     "savedir",
     type=str,
@@ -519,6 +529,7 @@ def main(
     no_subs: bool,
     keepsubs: bool,
     cookies_userinput: str,
+    slang: str|list,
     unknown: tuple,
 ) -> None:
     global _global_args
@@ -573,6 +584,7 @@ def main(
         "no_subs": no_subs,
         "keep-subs": keepsubs,
         "cookies_userinput": cookies_userinput,
+        "slang": slang,
     }
     ctx.obj = args_dict
     _global_args = args_dict
@@ -682,6 +694,11 @@ def main(
         paramstore._store["artisid"] = artisid
     else:
         paramstore._store["artisid"] = [""]
+
+    if slang:
+        paramstore._store["slang"] = slang
+    else:
+        paramstore._store["slang"] = [""]
 
     paramstore._store["mediaonly"] = mediaonly
     paramstore._store["liveonly"] = liveonly
@@ -918,8 +935,12 @@ def no_cache_key() -> bool:
     return _get_arg("no_cache_key", False)
 
 
-def artisid() -> str:
+def artisid() -> str | list:
     return _get_arg("artisid", "")
+
+
+def slang() -> str | list:
+    return _get_arg("slang", "")
 
 
 def version() -> bool:
