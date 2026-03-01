@@ -187,9 +187,6 @@ class Video_folder:
         return new_path, full_path, original_name
 
     def _ensure_uuid_in_original_name(self, full_path: Path, original_name: str) -> bool:
-        if paramstore.get("subs_only"):
-            return False
-        
         if str(self.media_id) not in str(full_path):
             logger.warning(f"UUID '{self.media_id}' not found in folder name: {original_name}")
             return False
