@@ -105,14 +105,6 @@ class ProgressBar:
         text.append("| ")
         text.append(f"{self.current}/{self.total}", style="yellow")
         text.append(" | ")
-        text.append(f"{self.speed_mbps:5.2f}", style="green")
-        text.append(" MB/s ", style="gray")
-        text.append("| ")
-        text.append(f"{self.downloaded_mb:6.1f}", style="blue")
-        text.append(" MB ", style="gray")
-        text.append("| ETA: ")
-        text.append(self._format_time(self.eta_seconds), style="magenta")
-        text.append(" | ")
         text.append(self.duration_seconds, style="purple")
 
         extra_info = []
