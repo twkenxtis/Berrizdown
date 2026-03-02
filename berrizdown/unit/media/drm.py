@@ -15,7 +15,7 @@ from berrizdown.static.PublicInfo import PublicInfo
 from berrizdown.unit.handle.handle_log import setup_logging
 from berrizdown.unit.http.request_berriz_api import Live, Playback_info, Public_context
 from berrizdown.unit.media.console_print import print_title
-from berrizdown.unit.media.drm_typing_dict import LivePlaybackResponse, PlaybackResponse, PublicResponse, SelectedMedia, SelectedMediaItem
+from berrizdown.unit.media.drm_typing_dict import LivePlaybackResponse, PlaybackResponse, PublicResponse, SelectedMedia
 from berrizdown.unit.media.keyhandle import Key_handle
 
 logger = setup_logging("drm", "tomato")
