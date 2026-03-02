@@ -579,10 +579,9 @@ class Start_Download_Queue:
         self,
         output_dir: Path,
         playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack,
-        video_duration: float,
         savejsondata: save_json_data,
     ) -> tuple[bool, DownloadObjection]:
-        self.downloader: MediaDownloader = MediaDownloader(self.public_info.media_id, output_dir, video_duration, savejsondata)
+        self.downloader: MediaDownloader = MediaDownloader(self.public_info.media_id, output_dir, self.playback_info.duration, savejsondata)
         success, dl_obj = await self.downloader.download_content(playlist_content)
         return success, dl_obj
 
@@ -605,7 +604,7 @@ class Start_Download_Queue:
         video_file_name, mux_bool_status = await s.when_success(success)
         return video_file_name, mux_bool_status
 
-    async def start_download_queue(self, playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack, video_duration: float) -> None:
+    async def start_download_queue(self, playlist_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack) -> None:
         """協調資料夾創建、資訊儲存、下載和後續處理的整個流程"""
         if playlist_content is None:
             logger.error("Failed to parse Playlist.")
@@ -615,7 +614,7 @@ class Start_Download_Queue:
         
         if output_dir is not None and output_dir.exists():
             savejsondata: save_json_data = await self.task_of_info(output_dir, custom_community_name, community_name, playlist_content)
-            success, dl_obj = await self.start_request_download(output_dir, playlist_content, video_duration, savejsondata)
+            success, dl_obj = await self.start_request_download(output_dir, playlist_content, savejsondata)
             self.dl_obj: DownloadObjection = dl_obj 
             # 處理成功後的混流 重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
