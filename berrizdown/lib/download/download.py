@@ -661,7 +661,7 @@ class Start_Download_Queue:
                 if paramstore.get("nodl") is True:
                     logger.info(f"{Color.fg('light_gray')}Skip downloading{Color.reset()}")
                 else:
-                    await self.start_download_queue(playlist_content, self.playback_info.duration)
+                    await self.start_download_queue(playlist_content)
 
     def _video_start2end_time(self, time: float | int | str) -> float:
         sort_time: float = video_start2end_time(time)
