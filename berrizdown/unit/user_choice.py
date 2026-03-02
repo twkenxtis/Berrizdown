@@ -22,47 +22,38 @@ Key = tuple[str, int]
 
 
 class InquirerPySelector:
-    def __init__(
-        self,
-        vod_list: list[dict[str, Any]],
-        photo_list: list[dict[str, Any]],
-        live_list: list[dict[str, Any]],
-        post_list: list[dict[str, Any]],
-        notice_list: list[dict[str, Any]],
-        cmt_list: list[dict[str, Any]],
-    ) -> None:
-        self.vod_items = vod_list
-        self.photo_items = photo_list
-        self.live_items = live_list
-        self.post_items = post_list
-        self.notice_list = notice_list
-        self.cmt_list = cmt_list
+    
+    ATTRS = ["vod_items", "photo_items", "live_items", "post_items", "notice_list", "cmt_list"]
+
+    def __init__(self, media) -> None:
+        self.vod_items = media.filter_vod_list
+        self.photo_items = media.filter_photo_list
+        self.live_items = media.filter_live_list
+        self.post_items = media.filter_post_list
+        self.notice_list = media.filter_notice_list
+        self.cmt_list = media.filter_cmt_list
 
     def _filter_items_by_title_regex(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        raw_value = paramstore.get("retitle")
-        match raw_value:
-            case None:
-                cleaned = ""
-            case _:
-                if raw_value.startswith("r"):
-                    raw_value = raw_value[1:]
-                if raw_value.startswith(("'", '"')) and raw_value.endswith(("'", '"')):
-                    raw_value = raw_value[1:-1]
-                cleaned = raw_value
-        pattern: str | None = rf"{cleaned}"
-        if not pattern:
+        raw_value: str = paramstore.get("retitle")
+        if raw_value is None:
             return items
 
-        compiled = re.compile(pattern, re.IGNORECASE | re.MULTILINE | re.DOTALL)
-        return [item for item in items if compiled.search(item.get("title", ""))]
+        if raw_value.startswith("r"):
+            raw_value: str = raw_value[1:]
+        if raw_value.startswith(("'", '"')) and raw_value.endswith(("'", '"')):
+            raw_value: str = raw_value[1:-1]
+
+        pattern = re.compile(raw_value, re.IGNORECASE | re.MULTILINE | re.DOTALL)
+        return [item for item in items if pattern.search(item.get("title", ""))]
 
     def filter_all_by_regex(self) -> None:
-        self.vod_items = self._filter_items_by_title_regex(self.vod_items)
-        self.photo_items = self._filter_items_by_title_regex(self.photo_items)
-        self.live_items = self._filter_items_by_title_regex(self.live_items)
-        self.post_items = self._filter_items_by_title_regex(self.post_items)
-        self.notice_list = self._filter_items_by_title_regex(self.notice_list)
-        self.cmt_list = self._filter_items_by_title_regex(self.cmt_list)
+        for attr in self.ATTRS:
+            # 透過 getattr 取得該屬性的值 例如 self.vod_items
+            items: tuple[str, int, dict[str, Any]] = getattr(self, attr)
+
+            # 呼叫 _filter_items_by_title_regex 依照 regex 過濾 items
+            # 回傳的結果會覆蓋原本的屬性值
+            setattr(self, attr, self._filter_items_by_title_regex(items))
 
     async def _populate_entries(self) -> list[tuple[str, int, dict[str, Any]]]:
         """Populate entries from all item lists concurrently."""
