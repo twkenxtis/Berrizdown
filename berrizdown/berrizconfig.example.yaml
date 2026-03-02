@@ -16,7 +16,7 @@ headers:
   # Enable fakeuseragent: false
   Fake-User-Agent: false
   # default user agent when fake-User-Agent is false
-  User-Agent: "Berrizdown / 0.2.3"
+  User-Agent: "Berrizdown / 0.2.4"
 
 output_template:
   video: '{date}.{title}.{community_name}.{quality}.{artis}.{source}.WEB-DL.{audio}.{video}-{tag}'
