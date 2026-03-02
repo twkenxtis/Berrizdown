@@ -89,230 +89,220 @@ ListDataTuple = tuple[
 
 
 class Handle_Choice:
+    
+    _BOARD_LABEL: dict[str, str] = {
+        "filter_vod_list": "VOD",
+        "filter_photo_list": "PHOTO",
+        "filter_live_list": "LIVE",
+        "filter_post_list": "POST",
+        "filter_notice_list": "NOTICE",
+        "filter_cmt_list": "CMT",
+    }
+
     def __init__(
         self,
-        community_id: int|None,
-        communityname: str|None,
-        custom_name: str|None,
+        community_id: int,
+        community_name: str,
+        custom_name: str | None = None,
         time_a: datetime | None = None,
         time_b: datetime | None = None,
-    ):
-        if community_id is None or communityname is None:
-            raise ValueError("Community ID or Community Name must be provided")
-        self.custom_communityname: str|None = custom_name
+    ) -> None:
         self.community_id: int = community_id
-        self.communityname: str = communityname
+        self.community_name: str = community_name
+        self.custom_community_name: str | None = custom_name
         self.time_a: datetime | None = time_a
         self.time_b: datetime | None = time_b
-        self.selected_media = None
-        self.fetcher = MediaFetcher(self.community_id, self.communityname, custom_name, self.time_a, self.time_b)
+        self.selected_media: SelectedMediaDict | None = None
+        self.fetcher = MediaFetcher(
+            self.community_id,
+            self.community_name,
+            self.custom_community_name,
+            self.time_a,
+            self.time_b,
+        )
 
-    async def get_list_data(self) -> ListDataTuple:
-        # Fetch all media lists concurrently
-        TYPE: str = ""
-        MediaLists([], [], [], [], [], [])
-        post_list: list[dict[str, Any]] = []
-        notice_list: list[dict[str, Any]] = []
-        cmt_list: list[dict[str, Any]] = []
-        board_result, media_result = await asyncio.gather(self._board_chunk(), self._media_chunk())
-        post_list, notice_list, cmt_list, TYPE = board_result
+    @property
+    def _active_conditions_1(self) -> int:
+        return sum(bool(paramstore.get(k)) for k in ("liveonly", "mediaonly", "photoonly"))
+
+    @property
+    def _active_conditions_2(self) -> int:
+        return sum(bool(paramstore.get(k)) for k in ("board", "noticeonly", "cmtonly"))
+
+    @property
+    def _active_conditions(self) -> int:
+        return self._active_conditions_1 + self._active_conditions_2
+
+    async def get_list_data(self) -> MediaLists:
+        board_result, media_result = await asyncio.gather(
+            self._board_chunk(), self._media_chunk()
+        )
+        post_list, notice_list, cmt_list, board_type = board_result
         vod_list, photo_list, live_list = media_result
 
-        match TYPE:
+        match board_type:
             case "artist":
-                if noticeonly is False:
-                    notice_list: list[dict[str, Any]] = []
-                    return MediaLists(
-                        vod_list,
-                        photo_list,
-                        live_list,
-                        post_list,
-                        notice_list,
-                        cmt_list,
-                    )
-            case "notice":
-                post_list: list[dict[str, Any]] = []
-                cmt_list: list[dict[str, Any]] = []
+                if not paramstore.get("noticeonly"):
+                    notice_list = []
                 return MediaLists(vod_list, photo_list, live_list, post_list, notice_list, cmt_list)
+            case "notice":
+                return MediaLists(vod_list, photo_list, live_list, [], notice_list, [])
             case "notice+board":
                 return MediaLists(vod_list, photo_list, live_list, post_list, notice_list, cmt_list)
             case "archive":
                 paramstore._store["enable_archive"] = True
                 return MediaLists(vod_list, photo_list, live_list, post_list, notice_list, cmt_list)
             case _:
-                post_list, cmt_list, notice_list = [], [], []
-                return MediaLists(vod_list, photo_list, live_list, post_list, notice_list, cmt_list)
+                return MediaLists(vod_list, photo_list, live_list, [], [], [])
 
-    async def _media_chunk(self) -> tuple[list[dict], list[dict], list[dict]]:
-        if active_conditions_1 != 0 or active_conditions_1 + active_conditions_2 == 0:
-            vod_list, photo_list, live_list = await self.fetcher.get_all_media_lists()
-        else:
-            vod_list, photo_list, live_list = [], [], []
-        return vod_list, photo_list, live_list
+    async def _media_chunk(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+        if self._active_conditions_1 != 0 or self._active_conditions == 0:
+            return await self.fetcher.get_all_media_lists()
+        return [], [], []
 
-    async def _board_chunk(self) -> tuple[list[dict], list[dict], list[dict], str]:
+    async def _board_chunk(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], str]:
+        data_list: list | list[list] = []
+        board_type: str = ""
+        post_list: list[dict[str, Any]] = []
+        notice_list: list[dict[str, Any]] = []
         cmt_list: list[dict[str, Any]] = []
-        post_list, notice_list = [], []
-        TYPE: str = ""
-        BO: Board = Board(
+
+        board = Board(
             self.community_id,
-            self.communityname,
-            self.custom_communityname,
+            self.community_name,
+            self.custom_community_name,
             self.time_a,
             self.time_b,
         )
-        if active_conditions_2 != 0 or active_conditions_1 + active_conditions_2 == 0:
-            data_list, TYPE = await BO.get_artis_board_list()
-        match TYPE:
+        if self._active_conditions_2 != 0 or self._active_conditions == 0:
+            data_list, board_type = await board.get_artis_board_list()
+
+        match board_type:
             case "artist":
                 post_list = data_list
-                notice_list = []
             case "notice":
-                post_list = []
                 notice_list = data_list
             case "notice+board":
-                post_list = data_list[0]
-                notice_list = data_list[1]
+                post_list, notice_list = data_list[0], data_list[1]
             case "archive":
-                post_list = data_list[0]
-                cmt_list = data_list[1]
-                notice_list = data_list[2]
-        return post_list, notice_list, cmt_list, TYPE
+                post_list, cmt_list, notice_list = data_list[0], data_list[1], data_list[2]
 
-    async def fetch_filtered_media(self) -> ListDataTuple:
-        # 接收 ListDataTuple, 5個 List[dict]
-        (
-            vod_list,
-            photo_list,
-            live_list,
-            post_list,
-            notice_list,
-            cmt_list,
-        ) = await self.get_list_data()
-        # If no conditions are True, return all lists
-        if active_conditions == 0:
-            return vod_list, photo_list, live_list, post_list, notice_list, cmt_list
-        # Initialize result lists based on corresponding flags
-        result_vod_list: list[dict[str, Any]] = vod_list if mediaonly else []
-        result_photo_list: list[dict[str, Any]] = photo_list if photoonly else []
-        result_live_list: list[dict[str, Any]] = live_list if liveonly else []
-        result_post_list: list[dict[str, Any]] = post_list if boardonly else []
-        result_notice_list: list[dict[str, Any]] = notice_list if noticeonly else []
-        result_cmt_list: list[dict[str, Any]] = cmt_list if cmtonly else []
+        return post_list, notice_list, cmt_list, board_type
+
+    async def fetch_filtered_media(self) -> FilteredMediaLists:
+        media = await self.get_list_data()
+
+        if self._active_conditions == 0:
+            return FilteredMediaLists(
+                media.vod_list,
+                media.photo_list,
+                media.live_list,
+                media.post_list,
+                media.notice_list,
+                media.cmt_list,
+            )
+
         return FilteredMediaLists(
-            result_vod_list,
-            result_photo_list,
-            result_live_list,
-            result_post_list,
-            result_notice_list,
-            result_cmt_list,
+            filter_vod_list=media.vod_list if paramstore.get("mediaonly") else [],
+            filter_photo_list=media.photo_list if paramstore.get("photoonly") else [],
+            filter_live_list=media.live_list if paramstore.get("liveonly") else [],
+            filter_post_list=media.post_list if paramstore.get("board") else [],
+            filter_notice_list=media.notice_list if paramstore.get("noticeonly") else [],
+            filter_cmt_list=media.cmt_list if paramstore.get("cmtonly") else [],
         )
 
-    async def handle_choice(self) -> SelectedMediaDict | None:
+    async def _build_media_list(self) -> SelectedMediaDict | None:
+        media = await self.fetch_filtered_media()
+
+        if paramstore.get("notify_mod") is True:
+            live = await NotifyFetcher().get_all_notify_lists(self.time_a, self.time_b)
+            media = media._replace(
+                filter_vod_list=[],
+                filter_photo_list=[],
+                filter_live_list=live,
+                filter_post_list=[],
+                filter_notice_list=[],
+                filter_cmt_list=[],
+            )
+
+        self.print_chosen_boards(media)
+        return await InquirerPySelector(
+            media.filter_vod_list,
+            media.filter_photo_list,
+            media.filter_live_list,
+            media.filter_post_list,
+            media.filter_notice_list,
+            media.filter_cmt_list,
+        ).run()
+
+    async def handle_choice(self) -> None:
         if paramstore.get("no_cookie") is not True:
             await request_my()
 
         if self.time_a is not None or self.time_b is not None:
-            self.printer_time_filter()
-        selected_media: SelectedMediaDict | None = await self.media_list()
+            self.print_time_filter()
+
+        selected_media: SelectedMediaDict | None = await self._build_media_list()
         if selected_media is None:
             logger.info(f"{Color.fg('apple_green')}Not found, exit{Color.reset()}")
             await BerrizAPIClient().close_session()
-        self.selected_media = await self.user_selected_media(selected_media)
-        self.printer_user_choese()
-        return await self.process_selected_media()
+            return None
 
-    def user_selected_board(
-        self,
-        filter_vod_list,
-        filter_photo_list,
-        filter_live_list,
-        filter_post_list,
-        filter_notice_list,
-        filter_cmt_list,
-    ) -> None:
-        temp_list = []
-
-        board_map = {
-            "VOD": filter_vod_list,
-            "PHOTO": filter_photo_list,
-            "LIVE": filter_live_list,
-            "POST": filter_post_list,
-            "NOTICE": filter_notice_list,
-            "CMT": filter_cmt_list,
-        }
-
-        for name, value in board_map.items():
-            if value:
-                temp_list.append(name)
-        if temp_list != []:
-            logger.info("Choese boards: " + "|".join(f"{Color.fg('yellow' if i % 2 == 0 else 'khaki')}{name}{Color.reset()}" for i, (name, value) in enumerate(board_map.items()) if value))
-
-    async def media_list(self):
-        # 接收 ListDataTuple, 6個 List[dict]
-        filter_media = await self.fetch_filtered_media()
-        (
-            filter_vod_list,
-            filter_photo_list,
-            filter_live_list,
-            filter_post_list,
-            filter_notice_list,
-            filter_cmt_list,
-        ) = filter_media
-
-        self.user_selected_board(
-            filter_vod_list,
-            filter_photo_list,
-            filter_live_list,
-            filter_post_list,
-            filter_notice_list,
-            filter_cmt_list,
-        )
-        selected_media = await InquirerPySelector(
-            filter_vod_list,
-            filter_photo_list,
-            filter_live_list,
-            filter_post_list,
-            filter_notice_list,
-            filter_cmt_list,
-        ).run()
-        return selected_media
-
-    async def user_selected_media(self, selected_media: dict[str, list[dict[str, Any]]]) -> SelectedMediaDict:
-        if selected_media is None:
-            sys.exit(0)
         self.selected_media = selected_media
-        return self.selected_media
+        self.print_user_chosen()
+        await self.process_selected_media()
 
-    def printer_user_choese(self):
-        temp_messages = []
-        media_types = [
-            {"key": "vods", "color": "khaki", "label": "VOD"},
-            {"key": "photos", "color": "khaki", "label": "PHOTO"},
-            {"key": "lives", "color": "khaki", "label": "Live"},
-            {"key": "post", "color": "khaki", "label": "Post"},
-            {"key": "notice", "color": "khaki", "label": "Notice"},
-            {"key": "cmt", "color": "khaki", "label": "CMT"},
+    def print_chosen_boards(self, media: FilteredMediaLists) -> None:
+        active = [
+            (label, lst)
+            for key, lst in media._asdict().items()
+            if (label := Handle_Choice._BOARD_LABEL[key]) and lst
         ]
-        for media in media_types:
-            selected_list = self.selected_media.get(media["key"], [])
-            if len(selected_list) > 0:
-                count = len(selected_list)
-                color_name = media["color"]
-                label = media["label"]
+        if active:
+            label_str = "|".join(
+                f"{Color.fg('yellow' if i % 2 == 0 else 'khaki')}{name}{Color.reset()}"
+                for i, (name, _) in enumerate(active)
+            )
+            logger.info(f"Chosen boards: {label_str}")
 
-                formatted_item = f"{Color.fg(color_name)}{count} {Color.fg('light_gray')}{label}"
-                temp_messages.append(formatted_item)
-        if temp_messages:
-            combined_message = ", ".join(temp_messages)
-            logger.info(f"{Color.fg('light_gray')}choese {combined_message}{Color.reset()}")
+    def print_user_chosen(self) -> None:
+        if not self.selected_media:
+            return
+        media_types: list[tuple[str, str]] = [
+            ("vods", "VOD"),
+            ("photos", "PHOTO"),
+            ("lives", "Live"),
+            ("post", "Post"),
+            ("notice", "Notice"),
+            ("cmt", "CMT"),
+        ]
+        messages = [
+            f"{Color.fg('khaki')}{len(items)} {Color.fg('light_gray')}{label}"
+            for key, label in media_types
+            if (items := self.selected_media.get(key, []))
+        ]
+        if messages:
+            logger.info(
+                f"{Color.fg('light_gray')}Chosen: {', '.join(messages)}{Color.reset()}"
+            )
 
-    def printer_time_filter(self):
-        logger.info(f"{Color.fg('tomato')}choese {Color.fg('sand')}{self.time_a} {Color.fg('light_gray')}- {Color.fg('sand')}{self.time_b}{Color.reset()}")
+    def print_time_filter(self) -> None:
+        time_a = self.time_a.strftime("%Y-%m-%d %H:%M") if self.time_a else "—"
+        time_b = self.time_b.strftime("%Y-%m-%d %H:%M") if self.time_b else "—"
+        logger.info(
+            f"{Color.fg('tomato')}Time filter "
+            f"{Color.fg('sand')}{time_a} "
+            f"{Color.fg('light_gray')}- "
+            f"{Color.fg('sand')}{time_b}"
+            f"{Color.reset()}"
+        )
 
     async def process_selected_media(self) -> None:
-        processed_media: SelectedMediaDict = MediaJsonProcessor.process_selection(self.selected_media)
-        custom_media_types = [
+        assert self.selected_media is not None
+        processed_media: SelectedMediaDict = MediaJsonProcessor.process_selection(
+            self.selected_media
+        )
+        dispatch: list[tuple[str, str]] = [
             ("vods", "VOD"),
             ("lives", "LIVE"),
             ("photos", "PHOTO"),
@@ -320,10 +310,13 @@ class Handle_Choice:
             ("notice", "NOTICE"),
             ("cmt", "CMT"),
         ]
-        for k, type in custom_media_types:
-            if self.selected_media.get(k):
-                current_media_data = {k: self.selected_media[k]}
-                MP: Callable = MediaProcessor(current_media_data, self.community_id, self.communityname).process_media_queue
-                queue: MediaQueue = MediaQueue()
-                queue.enqueue_batch(processed_media[k], type)
-                await MP(queue)
+        for key, media_type in dispatch:
+            if not self.selected_media.get(key):
+                continue
+            queue = MediaQueue()
+            queue.enqueue_batch(processed_media[key], media_type)
+            await MediaProcessor(
+                {key: self.selected_media[key]},
+                self.community_id,
+                self.community_name,
+            ).process_media_queue(queue)
