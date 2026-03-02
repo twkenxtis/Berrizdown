@@ -35,7 +35,6 @@ class MediaLists(NamedTuple):
 
 
 class selected_media_list:
-    MediaLists([], [], [], [], [], [])
     post_list: list[dict[str, Any]] = []
     notice_list: list[dict[str, Any]] = []
     cmt_list: list[dict[str, Any]] = []
