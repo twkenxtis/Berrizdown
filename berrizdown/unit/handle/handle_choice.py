@@ -139,7 +139,6 @@ class Handle_Choice:
         )
         post_list, notice_list, cmt_list, board_type = board_result
         vod_list, photo_list, live_list = media_result
-
         match board_type:
             case "artist":
                 if not paramstore.get("noticeonly"):
@@ -167,7 +166,7 @@ class Handle_Choice:
         notice_list: list[dict[str, Any]] = []
         cmt_list: list[dict[str, Any]] = []
 
-        board = Board(
+        board: Board = Board(
             self.community_id,
             self.community_name,
             self.custom_community_name,
@@ -190,7 +189,7 @@ class Handle_Choice:
         return post_list, notice_list, cmt_list, board_type
 
     async def fetch_filtered_media(self) -> FilteredMediaLists:
-        media = await self.get_list_data()
+        media: MediaLists = await self.get_list_data()
 
         if self._active_conditions == 0:
             return FilteredMediaLists(
@@ -212,18 +211,7 @@ class Handle_Choice:
         )
 
     async def _build_media_list(self) -> SelectedMediaDict | None:
-        media = await self.fetch_filtered_media()
-
-        if paramstore.get("notify_mod") is True:
-            live = await NotifyFetcher().get_all_notify_lists(self.time_a, self.time_b)
-            media = media._replace(
-                filter_vod_list=[],
-                filter_photo_list=[],
-                filter_live_list=live,
-                filter_post_list=[],
-                filter_notice_list=[],
-                filter_cmt_list=[],
-            )
+        media: FilteredMediaLists = await self.fetch_filtered_media()
 
         self.print_chosen_boards(media)
         return await InquirerPySelector(
@@ -242,24 +230,23 @@ class Handle_Choice:
         if self.time_a is not None or self.time_b is not None:
             self.print_time_filter()
 
-        selected_media: SelectedMediaDict | None = await self._build_media_list()
-        if selected_media is None:
+        self.selected_media: SelectedMediaDict | None = await self._build_media_list()
+        if self.selected_media is None:
             logger.info(f"{Color.fg('apple_green')}Not found, exit{Color.reset()}")
             await BerrizAPIClient().close_session()
             return None
 
-        self.selected_media = selected_media
         self.print_user_chosen()
         await self.process_selected_media()
 
     def print_chosen_boards(self, media: FilteredMediaLists) -> None:
-        active = [
+        active: list[tuple[str, list[dict[str, Any]]]] = [
             (label, lst)
             for key, lst in media._asdict().items()
             if (label := Handle_Choice._BOARD_LABEL[key]) and lst
         ]
         if active:
-            label_str = "|".join(
+            label_str: str = "|".join(
                 f"{Color.fg('yellow' if i % 2 == 0 else 'khaki')}{name}{Color.reset()}"
                 for i, (name, _) in enumerate(active)
             )
@@ -276,7 +263,7 @@ class Handle_Choice:
             ("notice", "Notice"),
             ("cmt", "CMT"),
         ]
-        messages = [
+        messages: list[str] = [
             f"{Color.fg('khaki')}{len(items)} {Color.fg('light_gray')}{label}"
             for key, label in media_types
             if (items := self.selected_media.get(key, []))
