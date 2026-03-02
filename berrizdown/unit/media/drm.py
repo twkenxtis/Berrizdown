@@ -70,33 +70,6 @@ class BerrizProcessor:
     def Public_context(self) -> Public_context:
         return Public_context()
 
-    def _log_skipped_media(self, media_item: SelectedMediaItem) -> None:
-        """Log information about skipped media when no cookie is available."""
-        logger.info(
-            f"{Color.bg('ruby')}Skip video because without cookie:{Color.reset()}{Color.fg('light_magenta')} {media_item['title']}{Color.reset()}",
-        )
-        logger.info(
-            f"{Color.fg('beige')}Mediatype: {media_item['mediaType']}{Color.reset()} "
-            f"{Color.fg('tan')}[{media_item['mediaId']}]{Color.reset()} "
-            f"{Color.fg('peach')}{media_item['thumbnailUrl']}{Color.reset()} "
-            f"{Color.fg('teal')}isFanclubOnly:{media_item['isFanclubOnly']}{Color.reset()}"
-        )
-
-    def _handle_no_cookie_scenario(self) -> tuple[None, None]:
-        """Handle the case when no cookie is available."""
-        selected_media_list: list[SelectedMediaItem] | None = None
-
-        if self.selected_media.get("lives") is not None:
-            selected_media_list = self.selected_media.get("lives")
-        elif self.selected_media.get("vods") is not None:
-            selected_media_list = self.selected_media.get("vods")
-
-        if selected_media_list:
-            for media_item in selected_media_list:
-                self._log_skipped_media(media_item)
-
-        return None, None
-
     async def _fetch_vod_contexts(
         self,
     ) -> tuple[list[PlaybackResponse] | None, list[PublicResponse] | None]:
@@ -127,7 +100,7 @@ class BerrizProcessor:
         list[PublicResponse] | None,
     ]:
         if paramstore.get("no_cookie"):
-            return self._handle_no_cookie_scenario()
+            raise KeyboardInterrupt("Cookie is not available.")
 
         if self.media_type == "VOD":
             return await self._fetch_vod_contexts()
@@ -210,17 +183,16 @@ class BerrizProcessor:
             raw_mpd = await self.Live.fetch_mpd(playback_info.dash_playback_url, use_proxy)
 
         if getattr(playback_info, "hls_playback_url", None):
-            response_hls = await self.Live.fetch_mpd(playback_info.hls_playback_url, use_proxy)
-            raw_hls = await rebuild_master_playlist(response_hls, playback_info.hls_playback_url)
+            response_hls: ClientResponse = await self.Live.fetch_mpd(playback_info.hls_playback_url, use_proxy)
+            raw_hls: str = await rebuild_master_playlist(response_hls, playback_info.hls_playback_url)
 
         key: list[str] | None = None
 
         if getattr(playback_info, "is_drm", None) is True:
-            key_handler = Key_handle(playback_info, self.media_id, raw_mpd)
-            pk = await key_handler.send_drm()
+            key_handler: Key_handle = Key_handle(playback_info, self.media_id, raw_mpd)
+            pk: tuple[list[str] | None, str] = await key_handler.send_drm()
             if pk:
-                key_list, media_id_from_drm = pk
-                key = key_list
+                key, media_id_from_drm = pk
             print_title(public_info, playback_info, key_handler, key)
         elif getattr(playback_info, "is_drm", None) is False:
             print_title(public_info, playback_info)
