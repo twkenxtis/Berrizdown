@@ -32,8 +32,8 @@ output_template:
 donwload_dir_name:
   download_dir: "Berriz.downloads"
   # Default Folder formact
-  #dir_name: "{date}.{community_name}.{source}.{artis}.{title}"
-  dir_name: "{date}.{community_name}.{source}.{artis}"
+  # dir_name: "{date}.{community_name}.{source}.{artis}.{title}"
+  dir_name: "{date}.{community_name}.{source}.{artis}.{title}"
   # Default Folder datetime
   date_formact: "%y%m%d"
 
