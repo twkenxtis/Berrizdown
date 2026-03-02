@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from datetime import datetime
 from typing import Any, NamedTuple, TypedDict
 
@@ -282,6 +283,12 @@ class Handle_Choice:
             f"{Color.fg('sand')}{time_b}"
             f"{Color.reset()}"
         )
+
+    async def user_selected_media(self, selected_media: dict[str, list[dict[str, Any]]]) -> SelectedMediaDict:
+        if selected_media is None:
+            sys.exit(0)
+        self.selected_media = selected_media
+        return self.selected_media
 
     async def process_selected_media(self) -> None:
         assert self.selected_media is not None
