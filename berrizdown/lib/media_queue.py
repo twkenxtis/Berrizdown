@@ -27,7 +27,7 @@ class MediaQueue:
                 if "mediaId" in item and "mediaType" in item:
                     self.enqueue(item["mediaId"], item["mediaType"])
         else:
-            raise TabError("Type must be POST LIVE VOD PHOTO")
+            raise TabError("Type must be POST LIVE VOD PHOTO CMT")
 
     def dequeue(self) -> tuple[str, str] | None:
         """Remove and return the next media ID and type from the queue."""
