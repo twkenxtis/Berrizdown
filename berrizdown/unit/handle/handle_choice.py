@@ -260,22 +260,6 @@ class Handle_Choice:
             filter_cmt_list,
         ) = filter_media
 
-        if paramstore.get("notify_mod") is True:
-            # notify_only
-            filter_live_list = await NotifyFetcher().get_all_notify_lists(self.time_a, self.time_b)
-            (
-                filter_vod_list,
-                filter_photo_list,
-                filter_post_list,
-                filter_notice_list,
-                filter_cmt_list,
-            ) = (
-                [],
-                [],
-                [],
-                [],
-                [],
-            )
         self.user_selected_board(
             filter_vod_list,
             filter_photo_list,
