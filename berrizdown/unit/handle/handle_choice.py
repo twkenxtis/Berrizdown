@@ -1,8 +1,6 @@
 import asyncio
-import sys
-from collections.abc import Callable
 from datetime import datetime
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, TypedDict
 
 from berrizdown.lib.artis.menu import Board
 from berrizdown.lib.media_queue import MediaQueue
@@ -77,7 +75,15 @@ class FilteredMediaLists(NamedTuple):
     filter_cmt_list: list[dict[str, Any]]
 
 
-SelectedMediaDict = dict[str, list[dict[str, Any]]]
+class SelectedMediaDict(TypedDict):
+    vods: list[dict[str, Any]]
+    photos: list[dict[str, Any]]
+    lives: list[dict[str, Any]]
+    post: list[dict[str, Any]]
+    notice: list[dict[str, Any]]
+    cmt: list[dict[str, Any]]
+    
+
 ListDataTuple = tuple[
     list[dict[str, Any]],
     list[dict[str, Any]],
@@ -279,9 +285,7 @@ class Handle_Choice:
 
     async def process_selected_media(self) -> None:
         assert self.selected_media is not None
-        processed_media: SelectedMediaDict = MediaJsonProcessor.process_selection(
-            self.selected_media
-        )
+        processed_media: SelectedMediaDict = MediaJsonProcessor.process_selection(self.selected_media)
         dispatch: list[tuple[str, str]] = [
             ("vods", "VOD"),
             ("lives", "LIVE"),

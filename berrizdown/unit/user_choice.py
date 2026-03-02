@@ -5,6 +5,8 @@ from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from typing import TypedDict
+
 from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 
@@ -17,8 +19,16 @@ logger = setup_logging("user_choice", "fresh_chartreuse")
 
 
 MediaItem = dict[str, str | dict[str, Any] | bool]
-SelectedMedia = dict[str, list[dict[str, Any]]]
 Key = tuple[str, int]
+
+
+class SelectedMedia(TypedDict):
+    vods: list[dict[str, Any]]
+    photos: list[dict[str, Any]]
+    lives: list[dict[str, Any]]
+    post: list[dict[str, Any]]
+    notice: list[dict[str, Any]]
+    cmt: list[dict[str, Any]]
 
 
 class InquirerPySelector:
@@ -26,12 +36,12 @@ class InquirerPySelector:
     ATTRS = ["vod_items", "photo_items", "live_items", "post_items", "notice_list", "cmt_list"]
 
     def __init__(self, media) -> None:
-        self.vod_items = media.filter_vod_list
-        self.photo_items = media.filter_photo_list
-        self.live_items = media.filter_live_list
-        self.post_items = media.filter_post_list
-        self.notice_list = media.filter_notice_list
-        self.cmt_list = media.filter_cmt_list
+        self.vod_items: list[dict[str, Any]] = media.filter_vod_list
+        self.photo_items: list[dict[str, Any]] = media.filter_photo_list
+        self.live_items: list[dict[str, Any]] = media.filter_live_list
+        self.post_items: list[dict[str, Any]] = media.filter_post_list
+        self.notice_list: list[dict[str, Any]] = media.filter_notice_list
+        self.cmt_list: list[dict[str, Any]] = media.filter_cmt_list
 
     def _filter_items_by_title_regex(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         raw_value: str = paramstore.get("retitle")
@@ -81,14 +91,14 @@ class InquirerPySelector:
 
         for disp_no, (t, idx, item) in enumerate(entries, start=1):
             display_map[disp_no] = (t, idx)
-            core: str = format_core(item, t)
+            core: str = self.format_core(item, t)
             prefix: str = "|Fanclub|" if item.get("isFanclubOnly") else "|Not Fanclub|"
             community_name = await custom_dict(await get_community(item.get("communityId")))
             if community_name is None:
                 community_name: str = f"{await get_community(item.get('communityId'))}"
             else:
                 community_name: str = f"{community_name}"
-            ts: str = await convert_to_korea_time(item["publishedAt"])
+            ts: str = self.convert_to_korea_time(item["publishedAt"])
             match core:
                 case "NOTICE-NO-INFO":
                     name = f"{disp_no:6d} {ts} {community_name} {prefix} {t.upper():6s} {item['title']} "
@@ -108,7 +118,7 @@ class InquirerPySelector:
             Choice("lall", name="(All Live)"),
             Choice("ball", name="(All POST)"),
             Choice("nall", name="(All NOTICE)"),
-            Choice("ccall", name="(All CMT)"),
+            Choice("call", name="(All CMT)"),
         ]
 
         # Show checkbox with quick commands + individual items
@@ -152,7 +162,7 @@ class InquirerPySelector:
     async def run(self) -> SelectedMedia | None:
         self.filter_all_by_regex()
 
-        entries = await self._populate_entries()
+        entries: list[tuple[str, int, dict[str, Any]]] = await self._populate_entries()
         if not entries:
             return None
 
@@ -183,10 +193,10 @@ class InquirerPySelector:
         picks: set[int] = set()
         if cmd == "range":
             # Enter secondary menu with all commands + checkbox
-            picks = await self._handle_range_selection(item_choices, display_map)
+            picks: set[int] = await self._handle_range_selection(item_choices, display_map)
         else:
             # Single item selection
-            picks = {cmd} if isinstance(cmd, int) else set()
+            picks: set[int] = {cmd} if isinstance(cmd, int) else set()
 
         return await self._collect(picks, display_map)
 
@@ -194,10 +204,10 @@ class InquirerPySelector:
         try:
             vods: list[dict[str, Any]] = [self.vod_items[idx] for n in picks if (t := display_map[n])[0] == "vod" for idx in [t[1]]]
             photos: list[dict[str, Any]] = [self.photo_items[idx] for n in picks if (t := display_map[n])[0] == "photo" for idx in [t[1]]]
-            lives = []
+            lives: list[dict[str, Any]] = []
             for n in picks:
                 if (t := display_map[n])[0] == "live":
-                    item = self.live_items[t[1]]
+                    item: dict[str, Any] = self.live_items[t[1]]
                     if item.get("live", {}).get("liveStatus") == "REPLAY":
                         lives.append(item)
                     else:
@@ -228,39 +238,37 @@ class InquirerPySelector:
                 "cmt": [],
             }
 
+    def convert_to_korea_time(self, iso_string_utc: str) -> str:
+        dt_utc: datetime = datetime.fromisoformat(iso_string_utc.replace("Z", "+00:00"))
+        dt_kst: datetime = dt_utc.astimezone(ZoneInfo("Asia/Seoul"))
+        formatted_string: str = dt_kst.strftime("%y%m%d_%H:%M")
+        return formatted_string
 
-async def convert_to_korea_time(iso_string_utc: str) -> str:
-    dt_utc: datetime = datetime.fromisoformat(iso_string_utc.replace("Z", "+00:00"))
-    dt_kst: datetime = dt_utc.astimezone(ZoneInfo("Asia/Seoul"))
-    formatted_string: str = dt_kst.strftime("%y%m%d_%H:%M")
-    return formatted_string
-
-
-def format_core(item: dict[str, Any], t: str) -> str:
-    try:
-        if t == "vod":
-            return f"{item['vod']['duration'] / 60:.1f}min"
-        elif t == "photo":
-            return f"{item['photo']['imageCount']} imgs"
-        elif t == "live":
-            match item["live"]["liveStatus"]:
-                case "REPLAY":
-                    return f"{item['live']['replay']['duration'] / 60:.1f}min, [Live, {item['communityArtists'][0]['name']}]"
-                case "END":
-                    return "NO-Replay"
-        elif t == "post" and item.get("imageInfo"):
-            image_count: str = f"{len(item.get('imageInfo')[1])}"
-            match image_count:
-                case "0":
-                    return f"POST-ONLY, [{item['index']['boardInfo']['name']}, {item['writer_name']}]"
-                case _:
-                    return f" ({image_count} imgs), [{item['index']['boardInfo']['name']}, {item['writer_name']}]"
-        elif t == "notice":
-            return "NOTICE-NO-INFO"
-        elif t == "cmt":
-            if item.get("imageCount", 0) > 0:
-                return f"COMMENT, ({item['imageCount']} imgs), [{item['board']['boardName']}, {item['userNickname']}]"
-            return f"COMMENT, [{item['board']['boardName']}, {item['userNickname']}]"
-    except TypeError:
-        return ""
-    return "unknown"
+    def format_core(self, item: dict[str, Any], t: str) -> str:
+        try:
+            if t == "vod":
+                return f"{item['vod']['duration'] / 60:.1f}min"
+            elif t == "photo":
+                return f"{item['photo']['imageCount']} imgs"
+            elif t == "live":
+                match item["live"]["liveStatus"]:
+                    case "REPLAY":
+                        return f"{item['live']['replay']['duration'] / 60:.1f}min, [Live, {item['communityArtists'][0]['name']}]"
+                    case "END":
+                        return "NO-Replay"
+            elif t == "post" and item.get("imageInfo"):
+                image_count: str = f"{len(item.get('imageInfo')[1])}"
+                match image_count:
+                    case "0":
+                        return f"POST-ONLY, [{item['index']['boardInfo']['name']}, {item['writer_name']}]"
+                    case _:
+                        return f" ({image_count} imgs), [{item['index']['boardInfo']['name']}, {item['writer_name']}]"
+            elif t == "notice":
+                return "NOTICE-NO-INFO"
+            elif t == "cmt":
+                if item.get("imageCount", 0) > 0:
+                    return f"COMMENT, ({item['imageCount']} imgs), [{item['board']['boardName']}, {item['userNickname']}]"
+                return f"COMMENT, [{item['board']['boardName']}, {item['userNickname']}]"
+        except TypeError:
+            return ""
+        return "unknown"
