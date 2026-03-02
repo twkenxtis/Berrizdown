@@ -126,8 +126,8 @@ class MediaProcessor:
         return True
 
     def print_process_items(self, media_ids: list[Any], item_name: str) -> None:
-        display = media_ids if len(media_ids) < 14 else media_ids[-13:]
-        suffix = "" if len(media_ids) < 14 else " ..."
+        display: list[tuple[str, str]] = media_ids if len(media_ids) < 14 else media_ids[-13:]
+        suffix: str = "" if len(media_ids) < 14 else " ..."
         logger.info(
             f"{Color.fg('light_gray')}Processing {item_name} IDs:{Color.reset()} "
             f"{Color.fg('periwinkle')}{display}{suffix}{Color.reset()} "
@@ -207,7 +207,7 @@ class MediaProcessor:
     async def _check_download_pkl(self, media_id: str | int) -> str | None:
         """Return media_id string if it already exists in the store, else None."""
         media_id_str = str(media_id)
-        active = any(
+        active: bool = any(
             dup is False for dup in (image_dup, video_dup, post_dup, notice_dup, cmt_dup)
         )
         return media_id_str if active and self.store.exists(media_id_str) else None
@@ -291,7 +291,7 @@ class MediaProcessor:
             except asyncio.CancelledError:
                 logger.warning(f"{Color.fg('yellow')}Media processing cancelled{Color.reset()}")
 
-    async def check_duplicate(self, media_type: str) -> bool:
+    def check_duplicate(self, media_type: str) -> bool:
         if image_dup is False and media_type == "PHOTO":
             return True
         elif video_dup is False and media_type == "VOD" and paramstore.get("key") is None:
