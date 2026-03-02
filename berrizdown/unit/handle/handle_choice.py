@@ -214,14 +214,7 @@ class Handle_Choice:
         media: FilteredMediaLists = await self.fetch_filtered_media()
 
         self.print_chosen_boards(media)
-        return await InquirerPySelector(
-            media.filter_vod_list,
-            media.filter_photo_list,
-            media.filter_live_list,
-            media.filter_post_list,
-            media.filter_notice_list,
-            media.filter_cmt_list,
-        ).run()
+        return await InquirerPySelector(media).run()
 
     async def handle_choice(self) -> None:
         if paramstore.get("no_cookie") is not True:
