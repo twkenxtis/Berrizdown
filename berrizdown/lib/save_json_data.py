@@ -5,7 +5,6 @@ from typing import Any
 from urllib.parse import urlparse
 
 import aiofiles
-import httpx
 import orjson
 
 from berrizdown.static.color import Color
@@ -77,18 +76,18 @@ class save_json_data:
 
     async def _write_file(self, file_path: Path, content: str | bytes) -> None:
         """Write content to a file with retry logic using aiofiles."""
-        mode = "w" if isinstance(content, str) else "wb"
+        mode: str = "w" if isinstance(content, str) else "wb"
         is_text_mode: bool = "b" not in mode
 
         try:
-            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.parent.mkdirp()
         except Exception as e:
             raise RuntimeError(f"Failed to create parent directory for {file_path}: {e}")
-        resolve_file_path = await resolve_conflict_path(file_path)
+        resolve_file_path: Path = await resolve_conflict_path(file_path)
         if is_text_mode and isinstance(content, bytes):
-            content = content.decode("utf-8")
+            content: str = content.decode("utf-8")
         elif not is_text_mode and isinstance(content, str):
-            content = content.encode("utf-8")
+            content: str = content.encode("utf-8")
 
         for attempt in range(self.max_retries):
             try:
@@ -123,7 +122,7 @@ class save_json_data:
             meta_data_path = self.info_path
         return name, meta_data_path
 
-    async def mpd_to_folder(self, raw_mpd: httpx.Response) -> None:
+    async def mpd_to_folder(self, raw_mpd: str) -> None:
         """Save MPD content (expecting an object with a .text attribute) to manifest.mpd"""
         match paramstore.get("noplaylist"):
             case True:
@@ -135,8 +134,7 @@ class save_json_data:
                 try:
                     if paramstore.get("nosubfolder") is True:
                         self.output_dir = self.output_dir.parent
-                    content: str = raw_mpd
-                    await self._write_file(meta_data_path / f"{mpd_file_name}.mpd", content)
+                    await self._write_file(meta_data_path / f"{mpd_file_name}.mpd", raw_mpd)
                     self.put_console_output(
                         meta_data_path / f"{mpd_file_name}.mpd",
                         f"{mpd_file_name}.mpd",
@@ -212,17 +210,15 @@ class save_json_data:
                 if not thumbnail_url:
                     logger.warning("No thumbnail URL found")
                     return
-                response: httpx.Response = await GetRequest().get_request(thumbnail_url, use_proxy)
-                thumbnail_url
+                response: bytes = await GetRequest().get_request(thumbnail_url, use_proxy)
                 thumbnail_file_name, meta_data_path = self.play_list_meta(CFG["output_template"]["image_file_name"])
                 output_thumbnail_name: str = f"{thumbnail_file_name}_Thumbnail"
-                ext = Path(urlparse(thumbnail_url).path).suffix
+                ext: str = Path(urlparse(thumbnail_url).path).suffix
                 temp_path: Path = await resolve_conflict_path(meta_data_path / f"{output_thumbnail_name}{ext}")
                 save_path: Path = temp_path.with_suffix(ext)
                 try:
-                    content: bytes = response
                     async with aiofiles.open(save_path, "wb") as f:
-                        await f.write(content)
+                        await f.write(response)
                     self.put_console_output(
                         save_path,
                         output_thumbnail_name,
