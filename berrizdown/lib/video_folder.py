@@ -1,4 +1,3 @@
-import asyncio
 from datetime import datetime
 from functools import cached_property
 from uuid import UUID
