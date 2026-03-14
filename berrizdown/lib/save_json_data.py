@@ -189,7 +189,7 @@ class save_json_data:
             case True:
                 logger.info(f"{Color.fg('light_gray')}Skip downloading{Color.reset()} {Color.fg('light_gray')}Video INFO JSON")
             case _:
-                json_data: tuple[dict[str, Any]] = (self.str2orjson_dict(),)
+                json_data: tuple[dict[str, Any]] = (self.str2orjson_dict,)
                 serialized: bytes = orjson.dumps(
                     json_data,
                     option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS,
@@ -232,6 +232,7 @@ class save_json_data:
                     logger.error(f"Thumbnail download failed: {e}")
                     raise RuntimeError("Thumbnail download failed") from e
 
+    @property
     def str2orjson_dict(self) -> tuple[dict[str, Any]]:
         json_data: dict[str, Any] = {}
         public_dict: dict[str] = orjson.loads(self.playback_info.to_json())
