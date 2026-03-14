@@ -19,11 +19,6 @@ from berrizdown.unit.http.request_berriz_api import Arits, Community, BerrizAPIC
 logger = setup_logging("menu", "ivory")
 
 
-boardonly: bool | None = paramstore.get("board")
-noticeonly: bool | None = paramstore.get("noticeonly")
-cmtonly: bool | None = paramstore.get("cmtonly")
-
-
 class Board_ERROR_Hanldle:
     @classmethod
     def board_error_handle(cls, json_data: dict[str, Any], boards_name: str) -> None:
@@ -37,6 +32,11 @@ class Board_ERROR_Hanldle:
 
 
 class Board:
+    
+    boardonly: bool | None = paramstore.get("board")
+    noticeonly: bool | None = paramstore.get("noticeonly")
+    cmtonly: bool | None = paramstore.get("cmtonly")
+    
     def __init__(
         self,
         community_id: int,
@@ -64,10 +64,11 @@ class Board:
     def cmt(self) -> "CMT":
         return CMT(self.communityid, self.communityname)
 
-    async def match_noticeonly(self, choices: list[dict[str, Any]]) -> list[dict[str, Any] | None]:
-        
+    async def match_noticeonly(self, choices: list[dict[str, str | dict[str, str]]]) -> tuple[dict[str, str], list[dict[str, str] | None]]:
+        selected_list: list[dict[str, str] | None] = []
         match choices:
             case []:
+                del selected_list
                 return {
                     "type": "board",
                     "iconType": "artist",
@@ -75,30 +76,36 @@ class Board:
                     "name": "Unable to automatically select",
                 }, []
             case _:
-                selected_list = []
-                selected: dict[str, Any] | None = None
-                choices = [c for c in choices]
-                filterchoice = [c for c in choices if c["value"]["type"] != "notice"]
-                if filterchoice != []:
-                    selected_notice = self.selected_notice(choices)
-                    if noticeonly is True and boardonly is False and cmtonly is False:
+                """
+                Based on the flags and filtered options, decide whether to include a notice
+                and select the user's final choice interactively or automatically choese
+                """
+                filtered_choices: list[dict[str, str | dict[str, str]]] = [choice for choice in choices if choice["value"]["type"] != "notice"]
+                if filtered_choices != []:
+                    selected_notice: dict[str, str] = self.selected_notice(choices)
+                    if self.noticeonly is True and self.boardonly is False and self.cmtonly is False:
                         selected_list.append(selected_notice)
                         selected = selected_notice
-                    elif noticeonly == boardonly or noticeonly == cmtonly or boardonly == cmtonly:
+
+                    elif self.noticeonly == self.boardonly or self.noticeonly == self.cmtonly or self.boardonly == self.cmtonly:
                         selected_list.append(selected_notice)
                         try:
-                            selected = await self.call_inquirer(filterchoice)
+                            selected = await self.call_inquirer(filtered_choices)
                             selected_list.append(selected)
                         except TimeoutError:
                             selected = await self.call_auto_choese(choices)
                             selected_list.append(selected)
+
                     else:
                         try:
-                            selected = await self.call_inquirer(filterchoice)
+                            selected = await self.call_inquirer(filtered_choices)
                         except TimeoutError:
                             selected = await self.call_auto_choese(choices)
+                            
                     return selected, selected_list
+
                 else:
+                    del selected_list
                     return {
                         "type": "board",
                         "iconType": "artist",
@@ -124,8 +131,7 @@ class Board:
         for value in choices:
             if value["value"]["iconType"] == "artist":
                 logger.info(f"{Color.fg('light_gray')}Auto-selecting default Options {Color.fg('light_blue')}{value['value']['name']}{Color.reset()}")
-                selected = value["value"]
-                return selected
+                return value["value"]
         # 如我迴圈沒有符合條件返回模板預設
         return {
             "type": "board",
@@ -137,10 +143,9 @@ class Board:
     def selected_notice(self, choices: list[dict]) -> dict:
         for value in choices:
             if "notice" in value["value"]["type"].lower():
-                selected_notice = value["value"]
-                return selected_notice
+                return value["value"]
 
-    def make_choice(self, data: dict[str, Any]) -> list[dict[str, Any]]:
+    def make_choice(self, data: dict[str, Any]) -> list[dict[str, str | dict[str, str]]]:
         new_menu = {
             "type": "board",
             "iconType": "archive",
@@ -150,13 +155,14 @@ class Board:
         menus = data["data"].get("menus", [])
         menus.insert(0, new_menu)
 
-        choice = [{"name": f"{idx}. {i['name']}", "value": i} for idx, i in enumerate(menus) if i["name"].lower() not in ("media", "live")]
+        choice: list[dict[str, str | dict[str, str]]] = [{"name": f"{idx}. {i['name']}", "value": i} for idx, i in enumerate(menus) if i["name"].lower() not in ("media", "live")]
         return choice
 
     async def get_artis_board_list(self) -> tuple[Any, str] | None:
         community_menu: dict[str, Any] | None = await self.Community.community_menus(self.communityid, use_proxy)
         if community_menu is None:
             return None
+
         community_menu["data"]["menus"] = [
             m for m in community_menu["data"].get("menus", [])
             if m.get("type") not in {"calendar", "shop", "event"}
@@ -165,15 +171,11 @@ class Board:
         if selected is None:
             return None
 
-        selected_list: list[dict[str:Any]]
-        selected: dict[str]|None
-        _type: str
-        iconType: str
-        _id: int | str
-        name: str
         _type, iconType, _id, name = self.parse_user_select(selected)
+        
         logger.info(f"【{name}】[{iconType}] （{_id}）")
-        result_notice: list[dict[str]] = await self.handle_artist_notice(selected_list[0])
+        
+        result_notice: list[dict[str, Any]] = await self.handle_artist_notice(selected_list[0])
         return await self._get_artis_board_list(iconType, name, selected, selected_list, result_notice)
 
     async def _get_artis_board_list(
@@ -237,11 +239,11 @@ class Board:
             self.time_b,
         )
         post_list, __archive_cmt = await AC.archive()
-        archive_post_list = await BoardMain(post_list, self.time_a, self.time_b).main()
+        archive_post_list: list[dict[str, Any]] = await BoardMain(post_list, self.time_a, self.time_b).main()
         if paramstore.get("cmtonly") is False:
             archive_cmt = []
         else:
-            archive_cmt = await self.cmt.normalization(__archive_cmt)
+            archive_cmt: list[dict[str, Any]] = await self.cmt.normalization(__archive_cmt)
         return archive_post_list, archive_cmt
 
     async def handle_artist_notice(self, selected: dict[str, Any]|None) -> list[dict[str, Any]]:
@@ -264,6 +266,7 @@ class Board:
             return await Notice(self.communityid, self.communityname, self.custom_communityname).get_all_notice_content_lists()
         return None
 
+    @property
     def basic_sort_json(self) -> tuple[list[dict[str, Any]], dict[str, Any], bool]:
         if not self.json_data:
             return [], {}, False
@@ -289,7 +292,7 @@ class Board:
         params: dict[str, str | int] = {"pageSize": 100, "languageCode": "en"}
         self.json_data = await self._fetch_board_data(boards_id, params)
         contents: list[dict[str, Any]]
-        contents, params, hasNext = self.basic_sort_json()
+        contents, params, hasNext = self.basic_sort_json
         all_contents.extend(contents)
         Board_ERROR_Hanldle.board_error_handle(self.json_data, boards_name)
         if not hasNext:
@@ -304,7 +307,7 @@ class Board:
 
             self.json_data = result
             page_contents: list[dict[str, Any]]
-            page_contents, params, hasNext = self.basic_sort_json()
+            page_contents, params, hasNext = self.basic_sort_json
             if page_contents:
                 all_contents.extend(page_contents)
 
@@ -355,7 +358,7 @@ class Notice(Board):
 
         self.json_data = result
         contents: list[dict[str, Any]]
-        contents, _, hasNext = self.basic_sort_json()
+        contents, _, hasNext = self.basic_sort_json
         all_contents.extend(contents)
         Board_ERROR_Hanldle.board_error_handle(self.json_data, "NOTICE")
         if not hasNext:
@@ -372,14 +375,14 @@ class Notice(Board):
                 "languageCode": "en",
                 "next": next_int,
             }
-            result = await self.fetch_notice_content_lists(params)
+            result: dict[str, Any] | None = await self.fetch_notice_content_lists(params)
 
             if result is None:
                 break
 
-            self.json_data = result
+            self.json_data: dict[str, Any] | None = result
             page_contents: list[dict[str, Any]]
-            page_contents, _, hasNext = self.basic_sort_json()
+            page_contents, _, hasNext = self.basic_sort_json
 
             actual_cursor: dict[str, Any] = result.get("data", {}).get("cursor", {})
             actual_next: int | None = actual_cursor.get("next", None)
