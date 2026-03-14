@@ -33,12 +33,11 @@ from berrizdown.lib.account.change_pawword import Change_Password
 from berrizdown.lib.account.signup import run_signup
 from berrizdown.lib.path import Path
 from berrizdown.lib.interface.interface import Community_Uniqueness, StartProcess, URL_Parser
-from berrizdown.lib.load_yaml_config import CFG
 from berrizdown.mystate.parse_my import request_my
 from berrizdown.unit.community.community import get_community_print
 from berrizdown.unit.date.date import process_time_inputs
 from berrizdown.unit.handle.handle_choice import Handle_Choice
-from berrizdown.unit.http.request_berriz_api import BerrizAPIClient, GetRequest, WEBView
+from berrizdown.unit.http.request_berriz_api import BerrizAPIClient, WEBView
 BAPIClient: BerrizAPIClient = BerrizAPIClient()
 
 time1, time2 = time_date1(), time_date2()
