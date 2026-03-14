@@ -22,14 +22,15 @@ class RequestData(BaseModel):
 class Request:
     cookies: dict[str, str] = {
         "pcid": str(uuid.uuid4()),
+        "currency_code": "USD",
+        "country_code": "JP",
         "pacode": "fanplatf::app:android:phone",
-        "__T_": "1",
-        "__T_SECURE": "1",
     }
 
     headers: dict[str, str] = {
         "user-agent": f"{USERAGENT}",
         "accept": "application/json",
+        "accept-encoding": "gzip, deflate, br, zstd",
         "referer": "https://berriz.in/",
     }
 
