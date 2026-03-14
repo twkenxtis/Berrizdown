@@ -877,7 +877,7 @@ class URL_Parser:
         for url in urls:
             result = None
             if isinstance(url, str):
-                url = url.replace("/ko", "").replace("/en", "")
+                url: str = url.replace("/ko", "").replace("/en", "").replace("/ja", "").replace("/zh-Hans", "")
                 parsed = self.url2berrizin(self.urlparse(url))
                 
                 if parsed.netloc == "berriz.in":
