@@ -145,10 +145,10 @@ async def sign_up_main():
         sys.exit(0)
 
 def version_check() -> bool:
-    url = 'https://raw.githubusercontent.com/twkenxtis/Berrizdown/refs/heads/main/berrizdown/static/version.py'
+    url: str = "ttps://raw.githubusercontent.com/twkenxtis/Berrizdown/refs/heads/main/berrizdown/static/version.py"
     
     try:
-        v = requests.get(url).text
+        v: str = requests.get(url).text
     except requests.exceptions.RequestException:
         return False, ""
     
