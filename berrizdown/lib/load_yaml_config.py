@@ -697,7 +697,8 @@ class ConfigLoader:
         ConfigLoader.check_remote_cdm(config)
 
         # 9 CDM 區段
-        ConfigLoader._check_cdm(config)
+        if config.get("KeyService", {}).get("KeyService") != "none":
+            ConfigLoader._check_cdm(config)
 
         # 10 berriz 區段
         ConfigLoader._check_berriz(config)
