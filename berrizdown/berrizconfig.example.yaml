@@ -90,6 +90,12 @@ CDM:
   # "path \key\device\web_tv_os_1.1.3_sl300.prd"
   playready: 
 
+# CDM_EXAMPLE: Put your CDM File to path berrizdown\key\device\ then set the file name here
+#   (Name only not full path, allow without suffix but must be .wvd or .prd)
+#   widevine: aosp_7.1.2_12e5a_4410_l3.wvd
+#   (Name only not full path, allow without suffix but must be .wvd or .prd)
+#   playready: web_tv_os_1.1.3_sl300.prd
+
 berriz:
   # only support Berriz account no OAuth2 support (No Google/No Apple)
   # if using google or apple account use default.txt
