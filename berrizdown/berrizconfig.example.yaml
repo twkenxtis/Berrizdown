@@ -86,9 +86,9 @@ remote_cdm:
 
 CDM:
   # "path \key\device\aosp_7.1.2_12e5a_4410_l3.wvd"
-  widevine: 
+  widevine: AOSP_L3.wvd
   # "path \key\device\web_tv_os_1.1.3_sl300.prd"
-  playready: 
+  playready: SL2K.prd
 
 # CDM_EXAMPLE: Put your CDM File to path berrizdown\key\device\ then set the file name here
 #   (Name only not full path, allow without suffix but must be .wvd or .prd)
