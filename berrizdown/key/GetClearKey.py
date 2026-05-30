@@ -1,3 +1,5 @@
+import os
+
 from berrizdown.key.cdm_path import CDM_PATH
 from berrizdown.key.http_vault import HTTP_API
 from berrizdown.key.remotecdm_pr import Remotecdm_Playready
@@ -50,8 +52,9 @@ async def get_clear_key(wv_pssh: str, pr_pssh: str, acquirelicenseassertion_inpu
         prd_path_obj = Path(prd_device_path)
         final_path = prd_path_obj if prd_path_obj.exists() else prd_path_obj.with_name(prd_path_obj.name + ".prd")
         
-        if len(str(prd_device_path)) < 1:
+        if not prd_path_obj.suffix in ('.wvd', '.prd'):
             logger.warning(f"PlayReady CDM file not found: {final_path}")
+            logger.error(f"{os.getcwd()}\\key\\device\\CDMFILE not match berrizconfig.yaml CDM setting")
             return None
         pssh_input: str = pr_pssh
         prd_device_path = str(final_path)
@@ -65,10 +68,10 @@ async def get_clear_key(wv_pssh: str, pr_pssh: str, acquirelicenseassertion_inpu
         pssh_input: str = wv_pssh
     if drm_type == "widevine":
         original_path_obj = Path(wv_device_path)
-
-        final_path = original_path_obj if original_path_obj.exists() else original_path_obj.with_name(original_path_obj.name + ".wvd")
-        if len(str(wv_device_path)) < 1:
+        if not original_path_obj.suffix in ('.wvd', '.prd'):
+            final_path = original_path_obj if original_path_obj.exists() else original_path_obj.with_name(original_path_obj.name + ".wvd")
             logger.warning(f"Widevine CDM file not found. Neither the original path nor the .wvd fallback exists: {str(final_path)}")
+            logger.error(f"{os.getcwd()}\\key\\device\\CDMFILE not match berrizconfig.yaml CDM setting")
             return None
         wv_device_path = str(final_path)
         pssh_input: str = wv_pssh
