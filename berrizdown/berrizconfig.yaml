@@ -68,17 +68,17 @@ remote_cdm:
   - name: "playready"
     device_name: public
     security_level: 3000
-    host: https://cdrm-project.com/remotecdm/playready
-    secret: 'CDRM'
+    host: 
+    secret: 
   - name: "widevine"
     device_name: public
     device_type: 'ANDROID'
-    system_id: 22590
+    system_id: 
     security_level: 3
-    host: https://cdrm-project.com/remotecdm/widevine
-    secret: 'CDRM'
+    host: 
+    secret: 
   - name: "http_api"
-    host: https://cdrm-project.com/api/decrypt
+    host: 
 
 CDM:
   # "path \key\device\aosp_7.1.2_12e5a_4410_l3.wvd"

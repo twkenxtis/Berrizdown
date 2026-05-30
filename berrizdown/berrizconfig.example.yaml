@@ -66,29 +66,29 @@ TimeZone:
 
 KeyService:
   # None, playready, widevine, remote_widevine, remote_playready | watora, http_api
-  source: remote_widevine
+  source: None
 
 remote_cdm:
   - name: "playready"
     device_name: public
     security_level: 3000
-    host: https://cdrm-project.com/remotecdm/playready
-    secret: 'CDRM'
+    host: 
+    secret: 
   - name: "widevine"
     device_name: public
     device_type: 'ANDROID'
-    system_id: 22590
+    system_id: 
     security_level: 3
-    host: https://cdrm-project.com/remotecdm/widevine
-    secret: 'CDRM'
+    host: 
+    secret: 
   - name: "http_api"
-    host: https://cdrm-project.com/api/decrypt
+    host: 
 
 CDM:
   # "path \key\device\aosp_7.1.2_12e5a_4410_l3.wvd"
-  widevine: 
+  widevine: AOSP_L3.wvd
   # "path \key\device\web_tv_os_1.1.3_sl300.prd"
-  playready: 
+  playready: SL2K.prd
 
 # CDM_EXAMPLE: Put your CDM File to path berrizdown\key\device\ then set the file name here
 #   (Name only not full path, allow without suffix but must be .wvd or .prd)
