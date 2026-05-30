@@ -1,4 +1,5 @@
 import asyncio
+from logging import config
 import os
 import re
 import subprocess
@@ -430,11 +431,17 @@ class ConfigLoader:
         if not isinstance(cdm, dict):
             raise TypeError("CDM must be a dict")
 
-        CDM_FIELDS = {
-            "widevine": {"extension": ".wvd", "path_attr": "wv_device_path"},
-            "playready": {"extension": ".prd", "path_attr": "prd_device_path"},
-        }
+        # 根據berrizconfig.yaml的CDM設定 動態構建CDM_FIELDS配置
+        key_service = config.get("KeyService", {}).get("KeyService")
 
+        # 動態生成僅包含單一 Key 的 CDM_FIELDS
+        CDM_FIELDS = {
+            key_service: {
+                "extension": ".wvd" if key_service == "widevine" else ".prd",
+                "path_attr": "wv_device_path" if key_service == "widevine" else "prd_device_path"
+            }
+        } if key_service in ("widevine", "playready") else {}
+        print(CDM_FIELDS)
         for field_name, field_config in CDM_FIELDS.items():
             value = cdm.get(field_name)
             if value is None:
