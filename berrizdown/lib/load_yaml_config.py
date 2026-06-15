@@ -441,7 +441,6 @@ class ConfigLoader:
                 "path_attr": "wv_device_path" if key_service == "widevine" else "prd_device_path"
             }
         } if key_service in ("widevine", "playready") else {}
-        print(CDM_FIELDS)
         for field_name, field_config in CDM_FIELDS.items():
             value = cdm.get(field_name)
             if value is None:
