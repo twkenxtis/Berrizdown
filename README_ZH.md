@@ -31,7 +31,7 @@ git clone --depth=1 https://githubfast.com/twkenxtis/Berrizdown
 cd Berrizdown
 uv sync --index https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 打开berrizdown档案夹中的 berrizconfig.yaml 编辑设定， ctrl+F 搜索 Proxy_Enable
-调整成 true 并设定本地http(s)代理
+调整成 true 并设定本地http(s)代理IP地址和Port
 uv run berrizdown -?
 ```
 
@@ -39,17 +39,28 @@ uv run berrizdown -?
 # 必要條件
 #### Python 3.11 或更新版本
 - UV 需要在您的系統上安裝
+    - **[大陆地区uv环境参考此专案安装](https://github.com/Wangnov/uv-custom)**
+        macOS / Linux
+        ```sh
+        curl -LsSf https://uv.agentsmirror.com/install-cn.sh | sh
+        ```
+        Windows PowerShell
+        ```powershell
+        powershell -ExecutionPolicy ByPass -c "irm https://uv.agentsmirror.com/install-cn.ps1 | iex"
+        ```
+
+    - **一般環境UV安裝**
     [UV](https://docs.astral.sh/uv/getting-started/installation/)
-    到UV官網查看詳細資訊
-    ```
-    Windows:
-    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+        到UV官網查看詳細資訊
+        ```
+        Windows:
+        powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
-    Mac and Linux:
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+        Mac and Linux:
+        curl -LsSf https://astral.sh/uv/install.sh | sh
 
-    wget -qO- https://astral.sh/uv/install.sh | sh
-    ```
+        wget -qO- https://astral.sh/uv/install.sh | sh
+        ```
 
 > [!NOTE]
 > 確保完整閱讀 YAML 配置文件
