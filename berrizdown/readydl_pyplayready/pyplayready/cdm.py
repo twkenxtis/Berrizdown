@@ -94,8 +94,7 @@ class Cdm:
             self,
             session_id: bytes,
             wrm_header: Union[WRMHeader, str],
-            rev_lists: Optional[List[UUID]] = None,  # default: RevocationList.SupportedListIds
-            custom_data: Optional[str] = None
+            rev_lists: Optional[List[UUID]]=None  # default: RevocationList.SupportedListIds
     ) -> str:
         session = self.__sessions.get(session_id)
         if not session:
@@ -127,8 +126,7 @@ class Cdm:
             client_data=self._get_cipher_data(session),
             signing_key=self.signing_key,
             client_info=self.client_version,
-            revocation_lists=rev_lists,
-            custom_data=custom_data
+            revocation_lists=rev_lists
         )
         soap_message = SoapMessage.create(acquire_license_message)
 
