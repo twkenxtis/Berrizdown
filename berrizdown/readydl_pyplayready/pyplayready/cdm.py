@@ -144,6 +144,7 @@ class Cdm:
 
         return soap_message.dumps()
 
+
     def parse_license(self, session_id: bytes, soap_message: str) -> None:
         session = self.__sessions.get(session_id)
         if not session:
