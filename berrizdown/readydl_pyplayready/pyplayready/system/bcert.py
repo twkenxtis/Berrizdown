@@ -646,7 +646,13 @@ class CertificateChain(_BCertStructs):
         return self.get(0).get_security_level()
 
     def get_name(self) -> str:
-        return self.get(0).get_name()
+        for i in range(self.count()):
+            name = self.get(i).get_name()
+
+            if name is not None:
+                return name
+
+        raise InvalidCertificateChain("No certificate in the chain contains a name (manufacturer) attribute")
 
     def verify_chain(
             self,

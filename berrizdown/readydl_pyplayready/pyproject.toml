@@ -4,10 +4,10 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "pyplayready"
-version = "0.8.2"
+version = "0.8.5"
 description = "pyplayready CDM (Content Decryption Module) implementation in Python."
 license = "CC BY-NC-ND 4.0"
-authors = ["DevLARLEY, Erevoc", "DevataDev"]
+authors = ["DevLARLEY", "Erevoc", "DevataDev", "Sp4rky", "Xewdy"]
 readme = "README.md"
 repository = "https://git.gay/ready-dl/pyplayready"
 keywords = ["python", "drm", "playready", "microsoft"]

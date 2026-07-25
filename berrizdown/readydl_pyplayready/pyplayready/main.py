@@ -30,9 +30,9 @@ def main(version: bool, debug: bool) -> None:
     current_year = datetime.now().year
     copyright_years = f"2024-{current_year}"
 
-    log.info("readydl_pyplayready.pyplayready version %s Copyright (c) %s DevLARLEY, Erevoc, DevataDev", __version__, copyright_years)
-    log.info("https://git.gay/ready-dl/readydl_pyplayready.pyplayready")
-    log.info("Run 'readydl_pyplayready.pyplayready --help' for help")
+    log.info("pyplayready version %s Copyright (c) %s DevLARLEY, Erevoc, DevataDev, Sp4rky, Xewdy", __version__, copyright_years)
+    log.info("https://git.gay/ready-dl/pyplayready")
+    log.info("Run 'pyplayready --help' for help")
     if version:
         return
 
@@ -95,7 +95,7 @@ def license_(device_path: Path, pssh: PSSH, server: str) -> None:
 
 @main.command()
 @click.argument("device", type=Path)
-@click.option("-c", "--ckt", type=click.Choice(["aesctr", "aescbc"], case_sensitive=False), default="aesctr", help="Content Key Encryption Type")
+@click.option("-c", "--ckt", type=click.Choice(["AES128BitCTR", "AES128BitCBC"], case_sensitive=False), default="AES128BitCTR", help="Content Key Encryption Type")
 @click.option("-sl", "--security_level", type=click.Choice(["150", "2000", "3000"]), default="2000", help="Minimum Security Level")
 @click.pass_context
 def test(ctx: click.Context, device: Path, ckt: str, security_level: str) -> None:
@@ -514,7 +514,7 @@ def serve_(config_path: Path, host: str, port: int) -> None:
     Host as 127.0.0.1 may block remote access even if port-forwarded.
     Instead, use 0.0.0.0 and ensure the TCP port you choose is forwarded.
     """
-    from readydl_pyplayready.pyplayready.remote import serve
+    from pyplayready.remote import serve
     import yaml
 
     config = yaml.safe_load(config_path.read_text(encoding="utf8"))

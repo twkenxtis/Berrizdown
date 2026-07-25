@@ -1,3 +1,4 @@
+import time
 from typing import Optional
 
 from Crypto.Random import get_random_bytes
@@ -15,3 +16,4 @@ class Session:
         self.signing_key: Optional[ECCKey] = None
         self.encryption_key: Optional[ECCKey] = None
         self.keys: list[Key] = []
+        self.opened_at: float = time.time()

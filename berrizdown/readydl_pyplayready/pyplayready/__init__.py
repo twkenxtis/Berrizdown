@@ -16,4 +16,4 @@ from berrizdown.readydl_pyplayready.pyplayready.misc.revocation_list import *
 from berrizdown.readydl_pyplayready.pyplayready.misc.storage import *
 
 
-__version__ = "0.8.2"
+__version__ = "0.8.5"
