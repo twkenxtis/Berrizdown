@@ -125,7 +125,7 @@ Export your browser cookies in **Netscape format** while logged in with an activ
 
 After exporting the cookies:
 
-1. Copy `default.txt` to:
+1. Rename to `default.txt` then Copy to:
 
    ```text
    berrizdown\cookies\Berriz\
