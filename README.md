@@ -28,82 +28,195 @@ uv run berrizdown -?
 
 
 
-# Required
-#### Python 3.11 or higher
-- UV requires install in your sytem
-    [UV](https://docs.astral.sh/uv/getting-started/installation/)
-    check UV docs for more information
-    ```
-    Windows:
-    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+# berrizdown
 
-    Mac and Linux:
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+## Table of Contents
 
-    wget -qO- https://astral.sh/uv/install.sh | sh
-    ```
+* [Requirements](#requirements)
+
+  * [Python 3.11 or higher](#python-311-or-higher)
+  * [FFmpeg](#ffmpeg)
+* [Cookie / Login](#cookie--login)
+
+  * [Berriz Cookies](#1-berriz-cookies)
+  * [Berriz Account Login](#2-berriz-account-login)
+  * [`--cookies`](#3---cookies)
+* [Optional Tools](#optional-tools)
+
+  * [mp4decrypt](#mp4decrypt)
+  * [shaka-packager](#shaka-packager)
+  * [mkvmerge](#mkvmerge)
+
+---
+
+# Requirements
+
+## Python 3.11 or higher
+
+* **UV** requires installation on your system.
+
+  [UV Documentation](https://docs.astral.sh/uv/getting-started/installation/)
+
+  Check the UV documentation for more information.
+
+  **Windows:**
+
+  ```powershell
+  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+  ```
+
+  **macOS / Linux:**
+
+  ```bash
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+
+  Or:
+
+  ```bash
+  wget -qO- https://astral.sh/uv/install.sh | sh
+  ```
 
 > [!NOTE]
-> Make sure fully read and setting YAML config
-> `berrizconfig.yaml` and `berrizconfig.example.yaml` files in the berrizdown folder contain default values ​​and references
-- **YAML Config** \- Edit `berrizconfig.yaml` file to customize your settings
+> Make sure to fully read and configure the YAML settings.
+>
+> The `berrizconfig.yaml` and `berrizconfig.example.yaml` files in the `berrizdown` folder contain default values and references.
+>
+> * **YAML Config** — Edit `berrizconfig.yaml` to customize your settings.
 
+## FFmpeg
 
-#### FFmpeg only require when download videos
-Put ffmpeg in `berrizdown\\lib\\tools` and add ffmpeg name in `berrizconfig.yaml` or `ffmpeg` in system env
-- Windows: [AnimMouse's FFmpeg Builds](https://github.com/AnimMouse/ffmpeg-stable-autobuild/releases)
-- Linux: [John Van Sickle's FFmpeg Builds](https://johnvansickle.com/ffmpeg/)
+FFmpeg is only required when downloading videos.
 
-Put ffprobe in `berrizdown\\lib\\tools` and add ffprobe name in `berrizconfig.yaml` or `ffprobe` in system env
+Put `ffmpeg` in:
 
+```text
+berrizdown\lib\tools\
+```
 
+Then add the FFmpeg executable name to `berrizconfig.yaml`, or make sure `ffmpeg` is available in your system `PATH`.
+
+* **Windows:** [AnimMouse's FFmpeg Builds](https://github.com/AnimMouse/ffmpeg-stable-autobuild/releases)
+* **Linux:** [John Van Sickle's FFmpeg Builds](https://johnvansickle.com/ffmpeg/)
+
+Put `ffprobe` in:
+
+```text
+berrizdown\lib\tools\
+```
+
+Then add the FFprobe executable name to `berrizconfig.yaml`, or make sure `ffprobe` is available in your system `PATH`.
+
+---
 
 # Cookie / Login
 
-> ⚠️ Only Fanclub and Videos require cookie
+> ⚠️ **Only Fanclub and Videos require cookies.**
 
-1. Berriz Cookies
+## 1. Berriz Cookies
 
-Export your browser cookies in **Netscape format** while logged in with an active at the Berriz website:
+Export your browser cookies in **Netscape format** while logged in with an active Berriz account.
 
-- **Firefox**: [Get cookies.txt LOCALLY](https://addons.mozilla.org/en-US/firefox/addon/get-cookies-txt-locally/)
-- **Chromium**: [Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
+### Firefox
 
-📁 Copy `default.txt` to `berrizdown\\cookies\\Berriz` folder.  
-✅ Script only reads **default.txt** in NETSCAPE format.
+[Get cookies.txt LOCALLY](https://addons.mozilla.org/en-US/firefox/addon/get-cookies-txt-locally/)
 
----
+### Chromium
 
-1. Berriz Account Login
+[Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
 
-Use your **Berriz account and password** (not Google/Apple login):
+After exporting the cookies:
 
-1. Edit `[account:password]` in `berrizconfig.yaml` file.
+1. Copy `default.txt` to:
+
+   ```text
+   berrizdown\cookies\Berriz\
+   ```
+
+2. The script only reads **`default.txt`** in **Netscape cookie format**.
+
+## 2. Berriz Account Login
+
+Use your **Berriz account and password**.
+
+> ⚠️ Google / Apple login credentials cannot be used here.
+
+1. Edit the following section in `berrizconfig.yaml`:
+
+   ```yaml
+   account:password
+   ```
+
 2. Run:
 
-   ```
+   ```bash
    uv run berrizdown
    ```
 
+## 3. `--cookies`
+
+You can also specify a Netscape-formatted cookie file directly:
+
+```bash
+uv run berrizdown --cookies FILEPATH
+```
+
 ---
 
-1. `--cookies` FILEPATH with Netscape formatted file
+# Optional Tools
 
+## mp4decrypt
 
-### Optional
-**mp4decrypt** \- Required for Decrypting DRM content if want use `mp4decrypt` for decrypting [mp4decrypt](https://www.bento4.com/documentation/mp4decrypt/)
-* Put mp4decrypt in `berrizdown\\lib\\tools` and add mp4decrypt name in `berrizconfig.yaml` 
+Required for decrypting DRM content if you want to use `mp4decrypt`.
 
-**shaka-packager** \- Required for Decrypting DRM content if want use `shaka-packager` for decrypting
-[shaka-packager](https://github.com/shaka-project/shaka-packager)
-* Put shaka-packager in `berrizdown\\lib\\tools` and add shaka-packager name in `berrizconfig.yaml` or `shaka-packager` in system env
+[mp4decrypt Documentation](https://www.bento4.com/documentation/mp4decrypt/)
 
-**mkvmerge** \-\- Required for remuxing with `mkvtoolnix` or you can choese ffmpeg only [mkvtoolnix](https://mkvtoolnix.download/)
-* Put mkvmerge in `berrizdown\\lib\\tools` and add mkvmerge name in `berrizconfig.yaml` or `mkvmerge` in system env
+Put `mp4decrypt` in:
 
+```text
+berrizdown\lib\tools\
+```
+
+Then add the `mp4decrypt` executable name to `berrizconfig.yaml`.
+
+## shaka-packager
+
+Required for decrypting DRM content if you want to use `shaka-packager`.
+
+[Shaka Packager](https://github.com/shaka-project/shaka-packager)
+
+Put `shaka-packager` in:
+
+```text
+berrizdown\lib\tools\
+```
+
+Then add the `shaka-packager` executable name to `berrizconfig.yaml`, or make sure `shaka-packager` is available in your system `PATH`.
+
+## mkvmerge
+
+Required for remuxing with `mkvtoolnix`.
+
+Alternatively, you can use FFmpeg only.
+
+[MKVToolNix](https://mkvtoolnix.download/)
+
+Put `mkvmerge` in:
+
+```text
+berrizdown\lib\tools\
+```
+
+Then add the `mkvmerge` executable name to `berrizconfig.yaml`, or make sure `mkvmerge` is available in your system `PATH`.
+
+---
 
 > [!IMPORTANT]
-> If console show missing tool, please follow path and put it in `berrizdown\\lib\\tools`
+> If the console shows that a tool is missing, follow the path above and put the required executable in:
+>
+> ```text
+> berrizdown\lib\tools\
+> ```
 
 
 ## 🧾 Berrizdown CLI Options

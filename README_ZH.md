@@ -37,94 +37,200 @@ uv run berrizdown -?
 
 
 # 必要條件
-#### Python 3.11 或更新版本
-- UV 需要在您的系統上安裝
-    - **[大陆地区uv环境参考此专案安装](https://github.com/Wangnov/uv-custom)**
-        macOS / Linux
-        ```sh
-        curl -LsSf https://uv.agentsmirror.com/install-cn.sh | sh
-        ```
-        Windows PowerShell
-        ```powershell
-        powershell -ExecutionPolicy ByPass -c "irm https://uv.agentsmirror.com/install-cn.ps1 | iex"
-        ```
 
-    - **一般環境UV安裝**
-    [UV](https://docs.astral.sh/uv/getting-started/installation/)
-        到UV官網查看詳細資訊
-        ```
-        Windows:
-        powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+## Python 3.11 或更新版本
 
-        Mac and Linux:
-        curl -LsSf https://astral.sh/uv/install.sh | sh
+* UV 需要在您的系統上安裝
 
-        wget -qO- https://astral.sh/uv/install.sh | sh
-        ```
+  ### 大陸地區 UV 環境
+
+  [大陸地區 UV 環境參考此專案安裝](https://github.com/Wangnov/uv-custom)
+
+  **macOS / Linux**
+
+  ```sh
+  curl -LsSf https://uv.agentsmirror.com/install-cn.sh | sh
+  ```
+
+  **Windows PowerShell**
+
+  ```powershell
+  powershell -ExecutionPolicy ByPass -c "irm https://uv.agentsmirror.com/install-cn.ps1 | iex"
+  ```
+
+  ### 一般環境 UV 安裝
+
+  [UV](https://docs.astral.sh/uv/getting-started/installation/)
+
+  到 UV 官網查看詳細資訊
+
+  **Windows:**
+
+  ```powershell
+  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+  ```
+
+  **macOS / Linux:**
+
+  ```sh
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+
+  或：
+
+  ```sh
+  wget -qO- https://astral.sh/uv/install.sh | sh
+  ```
 
 > [!NOTE]
 > 確保完整閱讀 YAML 配置文件
-> berrizdown檔案夾內的`berrizconfig.yaml`, berrizconfig.example.yaml為預設值和參考
-- **YAML Config** \- 編輯 `berrizconfig.yaml` 檔案來確保你的客製設定
-
-
-#### FFmpeg 需求只有在需要下載影片
-將 ffmpeg 放到 `berrizdown\\lib\\tools` 和ffmpeg檔名寫入 `berrizconfig.yaml` 或 `ffmpeg` 已經在系統環境變數
-- Windows: [AnimMouse's FFmpeg Builds](https://github.com/AnimMouse/ffmpeg-stable-autobuild/releases)
-- Linux: [John Van Sickle's FFmpeg Builds](https://johnvansickle.com/ffmpeg/)
-
-將 ffprobe 放到 `berrizdown\\lib\\tools` 和ffprobe檔名寫入 `berrizconfig.yaml` 或 `ffprobe` 已經在系統環境變數
-
-
-
-# Cookie / Login
-
-> ⚠️ 只有Fanclub和影片才要求Cookie
-
-1. Berriz Cookies
-
-從你的瀏覽器導出 **Netscape format** 正常再Berriz登入的 cookie:
-
-- **Firefox**: [Get cookies.txt LOCALLY](https://addons.mozilla.org/en-US/firefox/addon/get-cookies-txt-locally/)
-- **Chromium**: [Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
-
-📁 複製 `default.txt` 到 `berrizdown\\cookies\\Berriz` 檔案夾內，確保在複製前重新命名.txt
-✅ 腳本只檢測 **default.txt** 並且是 Netscape 格式
+>
+> `berrizdown` 檔案夾內的 `berrizconfig.yaml`、`berrizconfig.example.yaml` 為預設值和參考
+>
+> * **YAML Config** — 編輯 `berrizconfig.yaml` 檔案來確保你的客製設定
 
 ---
 
-1. Berriz Account Login
+## FFmpeg
 
-使用 **Berriz 帳號 和 密碼** (非 Google/Apple login):
+FFmpeg 需求只有在需要下載影片時使用
 
-1. 編輯 `[account:password]` 在 `berrizconfig.yaml` 檔案
-2. 運行:
+將 `ffmpeg` 放到：
 
+```text
+berrizdown\lib\tools\
+```
+
+並將 ffmpeg 檔名寫入 `berrizconfig.yaml`，或確保 `ffmpeg` 已經存在於系統環境變數 `PATH`
+
+* **Windows:** [AnimMouse's FFmpeg Builds](https://github.com/AnimMouse/ffmpeg-stable-autobuild/releases)
+* **Linux:** [John Van Sickle's FFmpeg Builds](https://johnvansickle.com/ffmpeg/)
+
+將 `ffprobe` 放到：
+
+```text
+berrizdown\lib\tools\
+```
+
+並將 ffprobe 檔名寫入 `berrizconfig.yaml`，或確保 `ffprobe` 已經存在於系統環境變數 `PATH`
+
+---
+
+# Cookie / Login
+
+> ⚠️ **只有 Fanclub 和影片才要求 Cookie**
+
+## 1. Berriz Cookies
+
+從你的瀏覽器導出 **Netscape format**、正常在 Berriz 登入的 cookie
+
+### Firefox
+
+[Get cookies.txt LOCALLY](https://addons.mozilla.org/en-US/firefox/addon/get-cookies-txt-locally/)
+
+### Chromium
+
+[Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
+
+導出 cookie 後：
+
+1. 複製 `default.txt` 到：
+
+   ```text
+   berrizdown\cookies\Berriz\
    ```
+
+2. 確保在複製前重新命名為 `default.txt`
+
+3. 腳本只檢測 **`default.txt`**，並且要求為 **Netscape format**
+
+---
+
+## 2. Berriz Account Login
+
+使用 **Berriz 帳號和密碼**（非 Google / Apple login）
+
+1. 編輯 `berrizconfig.yaml` 檔案中的：
+
+   ```yaml
+   account:password
+   ```
+
+2. 運行：
+
+   ```bash
    uv run berrizdown
    ```
 
 ---
 
-1. 使用 `--cookies` 選項來指定 cookie 檔案路徑並要求為Netscape格式
+## 3. `--cookies`
 
+使用 `--cookies` 選項來指定 cookie 檔案路徑，並要求為 Netscape format
 
+```bash
+uv run berrizdown --cookies FILEPATH
+```
 
+---
 
-### 可選
-**mp4decrypt** \- 如果想要使用 `mp4decrypt` 解密 DRM 內容，則需要此檔案 [mp4decrypt](https://www.bento4.com/documentation/mp4decrypt/)
-* 將 mp4decrypt 放到 `berrizdown\\lib\\tools` 和在配置文件寫入mp4decrypt的檔名 `berrizconfig.yaml` 
+# 可選工具
 
-**shaka-packager** \- 如果您想要使用 `shaka-packager` 解密 DRM 內容，則需要此檔案
+## mp4decrypt
+
+如果想要使用 `mp4decrypt` 解密 DRM 內容，則需要此檔案
+
+[mp4decrypt](https://www.bento4.com/documentation/mp4decrypt/)
+
+將 `mp4decrypt` 放到：
+
+```text
+berrizdown\lib\tools\
+```
+
+並在 `berrizconfig.yaml` 配置文件寫入 `mp4decrypt` 的檔名
+
+---
+
+## shaka-packager
+
+如果您想要使用 `shaka-packager` 解密 DRM 內容，則需要此檔案
+
 [shaka-packager](https://github.com/shaka-project/shaka-packager)
-* 將 shaka-packager 放到 `berrizdown\\lib\\tools` 和在配置文件寫入shaka-packager的檔名 `berrizconfig.yaml` 或 `shaka-packager` 存在系統環境變數
 
-**mkvmerge** \-\- 使用 `mkvtoolnix` 進行重新封裝需要此工具，或者您也可以選擇僅使用 ffmpeg [mkvtoolnix](https://mkvtoolnix.download/)
-* 將 mkvmerge 放到 `berrizdown\\lib\\tools` 和在配置文件寫入mkvmerger的檔名 `berrizconfig.yaml` 或 `mkvmerge` 存在系統環境變數
+將 `shaka-packager` 放到：
 
+```text
+berrizdown\lib\tools\
+```
+
+並在 `berrizconfig.yaml` 配置文件寫入 `shaka-packager` 的檔名，或確保 `shaka-packager` 存在於系統環境變數 `PATH`
+
+---
+
+## mkvmerge
+
+使用 `mkvtoolnix` 進行重新封裝需要此工具，或者您也可以選擇僅使用 ffmpeg
+
+[MKVToolNix](https://mkvtoolnix.download/)
+
+將 `mkvmerge` 放到：
+
+```text
+berrizdown\lib\tools\
+```
+
+並在 `berrizconfig.yaml` 配置文件寫入 `mkvmerge` 的檔名，或確保 `mkvmerge` 存在於系統環境變數 `PATH`
+
+---
 
 > [!IMPORTANT]
-> 如果終端報錯提示缺少工具 請按造指引添加到路徑中 `berrizdown\\lib\\tools`
+> 如果終端報錯提示缺少工具，請按照指引添加到路徑：
+>
+> ```text
+> berrizdown\lib\tools\
+> ```
+
 
 
 ## 🧾 Berrizdown CLI 命令參數
@@ -466,27 +572,27 @@ AGPLv3 License - see [LICENSE](https://github.com/twkenxtis/Berrizdown/blob/main
 # 免責聲明
 
 <ol>
-  <li>使用者自行決定是否使用本專案，並承擔所有相關風險。作者對因使用本專案而引起的任何損失、責任或風險概不負責。</li>
-  <li>作者提供的程式碼和功能是基於現有知識和技術開發的成果。雖然作者盡一切努力確保程式碼的正確性和安全性符合當前技術標準，但並不保證程式碼完全沒有錯誤或缺陷。</li>
-  <li>本專案依賴於第三方函式庫、外掛程式或服務，這些元件各自受其原始的開源或商業許可協議管轄。使用者必須審查並遵守相應的協議。作者對第三方元件的穩定性、安全性或合規性不承擔任何責任。</li>
+  <li>使用者自行決定是否使用本專案，並承擔所有相關風險作者對因使用本專案而引起的任何損失、責任或風險概不負責</li>
+  <li>作者提供的程式碼和功能是基於現有知識和技術開發的成果雖然作者盡一切努力確保程式碼的正確性和安全性符合當前技術標準，但並不保證程式碼完全沒有錯誤或缺陷</li>
+  <li>本專案依賴於第三方函式庫、外掛程式或服務，這些元件各自受其原始的開源或商業許可協議管轄使用者必須審查並遵守相應的協議作者對第三方元件的穩定性、安全性或合規性不承擔任何責任</li>
   <li>使用者在使用本專案時必須嚴格遵守 
     <a href="https://github.com/twkenxtis/Berrizdown/blob/main/LICENSE">GNU Affero General Public License v3.0</a>，
     並須適當地承認使用了依據 
-    <a href="https://github.com/twkenxtis/Berrizdown/blob/main/LICENSE">GNU Affero General Public License v3.0</a> 授權的程式碼。
+    <a href="https://github.com/twkenxtis/Berrizdown/blob/main/LICENSE">GNU Affero General Public License v3.0</a> 授權的程式碼
   </li>
-  <li>使用者有責任研究使用本專案程式碼和功能時應適用的法律和法規，並必須確保其使用行為是合法且合規的。任何因違規而導致的法律責任或風險將完全由使用者自行承擔。</li>
-  <li><strong>使用者不得使用本工具從事任何侵犯智慧財產權的活動，包括但不限於未經授權地下載或散布受版權保護的內容。開發者不參與、不支持或認可任何非法獲取或散布內容的行為。</strong></li>
-  <li>本專案對使用者資料的收集、儲存、傳輸或其他處理活動的合規性不承擔任何責任。使用者必須遵守相關法律法規，並確保其行為合法適當。任何因不合規操作而產生的法律責任將完全由使用者自行承擔。</li>
-  <li>在任何情況下，使用者均不得將本專案的作者、貢獻者或任何相關方與其自身的使用行為相聯結，亦不得因使用本專案所造成的任何損失或損害而要求他們承擔責任。</li>
-  <li>作者不會提供任何付費版本的 Berrizdown 專案，也不會提供任何與 Berrizdown 專案相關的商業服務。</li>
-  <li>任何基於本專案的二次開發、修改或編譯與原作者無關。原作者對此類衍生行為或其結果不承擔任何責任。使用者應對二次開發所產生的任何後果承擔全部責任。</li>
-  <li>本專案並未授予使用者任何專利許可。若使用本專案導致專利爭議或侵權，使用者應承擔所有風險與責任。未經作者或權利人書面授權，使用者不得將本專案用於任何商業推廣、行銷或再授權。</li>
-  <li>作者保留終止對任何違反本免責聲明之使用者提供服務的權利，並可能要求銷毀任何已獲取的程式碼或衍生作品。</li>
-  <li>作者保留隨時更新本免責聲明的權利，恕不另行通知。繼續使用本專案將被視為接受修訂後的條款。</li>
+  <li>使用者有責任研究使用本專案程式碼和功能時應適用的法律和法規，並必須確保其使用行為是合法且合規的任何因違規而導致的法律責任或風險將完全由使用者自行承擔</li>
+  <li><strong>使用者不得使用本工具從事任何侵犯智慧財產權的活動，包括但不限於未經授權地下載或散布受版權保護的內容開發者不參與、不支持或認可任何非法獲取或散布內容的行為</strong></li>
+  <li>本專案對使用者資料的收集、儲存、傳輸或其他處理活動的合規性不承擔任何責任使用者必須遵守相關法律法規，並確保其行為合法適當任何因不合規操作而產生的法律責任將完全由使用者自行承擔</li>
+  <li>在任何情況下，使用者均不得將本專案的作者、貢獻者或任何相關方與其自身的使用行為相聯結，亦不得因使用本專案所造成的任何損失或損害而要求他們承擔責任</li>
+  <li>作者不會提供任何付費版本的 Berrizdown 專案，也不會提供任何與 Berrizdown 專案相關的商業服務</li>
+  <li>任何基於本專案的二次開發、修改或編譯與原作者無關原作者對此類衍生行為或其結果不承擔任何責任使用者應對二次開發所產生的任何後果承擔全部責任</li>
+  <li>本專案並未授予使用者任何專利許可若使用本專案導致專利爭議或侵權，使用者應承擔所有風險與責任未經作者或權利人書面授權，使用者不得將本專案用於任何商業推廣、行銷或再授權</li>
+  <li>作者保留終止對任何違反本免責聲明之使用者提供服務的權利，並可能要求銷毀任何已獲取的程式碼或衍生作品</li>
+  <li>作者保留隨時更新本免責聲明的權利，恕不另行通知繼續使用本專案將被視為接受修訂後的條款</li>
 </ol>
 <br>
 
-**在使用本專案的程式碼和功能之前，請仔細考量並接受上述免責聲明。如果您有任何疑問或不同意上述條款，請勿使用本專案的程式碼或功能。透過使用本專案的程式碼和功能，即視為您已充分理解並接受上述免責聲明，並自願承擔使用所產生的一切風險與後果。**
+**在使用本專案的程式碼和功能之前，請仔細考量並接受上述免責聲明如果您有任何疑問或不同意上述條款，請勿使用本專案的程式碼或功能透過使用本專案的程式碼和功能，即視為您已充分理解並接受上述免責聲明，並自願承擔使用所產生的一切風險與後果**
 
 
 
