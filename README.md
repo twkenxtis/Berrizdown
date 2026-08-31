@@ -550,3 +550,8 @@ https://github.com/ready-dl/pyplayready
 https://github.com/chu23465/VT-PR
 https://github.com/devine-dl/devine
 https://git.gay/ready-dl/pywidevine
+
+
+
+# DeepWiki AI This project info (Third-Party)
+https://deepwiki.com/twkenxtis/Berrizdown/

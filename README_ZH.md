@@ -606,3 +606,8 @@ https://github.com/ready-dl/pyplayready
 https://github.com/chu23465/VT-PR
 https://github.com/devine-dl/devine
 https://git.gay/ready-dl/pywidevine
+
+
+
+# DeepWiki AI本專案資訊 (第三方)
+https://deepwiki.com/twkenxtis/Berrizdown/
