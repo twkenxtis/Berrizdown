@@ -35,6 +35,19 @@ uv sync --index https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
 uv run berrizdown -?
 ```
 
+- [必要條件](#requirements) <-- 基本環境
+  - [Python 3.11 或更新版本](#python-311-or-higher) <-- UV / Python
+  - [FFmpeg](#ffmpeg) <-- 下載影片時需要
+
+- [Cookie / Login](#cookie--login) <-- 登入驗證
+  - [Berriz Cookies](#1-berriz-cookies) <-- 瀏覽器 Cookie
+  - [Berriz Account Login](#2-berriz-account-login) <-- 帳號登入
+  - [`--cookies`](#3---cookies) <-- Cookie 檔案
+
+- [可選工具](#optional-tools) <-- 額外工具
+  - [mp4decrypt](#mp4decrypt) <-- DRM 解密
+  - [shaka-packager](#shaka-packager) <-- DRM 解密
+  - [mkvmerge](#mkvmerge) <-- 重新封裝
 
 # 必要條件
   
