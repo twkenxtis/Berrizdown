@@ -58,7 +58,8 @@ uv run berrizdown -?
 
   Check the UV documentation for more information.
 
-    - Python 3.11 or higher
+  [Python 3.11 or higher]
+  
   **Windows:**
 
   ```powershell
