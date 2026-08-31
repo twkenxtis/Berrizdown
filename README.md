@@ -51,7 +51,6 @@ uv run berrizdown -?
 
 # Requirements
 
-## Python 3.11 or higher
 
 * **UV** requires installation on your system.
 
@@ -59,6 +58,7 @@ uv run berrizdown -?
 
   Check the UV documentation for more information.
 
+    - Python 3.11 or higher
   **Windows:**
 
   ```powershell
