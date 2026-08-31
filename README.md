@@ -30,8 +30,6 @@ uv run berrizdown -?
 
 # berrizdown
 
-## Table of Contents
-
 * [Requirements](#requirements)
 
   * [Python 3.11 or higher](#python-311-or-higher)
@@ -59,7 +57,7 @@ uv run berrizdown -?
   Check the UV documentation for more information.
 
   [Python 3.11 or higher]
-  
+
   **Windows:**
 
   ```powershell
