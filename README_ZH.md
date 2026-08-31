@@ -153,7 +153,7 @@ berrizdown\lib\tools\
 1. 編輯 `berrizconfig.yaml` 檔案中的：
 
    ```yaml
-   account:password
+   [account:password]
    ```
 
 2. 運行：
