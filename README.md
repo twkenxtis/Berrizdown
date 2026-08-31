@@ -30,19 +30,19 @@ uv run berrizdown -?
 
 # berrizdown
 
-- [Requirements](#requirements) <!-- Basic environment -->
-  - [Python 3.11 or higher](#python-311-or-higher) <!-- UV Python -->
-  - [FFmpeg](#ffmpeg) <!-- When Video download -->
+- [Requirements](#requirements) <-- Basic environment
+  - [Python 3.11 or higher](#python-311-or-higher) <-- UV Python
+  - [FFmpeg](#ffmpeg) <-- When Video download
 
-- [Cookie / Login](#cookie--login) <!-- Authentication -->
-  - [Berriz Cookies](#1-berriz-cookies) <!-- Browser cookies -->
-  - [Berriz Account Login](#2-berriz-account-login) <!-- Account login -->
-  - [`--cookies`](#3---cookies) <!-- Cookie file -->
+- [Cookie / Login](#cookie--login) <-- Authentication
+  - [Berriz Cookies](#1-berriz-cookies) <-- Browser cookies
+  - [Berriz Account Login](#2-berriz-account-login) <-- Account login
+  - [`--cookies`](#3---cookies) <-- Cookie file
 
-- [Optional Tools](#optional-tools) <!-- Optional tools -->
-  - [mp4decrypt](#mp4decrypt) <!-- DRM -->
-  - [shaka-packager](#shaka-packager) <!-- DRM -->
-  - [mkvmerge](#mkvmerge) <!-- Remux -->
+- [Optional Tools](#optional-tools) <-- Optional tools
+  - [mp4decrypt](#mp4decrypt) <-- DRM
+  - [shaka-packager](#shaka-packager) <-- DRM
+  - [mkvmerge](#mkvmerge) <-- Remux
 
 ---
 
