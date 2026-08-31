@@ -37,10 +37,10 @@ uv run berrizdown -?
 
 
 # 必要條件
-
-## Python 3.11 或更新版本
-
+  
 * UV 需要在您的系統上安裝
+  
+  [Python 3.11 or higher]
 
   ### 大陸地區 UV 環境
 
@@ -134,7 +134,7 @@ berrizdown\lib\tools\
 
 導出 cookie 後：
 
-1. 複製 `default.txt` 到：
+1. 更改cookie文本檔案名稱為 `default.txt`，複製到：
 
    ```text
    berrizdown\cookies\Berriz\

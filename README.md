@@ -125,7 +125,7 @@ Export your browser cookies in **Netscape format** while logged in with an activ
 
 After exporting the cookies:
 
-1. Rename to `default.txt` then Copy to:
+1. Rename to `default.txt` then Copy to path:
 
    ```text
    berrizdown\cookies\Berriz\
@@ -142,7 +142,7 @@ Use your **Berriz account and password**.
 1. Edit the following section in `berrizconfig.yaml`:
 
    ```yaml
-   account:password
+   [account:password]
    ```
 
 2. Run:
