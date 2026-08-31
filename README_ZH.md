@@ -6,15 +6,6 @@
 </p>
 
 # Berrizdown
-* **輕鬆安裝** \- UV 支持
-* **多種畫質** \- DASH/HLS 兩種協議支持
-* **DRM** \- 內建 Widevine and PlayReady
-* **Key** \- 遠程 CDM or 本地 Key 資料庫
-* **持久化** \- 支持使用Cookie或直接登入
-* **自訂** \- YAML\-豐富設定
-* **自動化** \- 互動式選單或使用網址快速自動輸入並檢測
-* **Log** \- 自動跳過已經下載過的項目
-* **字幕** \- 支持下載Berriz AI字幕
 
 ![DEMO](https://github.com/twkenxtis/Berrizdown/blob/main/dmeo.gif)
 

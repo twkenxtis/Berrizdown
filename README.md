@@ -6,15 +6,6 @@
 </p>
 
 # Berrizdown
-* **Easy Installation** \- UV installation
-* **Multi Quality** \- DASH/HLS manifest support
-* **DRM** \- Widevine and PlayReady integration
-* **Key** \- Remote CDM or local key vault
-* **Session** \- Support for cookies and login
-* **Customizable** \- YAML\-based configuration
-* **Auto-Detection** \- Interactive menus or automatic URL recognition
-* **Log** \- Automatically skip already downloaded files
-* **Subtitle** \- Can download berriz AI subtitle
 
 ![DEMO](https://github.com/twkenxtis/Berrizdown/blob/main/dmeo.gif)
 
@@ -26,9 +17,6 @@ uv sync
 uv run berrizdown -?
 ```
 
-
-
-# berrizdown
 
 - [Requirements](#requirements) <-- Basic environment
   - [Python 3.11 or higher](#python-311-or-higher) <-- UV Python
