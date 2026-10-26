@@ -78,7 +78,7 @@ class MediaDownloader:
 
     MB_IN_BYTES = 1024 * 1024
 
-    def __init__(self, media_id: str, output_dir: str, video_duration: float, savejsondata: save_json_data,) -> None:
+    def __init__(self, media_id: str, output_dir: str, video_duration: float, savejsondata: save_json_data) -> None:
         self.media_id: str = media_id
         self.base_dir: Path = Path(output_dir)
         self.video_duration: float = video_duration
