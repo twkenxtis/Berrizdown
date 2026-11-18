@@ -156,7 +156,6 @@ class Video_folder:
             logger.info(f"{Color.fg('yellow')}Skipping file cleaning, keep segments after done{Color.reset()}")
 
     async def _flatten_to_parent(self, video_file_name: str) -> None:
-        logger.info(f"{Color.fg('light_gray')}No subfolder for{Color.reset()} {Color.fg('light_gray')}Video")
         match paramstore.get("subs_only"):
             case True:
                 if Path(self.output_dir).is_dir():

@@ -304,13 +304,13 @@ class MediaDownloader:
     ) -> bool:
         """處理字幕軌道並輸出 .srt 檔案"""
         subtitle_str: str = SubtitleProcessor(track, segments).process_subtitle(init_files)
+
         subtitle_path: Path = output_file.with_name(
             f"{self.savejsondata.sub_meta(track.language)}"
             f"{output_file.with_suffix('').suffix}.srt"
         )
-
         if paramstore.get("nosubfolder") is True:
-            subtitle_path = subtitle_path.parent.parent / subtitle_path.name
+            subtitle_path = subtitle_path.parent / subtitle_path.name
 
         result: bool = await MERGE.save_subtitle(track.language, subtitle_str, subtitle_path)
 
@@ -497,16 +497,13 @@ class MediaDownloader:
             merge_results.append(await self.merge_track("audio", mpd_content.audio_track))
 
         if mpd_content.sub_track:
-            sub_results = await asyncio.gather(
-                *[self.merge_track("subtitle", sub) for sub in mpd_content.sub_track],
-                return_exceptions=True,
-            )
-            for res in sub_results:
-                if isinstance(res, Exception):
-                    logger.error(f"Subtitle merge error: {res}")
-                    merge_results.append(False)
-                else:
+            for sub in mpd_content.sub_track:
+                try:
+                    res = await self.merge_track("subtitle", sub)
                     merge_results.append(res)
+                except Exception as e:
+                    logger.error(f"Subtitle merge error: {e}")
+                    merge_results.append(False)
 
         if all(merge_results):
             self.dl_obj.task_info = track_tasks
@@ -620,12 +617,7 @@ class Start_Download_Queue:
             self.dl_obj: DownloadObjection = dl_obj 
             # 處理成功後的混流 重命名和清理
             video_file_name, mux_bool_status = await self.start_rename(custom_community_name, community_name, success, output_dir)
-            if paramstore.get("subs_only") is True:
-                SubtitleProcessor.print_subtitle_info(self.dl_obj)
-            elif not paramstore.get("subs_only"):
-                await self.vv.re_name_folder(video_file_name, mux_bool_status)
-            else:
-                raise RuntimeError("Unexpected error")
+            await self.vv.re_name_folder(video_file_name, mux_bool_status)
         else:
             logger.error("Failed to create output directory.")
             raise ValueError("No output directory")
