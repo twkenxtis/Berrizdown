@@ -226,6 +226,10 @@ berrizdown\lib\tools\
 
 並在 `berrizconfig.yaml` 配置文件寫入 `mkvmerge` 的檔名，或確保 `mkvmerge` 存在於系統環境變數 `PATH`
 
+## CDM
+將 prd 或 wvd 格式的 CDM 檔案放入 `berrizdown\key\device` 目錄，接著設定 `berrizconfig.yaml`
+首先，將 `KeyService` 的設定從 `none` 改為您所使用的 CDM 系統，並在 `widevine:` 或 `playready:` 欄位中填入對應的 CDM 檔案名稱
+```uv run berrizdown https://berriz.in/en/jsh/live/replay/019681ce-aa41-6af0-b423-1c1cc6894bc5/ --key```
 ---
 
 > [!IMPORTANT]

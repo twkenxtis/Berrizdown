@@ -195,6 +195,10 @@ berrizdown\lib\tools\
 
 Then add the `mkvmerge` executable name to `berrizconfig.yaml`, or make sure `mkvmerge` is available in your system `PATH`.
 
+## CDM
+Put prd or wvd cdm to `berrizdown\key\device` then set up `berrizconfig.yaml`
+First change KeyService by none to *your cdm system*, write CDM file name in `widevine:`/`playready:`
+```uv run berrizdown https://berriz.in/en/jsh/live/replay/019681ce-aa41-6af0-b423-1c1cc6894bc5/ --key```
 ---
 
 > [!IMPORTANT]
