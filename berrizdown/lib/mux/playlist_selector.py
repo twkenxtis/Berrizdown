@@ -99,7 +99,7 @@ class PlaylistSelector:
         v_resolution_choice: str,
         a_resolution_choice: str,
         video_codec: str | None = None,
-        s_lang_choice: str | list[str] | None = "all",
+        s_lang_choice: str | tuple[str] | None = "all",
     ) -> SelectedContent:
         """"選擇視訊和音訊軌道"""
         selected_video, video_type = await self._select_single_track(v_resolution_choice, TrackType.VIDEO, video_codec)
@@ -107,7 +107,7 @@ class PlaylistSelector:
         
         if isinstance(s_lang_choice, str):
             s_lang_choice: list[str] = [s_lang_choice]
-        elif isinstance(s_lang_choice, list) and len(s_lang_choice) == 0:
+        elif isinstance(s_lang_choice, tuple) and len(s_lang_choice) == 0:
             s_lang_choice: str = "all"
         if isinstance(s_lang_choice, tuple):
             s_lang_choice: list[str] = list(s_lang_choice)
@@ -117,7 +117,7 @@ class PlaylistSelector:
             logger.info(f"{Color.fg('tomato')}【No subs mode】{Color.reset()}")
         else:
             selected_sub, sub_type = await self._select_subtitle_tracks(s_lang_choice)
-
+        
         # 更新 paramstore
         self._update_paramstore(video_type, audio_type)
         content_type: str | None = video_type if video_type == audio_type else "mixed"
@@ -345,6 +345,7 @@ class PlaylistSelector:
                 "zh-hk": "zh-Hans",
                 "zh-hant": "zh-Hans",
                 "zh-hans": "zh-Hans",
+                "zh": "zh-Hans",
                 "zho": "zh-Hans",
                 "zha": "zh-Hans",
                 "zhs": "zh-Hans",
