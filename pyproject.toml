@@ -1,25 +1,23 @@
 [project]
 name = "Berrizdown"
-version = "0.2.7"
+version = "0.2.8"
 description = "Image Video Post Comment Berriz download tool "
 readme = "README.md"
 requires-python = "==3.12.*"
 license = "AGPL-3.0-or-later"
-authors = [
-  {name = "omenbibi", email = "ytiq8nxnm@mozmail.com"}
-]
+authors = [{ name = "omenbibi", email = "ytiq8nxnm@mozmail.com" }]
 dependencies = [
     "pycryptodome>=3.23,<4",
     "PyJWT>=2.10,<3",
     "pydantic",
-    "PyYAML~=6.0.1",
+    "PyYAML~=6.0.3",
     "ruamel.yaml>=0.18,<1",
     "orjson>=3.11,<4",
     "cryptography~=45.0.6",
     "ECPy~=1.2.5",
     "python-dateutil>=2.9,<3",
-    "pytz>=2025.2,<2026",
-    "tzdata>=2025.2,<2026",
+    "pytz>=2025.2,<2027",
+    "tzdata>=2025.2,<2027",
     "requests>=2.32,<3",
     "urllib3>=2.5,<3",
     "aiohttp>=3.12,<4",
@@ -30,13 +28,13 @@ dependencies = [
     "aioshutil>=1.5,<2",
     "aiolimiter>=1.0.0,<2",
     "async-lru",
-    "certifi>=2025.8,<2026",
+    "certifi>=2025.8,<2027",
     "lxml>=6.0,<7",
     "bs4>=0.0.2,<1",
     "validators>=0.35,<1",
     "email_validator>=2.3,<3",
     "Unidecode",
-    "m3u8>=5.0.0",
+    "m3u8>=6.0.0",
     "ffmpeg-python>=0.2,<1",
     "protobuf>=3.6.1,<7",
     "pymp4>=1.4.0,<2",
@@ -49,8 +47,6 @@ dependencies = [
     "httpagentparser>=1.9.5,<2",
     "fake-useragent>=2.2,<3",
     "pip-system-certs>=5.2,<6",
-    "pycaption>=2.2.20",
-    "pysubs2>=1.8.0",
 ]
 
 [project.scripts]
@@ -70,12 +66,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
-exclude = [
-    "readydl_pyplayready",
-    "wvd",
-    "pywidevine",
-    "pyplayready"
-]
+exclude = ["readydl_pyplayready", "wvd", "pywidevine", "pyplayready"]
 
 [tool.ruff.format]
 quote-style = "double"
