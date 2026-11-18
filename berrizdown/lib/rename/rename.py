@@ -85,6 +85,8 @@ class SUCCESS:
                     final_video_name_with_p2p: str = "[ User choese SKIP MERGE ] " + f"{Color.bg('ruby')}Keep all segments in folder{Color.reset()}"
             await self._maybe_cleanup_artifacts(mux_succeeded)
             return final_video_name_with_p2p, mux_succeeded
+        else:
+            raise Exception("Should be not here")
 
     async def run_mux(self) -> bool:
         if paramstore.get("subs_only") is True:
