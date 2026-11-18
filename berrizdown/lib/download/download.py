@@ -583,6 +583,8 @@ class Start_Download_Queue:
     ) -> tuple[bool, DownloadObjection]:
         self.downloader: MediaDownloader = MediaDownloader(self.public_info.media_id, output_dir, self.playback_info.duration, savejsondata)
         success, dl_obj = await self.downloader.download_content(playlist_content)
+        if success is False:
+            raise RuntimeWarning("an any content not succeeded")
         return success, dl_obj
 
     async def start_rename(
@@ -662,7 +664,7 @@ class Start_Download_Queue:
                     logger.info(f"{Color.fg('light_gray')}Skip downloading{Color.reset()}")
                 else:
                     await self.start_download_queue(playlist_content)
-
+                        
     def _video_start2end_time(self, time: float | int | str) -> float:
         sort_time: float = video_start2end_time(time)
         return sort_time

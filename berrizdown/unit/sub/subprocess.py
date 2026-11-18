@@ -49,7 +49,9 @@ class SubtitleProcessor:
                 raise FileNotFoundError(f"Segment file {p} does not exist.")
 
         full_vtt_raw: str = "\n\n".join(raw_parts)
+
         merged_vtt_string: str = merge_segmented_webvtt(full_vtt_raw)
+
         return merged_vtt_string
 
     def webvtt2srt(self, vtt_content: str) -> str:
