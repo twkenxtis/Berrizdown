@@ -122,7 +122,7 @@ known_flags: list[str] = [
     "--keep-subs",
     "--keepsubs",
     "--cookies",
-    "--sl",
+    "-sl",
     "--slang",
 ]
 
@@ -455,7 +455,7 @@ def apply_no_info(ctx, param, value):
     help="Filter by artis id",
 )
 @click.option(
-    "--sl",
+    "-sl",
     "--slang",
     "slang",
     type=str,
