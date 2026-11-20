@@ -145,7 +145,7 @@ async def sign_up_main():
         sys.exit(0)
 
 def version_check() -> bool:
-    url: str = "ttps://raw.githubusercontent.com/twkenxtis/Berrizdown/refs/heads/main/berrizdown/static/version.py"
+    url: str = "https://raw.githubusercontent.com/twkenxtis/Berrizdown/refs/heads/main/berrizdown/static/version.py"
     
     try:
         v: str = requests.get(url).text
