@@ -58,7 +58,7 @@ Video:
   # Berriz so far only [H.264]
   Video_codec: H264
   # 192, ask, None
-  Audio_Resolution_Choice: 192
+  Audio_Resolution_Choice: 189
 
 TimeZone:
   # UTC+9, utc+9, utc9, +9, 9, -9, [timezone should be in -12 ~ +14]
