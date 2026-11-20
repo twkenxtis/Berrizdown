@@ -54,7 +54,7 @@ class VODData(BaseModel):
     is_drm: bool | None = Field(None, alias="isDrm")
     drm_info: DRMInfo | None = Field(None, alias="drmInfo")
     hls: HLSData = Field(default_factory=HLSData)
-    dash: DASHData = Field(default_factory=DASHData)
+    dash: DASHData | None = Field(None)
 
 
 class TrackingData(BaseModel):
@@ -145,7 +145,7 @@ class PlaybackInfo:
         self.hls_adaptations: list[dict[str, Any]] = [item.model_dump(by_alias=True) for item in hls_data.adaptation_set]
 
         # DASH data
-        self.dash_playback_url = vod_data.dash.playback_url
+        self.dash_playback_url = vod_data.dash.playback_url if vod_data.dash else None
 
         # Tracking info
         self.tracking_interval = validated.data.tracking.tracking_playback_polling_interval_sec
@@ -227,7 +227,7 @@ class ReplayData(BaseModel):
     orientation: str | None = None
     is_drm: bool | None = Field(None, alias="isDrm")
     drm_info: DRMInfo | None = Field(None, alias="drmInfo")
-    dash: DASHData = Field(default_factory=DASHData)
+    dash: DASHData | None = Field(None)
     hls: ReplayHLSData = Field(default_factory=ReplayHLSData)
 
 
@@ -331,7 +331,7 @@ class LivePlaybackInfo:
         self.drm_info: dict[str, Any] | None = drm_info.model_dump(by_alias=True) if drm_info else None
 
         # DASH playback
-        self.dash_playback_url = replay.dash.playback_url
+        self.dash_playback_url = replay.dash.playback_url if replay.dash else None
 
         # DRM
         if drm_info and drm_info.assertion:
