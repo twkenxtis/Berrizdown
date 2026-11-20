@@ -34,7 +34,7 @@ async def start_download(
     elif paramstore.get("key") is True:
         pass
     else:
-        if (playback_info.dash_playback_url and playback_info.hls_playback_url.startswith("http")) or (playback_info.dash_playback_url and playback_info.hls_playback_url.startswith("https")):
+        if (playback_info.dash_playback_url and playback_info.hls_playback_url.startswith("http")) or (playback_info.hls_playback_url and playback_info.hls_playback_url.startswith("https")):
             await Start_Download_Queue(
                 decryption_key,
                 public_info,
@@ -43,6 +43,8 @@ async def start_download(
                 raw_hls,
                 input_community_name,
             ).run_dl()
+        else:
+            logger.error(f"DASH:{playback_info.dash_playback_url}, HLS:{playback_info.hls_playback_url} any url not vaild")
 
 
 class BerrizProcessor:
@@ -153,7 +155,7 @@ class BerrizProcessor:
 
         key, raw_hls, raw_mpd = await self.drm_handle(playback_info, public_info)
 
-        if not any(not v for v in (raw_hls, raw_mpd)):
+        if any((raw_hls, raw_mpd)):
             await start_download(
                 public_info,
                 playback_info,

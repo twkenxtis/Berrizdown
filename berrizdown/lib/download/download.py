@@ -634,8 +634,12 @@ class Start_Download_Queue:
             end_time: float = self._video_start2end_time(paramstore.get("end_time"))
             
         hls_content: HLSContent = await HLS_Paser().parse_playlist(self.raw_hls, self.playback_info.hls_playback_url)
-        mpd_parser: MPDParser = MPDParser(self.raw_mpd, self.playback_info.dash_playback_url)
-        mpd_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack = await mpd_parser.parse_all_tracks()
+        if self.raw_mpd is None:
+            mpd_parser = None
+            mpd_content = None
+        else:
+            mpd_parser: MPDParser = MPDParser(self.raw_mpd, self.playback_info.dash_playback_url)
+            mpd_content: MediaTrack | HLSVariant | HLSSubTrack | SubtitleTrack = await mpd_parser.parse_all_tracks()
 
         if self.playback_info.drm_info is None or self.playback_info.drm_info == {}:
             selector: PlaylistSelector = PlaylistSelector(hls_content, mpd_content, "all", start_time, end_time)

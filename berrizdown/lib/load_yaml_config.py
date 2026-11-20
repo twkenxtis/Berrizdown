@@ -284,7 +284,7 @@ class ConfigLoader:
             "Audio_Resolution_Choice": {
                 "expected_type": (str, int),
                 "default": "ask",
-                "allowed": ["192", "ask", "as", "none"],
+                "allowed": ["192", "189", "ask", "as", "none"],
                 "strip_suffixes": ["kbs", "mbs", "kb", "mb", "k", "m", "g", "p", "i"],
             },
             "Video_codec": {

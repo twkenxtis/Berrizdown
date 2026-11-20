@@ -99,7 +99,7 @@ class PlaylistSelector:
         v_resolution_choice: str,
         a_resolution_choice: str,
         video_codec: str | None = None,
-        s_lang_choice: str | tuple[str] | None = "all",
+        s_lang_choice: str | list[str] | None = "all",
     ) -> SelectedContent:
         """"選擇視訊和音訊軌道"""
         selected_video, video_type = await self._select_single_track(v_resolution_choice, TrackType.VIDEO, video_codec)
@@ -107,7 +107,7 @@ class PlaylistSelector:
         
         if isinstance(s_lang_choice, str):
             s_lang_choice: list[str] = [s_lang_choice]
-        elif isinstance(s_lang_choice, tuple) and len(s_lang_choice) == 0:
+        elif isinstance(s_lang_choice, list) and len(s_lang_choice) == 0:
             s_lang_choice: str = "all"
         if isinstance(s_lang_choice, tuple):
             s_lang_choice: list[str] = list(s_lang_choice)
@@ -530,21 +530,18 @@ class PlaylistSelector:
 
     async def _fallback_audio_selection(self, target_kbps: int) -> tuple[HLSAudioTrack | MediaTrack | None, str | None]:
         """音訊回退選擇（選擇最高碼率）"""
-        all_tracks: list[tuple[HLSAudioTrack | MediaTrack, str, int]] = []
+        all_tracks: list[tuple[HLSAudioTrack | MediaTrack, str, int | None]] = []
         for source in [SourceType.HLS, SourceType.MPD]:
             if self.select_mode in {source.value, "all"}:
                 tracks: list = self._get_tracks(source, TrackType.AUDIO)
-                all_tracks.extend((t, source.value, t.bandwidth) for t in tracks if t.bandwidth)
+                all_tracks.extend(
+                    (t, source.value, getattr(t, "bandwidth", None))
+                    for t in tracks
+                )
 
         if all_tracks:
-            best: tuple[HLSAudioTrack | MediaTrack, str, int] = max(all_tracks, key=lambda x: x[2])
-            logger.warning(f"Using highest bitrate audio: [{best[1].upper()}] {best[2] // 1000:,} kbps")
+            best = max(all_tracks, key=lambda x: x[2] if x[2] is not None else -1)
             return best[0], best[1]
-
-        logger.warning("Fail to auto select audio track, fallback to ask mode")
-        if not self._collect_all_track_items(TrackType.AUDIO):
-            raise ValueError("No audio tracks available")
-        return await self._ask_track(TrackType.AUDIO)
 
     async def _apply_filters(
         self, track: Any | None, track_type: str | None
